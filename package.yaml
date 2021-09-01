@@ -28,6 +28,8 @@ dependencies:
 - wai
 - bytestring
 - http-types
+- aeson
+- text
 
 library:
   source-dirs: src

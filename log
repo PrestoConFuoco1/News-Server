@@ -1,21 +1,18 @@
 
 Error: While constructing the build plan, the following exceptions were encountered:
 
-In the dependencies for old-time-1.1.0.3:
-    old-locale must match ==1.0.*, but the stack configuration has no specified version  (latest matching version is 1.0.0.7)
-needed due to warpt3-0.1.0.0 -> old-time-1.1.0.3
-
-In the dependencies for scientific-0.3.7.0:
-    integer-logarithms must match >=1.0.3.1 && <1.1, but the stack configuration has no specified version  (latest matching version is 1.0.3.1)
-    primitive must match >=0.7.1.0 && <0.8, but the stack configuration has no specified version  (latest matching version is 0.7.2.0)
-needed due to warpt3-0.1.0.0 -> scientific-0.3.7.0
+In the dependencies for comonad-5.0.8:
+    distributive must match >=0.5.2 && <1, but the stack configuration has no specified version  (latest matching version is 0.6.2.1)
+    indexed-traversable must match >=0.1.1 && <0.2, but the stack configuration has no specified version  (latest matching version is 0.1.1)
+    transformers-compat must match >=0.5 && <1, but the stack configuration has no specified version  (latest matching version is 0.7)
+needed due to warpt3-0.1.0.0 -> comonad-5.0.8
 
 Some different approaches to resolving this:
 
   * Recommended action: try adding the following to your extra-deps in /home/yuri/Jura/prog/haskell/warpt3/stack.yaml:
 
-- integer-logarithms-1.0.3.1@sha256:888fb6c4fbd79ed2e8f8b94b61bccac25f7fab2b13b32b496e86828bc60b17cf,3184
-- old-locale-1.0.0.7@sha256:fa998be2c7e00cd26a6e9075bea790caaf3932caa3e9497ad69bc20380dd6911,1071
-- primitive-0.7.2.0@sha256:d7c3635e83ae160129cdfe2be4092ab6389199d73a2c29adf904124dbcfe6100,2660
+- distributive-0.6.2.1@sha256:0f99f5541cca04acf89b64432b03422b6408e830a8dff30e6c4334ef1a48680c,2996
+- indexed-traversable-0.1.1@sha256:e4602357513aa3b146546227732e6e5698392f4324ab690e109cc05676ba3b4f,2491
+- transformers-compat-0.7@sha256:c4cc2d01c4e490ba680e9a0b607a1a790137856a6b3af12f8bdc7788a567bcf5,5572
 
 Plan construction failed.
