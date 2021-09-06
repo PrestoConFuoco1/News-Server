@@ -27,36 +27,41 @@ library
   exposed-modules:
       GenericPretty
       Lib
+      Logger
+      RequestToAction
+      Types
   other-modules:
       Paths_warpt3
   hs-source-dirs:
       src
   default-extensions:
-      OverloadedStrings
+      OverloadedStrings, DeriveGeneric
   build-depends:
       aeson
     , base >=4.7 && <5
     , bytestring
     , http-types
+    , mtl
     , text
     , wai
     , warp
   default-language: Haskell2010
 
-executable warpt3-exe
+executable warpt3
   main-is: Main.hs
   other-modules:
       Paths_warpt3
   hs-source-dirs:
       app
   default-extensions:
-      OverloadedStrings
+      OverloadedStrings, DeriveGeneric
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       aeson
     , base >=4.7 && <5
     , bytestring
     , http-types
+    , mtl
     , text
     , wai
     , warp
@@ -71,13 +76,14 @@ test-suite warpt3-test
   hs-source-dirs:
       test
   default-extensions:
-      OverloadedStrings
+      OverloadedStrings, DeriveGeneric
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       aeson
     , base >=4.7 && <5
     , bytestring
     , http-types
+    , mtl
     , text
     , wai
     , warp

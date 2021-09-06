@@ -11,7 +11,7 @@ extra-source-files:
 - ChangeLog.md
 
 
-default-extensions: OverloadedStrings
+default-extensions: OverloadedStrings, DeriveGeneric
 
 # Metadata used when publishing your package
 # synopsis:            Short description of your package
@@ -30,12 +30,13 @@ dependencies:
 - http-types
 - aeson
 - text
+- mtl
 
 library:
   source-dirs: src
 
 executables:
-  warpt3-exe:
+  warpt3:
     main:                Main.hs
     source-dirs:         app
     ghc-options:
