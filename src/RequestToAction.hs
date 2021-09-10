@@ -42,10 +42,13 @@ data WhoWhat a = WhoWhat {
     _ww_action :: a
     } deriving (Show, Generic) 
 
-data Action = AGetPosts GetPosts | AGetCategories GetCategories
+data Action = AGetPosts GetPosts | AGetCategories GetCategories | AGetAuthors GetAuthors
     deriving (Show, Generic)
 
 data GetCategories = GetCategories
+    deriving (Show, Generic)
+
+data GetAuthors = GetAuthors
     deriving (Show, Generic)
 
 
@@ -75,6 +78,7 @@ requestToAction req =
      | x == "posts" -> AGetPosts $ foldr getPostsStep defaultGetPosts $ W.queryString req
     (y:z:zs)
      | y == "categories" && z == "get" -> AGetCategories GetCategories
+     | y == "authors" && z == "get" -> AGetAuthors GetAuthors
         
 
 getPostsStep :: U.QueryItem -> GetPosts -> GetPosts
@@ -109,6 +113,10 @@ instance GP.PrettyShow SearchOptions where
 
 instance GP.PrettyShow GetCategories where
     prettyShow = GP.LStr . show
+
+instance GP.PrettyShow GetAuthors where
+    prettyShow = GP.LStr . show
+
 
 instance GP.PrettyShow SortEntity where
     prettyShow = GP.LStr . drop 2 . show

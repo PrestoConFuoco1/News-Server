@@ -65,22 +65,36 @@ mainServer req = do
 executeAction :: MonadServer m => WhoWhat Action -> m Response
 executeAction (WhoWhat y (AGetPosts x)) = getPosts' (WhoWhat y x)
 executeAction (WhoWhat y (AGetCategories x)) = getCategories (WhoWhat y x)
-
+executeAction (WhoWhat y (AGetAuthors x)) = getAuthors (WhoWhat y x)
 
 getPosts' :: MonadServer m => WhoWhat GetPosts -> m Response
 getPosts' (WhoWhat token g) = do
-    let str = "SELECT post_id, title, creation_date, author_id, category_id, content, photo, extra_photos \
-               \ FROM news.post"
+    let str1 = "SELECT post_id, title, creation_date, \
+               \ author_id, description, used_id, firstname, lastname, image, login, pass, creation_date, NULL as is_admin, \
+               \ arrcid, arrname, \
+               \ content, photo, extra_photos \
+               \ FROM news.get_posts"
     --let str = "SELECT post_id, title FROM news.post"
+    let str = "SELECT * from news.get_posts"
     pt <- query_ str
-    logDebug $ T.pack $ GP.defaultPretty (pt :: [DBT.Post])
-    undefined
+    logDebug $ T.pack $ GP.defaultPretty (pt :: [Ty.Post])
+    return $ Response NHT.ok200 $ Ae.toJSON pt
 
 getCategories :: MonadServer m => WhoWhat GetCategories -> m Response
 getCategories (WhoWhat token g) = do
     let str = "SELECT arrcid, arrname FROM news.temp2"
     cat <- query_ str
     logDebug $ T.pack $ GP.defaultPretty (cat :: [Ty.Category])
+    let val = Ae.toJSON cat
+    return $ Response NHT.ok200 val
+
+getAuthors :: MonadServer m => WhoWhat GetAuthors -> m Response
+getAuthors (WhoWhat token g) = do
+    let str = "SELECT author_id, description, user_id, firstname,\
+             \ lastname, image, login, pass, creation_date, NULL as is_admin \
+             \ FROM news.get_authors"
+    cat <- query_ str
+    logDebug $ T.pack $ GP.defaultPretty (cat :: [Ty.Author])
     let val = Ae.toJSON cat
     return $ Response NHT.ok200 val
 

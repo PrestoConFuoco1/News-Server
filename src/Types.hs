@@ -31,16 +31,32 @@ data User = User {
     _u_login :: T.Text,
     _u_passHash :: T.Text,
     _u_creationDate :: Time.Day,
-    _u_admin :: Bool
-    } deriving (Show, Eq, Generic, PS.FromRow, GP.PrettyShow)
+    _u_admin :: Maybe Bool
+    } deriving (Show, Eq, Generic, GP.PrettyShow, PSR.FromRow)
 
+instance Ae.ToJSON User where
+    toJSON = Ae.genericToJSON Ae.defaultOptions { Ae.fieldLabelModifier = defaultModifier }
+ 
 
 
 data Author = Author {
     _a_authorId :: AuthorId,
-    _a_user :: User,
-    _a_description :: Maybe T.Text
-    } deriving (Show, Eq, Generic, PSF.FromField, GP.PrettyShow)
+    _a_description :: Maybe T.Text,
+    _a_user :: User
+    } deriving (Show, Eq, Generic, GP.PrettyShow)
+
+instance Ae.ToJSON Author where
+    toJSON = Ae.genericToJSON Ae.defaultOptions { Ae.fieldLabelModifier = defaultModifier }
+ 
+instance PSR.FromRow Author where
+    fromRow = Author <$> PSR.field <*> PSR.field <*> PSR.fromRow
+    {-fromRow = do
+        (id, desc, uid, fn, ln, img, login, pass, creat) <-
+            (,,,,,,,,) <$> PSR.field <*> PSR.field <*> PSR.field <*> PSR.field
+                       <*> PSR.field <*> PSR.field <*> PSR.field <*> PSR.field <*> PSR.field
+        return $ Author id desc $ User uid fn ln img login pass creat Nothing
+-}
+   
 
 data Category = Category {
     _cat_categoryId :: CategoryId,
@@ -72,14 +88,48 @@ data Post = Post {
     _p_postId :: PostId,
     _p_title :: T.Text,
     _p_creationDate :: Time.Day,
-    _p_authorId :: Author,
-    _p_categoryId :: Category,
+    _p_author :: Author,
+    _p_tags :: [Tag],
+    _p_category :: Category,
     _p_content :: T.Text,
     _p_mainPhoto :: Maybe T.Text,
     _p_extraPhotos :: Maybe [T.Text]
     } deriving (Show, Eq, Generic)
 
 instance GP.PrettyShow Post
+
+instance Ae.ToJSON Post where
+    toJSON = Ae.genericToJSON Ae.defaultOptions { Ae.fieldLabelModifier = defaultModifier }
+
+
+instance PSR.FromRow Post where
+    --fromRow = Post <$> PSR.field <*> PSR.field <*> PSR.field <*> PSR.fromRow <*> PSR.fromRow <*> PSR.field <*> PSR.field <*> PSR.field
+    fromRow = do
+        id <- PSR.field
+        title <- PSR.field
+        creationDate <- PSR.field
+        author <- PSR.fromRow
+        tagIds <- PSR.field
+        tagNames <- PSR.field
+        catIds <- PSR.field
+        catNames <- PSR.field
+        content <- PSR.field
+        photo <- PSR.field
+        extraPhotos <- PSR.field
+        let category = listToCategory $ zip catIds catNames
+            tags = zipWith Tag tagIds tagNames
+        return $ Post id title creationDate author tags category content photo extraPhotos
+
+data Tag = Tag {
+    _t_tagId :: TagId,
+    _t_tagName :: T.Text
+    } deriving (Show, Eq, Generic, GP.PrettyShow)
+
+
+instance Ae.ToJSON Tag where
+    toJSON = Ae.genericToJSON Ae.defaultOptions { Ae.fieldLabelModifier = defaultModifier }
+
+
 
 data Comment = Comment {
     _com_commentId :: CommentId,
