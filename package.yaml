@@ -12,6 +12,7 @@ extra-source-files:
 
 
 default-extensions: OverloadedStrings, DeriveGeneric
+#DeriveAnyClass
 
 # Metadata used when publishing your package
 # synopsis:            Short description of your package
@@ -31,6 +32,8 @@ dependencies:
 - aeson
 - text
 - mtl
+- time
+- postgresql-simple
 
 library:
   source-dirs: src

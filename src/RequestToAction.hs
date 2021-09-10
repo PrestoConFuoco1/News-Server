@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveAnyClass #-}
 module RequestToAction where
 
 import qualified Network.Wai as W (Request, pathInfo, queryString)
@@ -14,6 +15,7 @@ type TagId = Int
 type Author = T.Text
 type QueryItem = (T.Text, Maybe T.Text)
 type Query = [QueryItem]
+type Token = T.Text
 
 data CreationDateOptions = Created | CreatedEarlier | CreatedLater
     deriving (Show, Generic)
@@ -33,10 +35,19 @@ data SortOptions = SortOptions {
     deriving (Show, Generic)
 defaultSortOptions :: SortOptions
 defaultSortOptions = SortOptions SEDate SODescending -- newer posts first
-   
 
-data Action = AGetPosts GetPosts
+data WhoWhat a = WhoWhat {
+    _ww_token  :: Maybe Token,
+    --_ww_action :: Action
+    _ww_action :: a
+    } deriving (Show, Generic) 
+
+data Action = AGetPosts GetPosts | AGetCategories GetCategories
     deriving (Show, Generic)
+
+data GetCategories = GetCategories
+    deriving (Show, Generic)
+
 
 
 data GetPosts = GetPosts {
@@ -50,12 +61,20 @@ data GetPosts = GetPosts {
 defaultGetPosts :: GetPosts
 defaultGetPosts = GetPosts Nothing Nothing Nothing defaultSortOptions
 
-requestToAction :: W.Request -> Action
+requestToAction :: W.Request -> WhoWhat Action
 requestToAction req =
-  let queryText = map (bimap E.decodeUtf8 $ fmap E.decodeUtf8) $ W.queryString req
-  in  case W.pathInfo req of 
+  let --queryText = map (bimap E.decodeUtf8 $ fmap E.decodeUtf8) $ W.queryString req
+      maybeToken = case W.queryString req of
+        ((tokenPar, Just tokenVal):ys) ->
+                if tokenPar == "token"
+                then Just $ E.decodeUtf8 tokenVal
+                else Nothing
+        _ -> Nothing
+  in  WhoWhat maybeToken $ case W.pathInfo req of 
     (x:xs)
      | x == "posts" -> AGetPosts $ foldr getPostsStep defaultGetPosts $ W.queryString req
+    (y:z:zs)
+     | y == "categories" && z == "get" -> AGetCategories GetCategories
         
 
 getPostsStep :: U.QueryItem -> GetPosts -> GetPosts
@@ -88,6 +107,8 @@ instance GP.PrettyShow SearchOptions where
 --    prettyShow = GP.LStr . GP.gprettyShowSum . from
     prettyShow = GP.LStr . show
 
+instance GP.PrettyShow GetCategories where
+    prettyShow = GP.LStr . show
 
 instance GP.PrettyShow SortEntity where
     prettyShow = GP.LStr . drop 2 . show

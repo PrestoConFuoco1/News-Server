@@ -26,6 +26,7 @@ import Data.Aeson (encode)
 import Data.Char
 import Data.Text.Lazy.Encoding (decodeUtf8)
 
+import qualified Data.Time as Time
 ---------
 
 
@@ -146,6 +147,13 @@ instance PrettyShow Value where
 
 instance PrettyShow Bool where
     prettyShow = LStr . show
+
+instance PrettyShow Time.Day where
+    prettyShow = LStr . Time.formatTime Time.defaultTimeLocale "%F"
+
+
+
+
 
 instance (PrettyShow a) => PrettyShow (Maybe a) where
     prettyShow (Just x) = prettyShow x

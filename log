@@ -1,18 +1,22 @@
+WARNING: Ignoring transformers-compat's bounds on transformers (>=0.3 && ==0.2.*); using transformers-0.5.6.2.
+Reason: allow-newer enabled.
 
 Error: While constructing the build plan, the following exceptions were encountered:
 
-In the dependencies for comonad-5.0.8:
-    distributive must match >=0.5.2 && <1, but the stack configuration has no specified version  (latest matching version is 0.6.2.1)
-    indexed-traversable must match >=0.1.1 && <0.2, but the stack configuration has no specified version  (latest matching version is 0.1.1)
-    transformers-compat must match >=0.5 && <1, but the stack configuration has no specified version  (latest matching version is 0.7)
-needed due to warpt3-0.1.0.0 -> comonad-5.0.8
+In the dependencies for postgresql-simple-0.6.4:
+    Only must match >=0.1 && <0.1.1, but the stack configuration has no specified version  (latest matching version is 0.1)
+    bytestring-builder must match >=0.10.8.1.0 && <0.11, but the stack configuration has no specified version  (latest matching version
+                       is 0.10.8.2.0)
+    postgresql-libpq must match >=0.9.4.3 && <0.10, but the stack configuration has no specified version  (latest matching version is 0.9.4.3)
+needed due to warpt3-0.1.0.0 -> postgresql-simple-0.6.4
 
 Some different approaches to resolving this:
 
-  * Recommended action: try adding the following to your extra-deps in /home/yuri/Jura/prog/haskell/warpt3/stack.yaml:
+  * Recommended action: try adding the following to your extra-deps
+    in /media/yuri/93940201-a162-4045-ae1d-8e41dd139852/yuri/Jura/prog/haskell/warpt3/stack.yaml:
 
-- distributive-0.6.2.1@sha256:0f99f5541cca04acf89b64432b03422b6408e830a8dff30e6c4334ef1a48680c,2996
-- indexed-traversable-0.1.1@sha256:e4602357513aa3b146546227732e6e5698392f4324ab690e109cc05676ba3b4f,2491
-- transformers-compat-0.7@sha256:c4cc2d01c4e490ba680e9a0b607a1a790137856a6b3af12f8bdc7788a567bcf5,5572
+- Only-0.1@sha256:f92f5da97e647451f1ee7f5bf44914fb75062d08ccd3f36b2000d649c63d13aa,1373
+- bytestring-builder-0.10.8.2.0@sha256:6b2b812cdac53f5a2c82376a416dde04adbb5ca3e1604c0d075368a0498f762b,3781
+- postgresql-libpq-0.9.4.3@sha256:a20a7a263343247526141d99154c9fa801e6d19e8e4da04849bc843f82db91b2,2803
 
 Plan construction failed.

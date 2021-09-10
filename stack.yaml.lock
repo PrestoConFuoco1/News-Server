@@ -445,4 +445,32 @@ packages:
       sha256: a30512e81cc439716fa40462c1421db5e7bf2c394e3af572f88057fb7d908427
   original:
     hackage: transformers-compat-0.7@sha256:c4cc2d01c4e490ba680e9a0b607a1a790137856a6b3af12f8bdc7788a567bcf5,5572
+- completed:
+    hackage: postgresql-simple-0.6.4@sha256:fb2779b909d7e7060662bcfa051c958ea984b96a1e30f71a693e30bd80a492cf,5220
+    pantry-tree:
+      size: 4197
+      sha256: 445b74c20013fa7c89627f4351410b50617f543760353b8e8284cebfc34ebb69
+  original:
+    hackage: postgresql-simple-0.6.4@sha256:fb2779b909d7e7060662bcfa051c958ea984b96a1e30f71a693e30bd80a492cf,5220
+- completed:
+    hackage: Only-0.1@sha256:f92f5da97e647451f1ee7f5bf44914fb75062d08ccd3f36b2000d649c63d13aa,1373
+    pantry-tree:
+      size: 210
+      sha256: e999ae7690fc1e13bb471bc1ead6d7a5c245843d17862d3d27f7f0f752513257
+  original:
+    hackage: Only-0.1@sha256:f92f5da97e647451f1ee7f5bf44914fb75062d08ccd3f36b2000d649c63d13aa,1373
+- completed:
+    hackage: bytestring-builder-0.10.8.2.0@sha256:6b2b812cdac53f5a2c82376a416dde04adbb5ca3e1604c0d075368a0498f762b,3781
+    pantry-tree:
+      size: 1393
+      sha256: cbfed55bf3b55fa213e9635423b69db89ff797e68b29bd8f9e62eef843c3524b
+  original:
+    hackage: bytestring-builder-0.10.8.2.0@sha256:6b2b812cdac53f5a2c82376a416dde04adbb5ca3e1604c0d075368a0498f762b,3781
+- completed:
+    hackage: postgresql-libpq-0.9.4.3@sha256:a20a7a263343247526141d99154c9fa801e6d19e8e4da04849bc843f82db91b2,2803
+    pantry-tree:
+      size: 629
+      sha256: 7f1ea7a2ad2c125c153437c60d767e71bf569fe6f04bcfa3b6bad25135ba1224
+  original:
+    hackage: postgresql-libpq-0.9.4.3@sha256:a20a7a263343247526141d99154c9fa801e6d19e8e4da04849bc843f82db91b2,2803
 snapshots: []
