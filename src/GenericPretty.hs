@@ -121,8 +121,11 @@ class PrettyShow a where
 genericPrettyShow :: (Generic a, GPrettyShow (Rep a)) => OptionsL -> a -> LayoutValue
 genericPrettyShow opts = gprettyShow opts . from
 --------------------------------------------------------------------
-instance PrettyShow String where
-    prettyShow s = LStr s
+
+newtype StrWrap = StrWrap { unStrWrap :: String } 
+
+instance PrettyShow StrWrap where
+    prettyShow s = LStr $ unStrWrap s
 
 instance PrettyShow Int where
     prettyShow = LStr . show

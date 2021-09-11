@@ -1,6 +1,14 @@
+{-# LANGUAGE
+ScopedTypeVariables,
+TypeFamilies,
+FlexibleContexts
+#-}
+
+
 module Lib
     ( someFunc
     ) where
+
 
 
 import qualified Network.Wai.Handler.Warp as Warp
@@ -25,6 +33,7 @@ import qualified DatabaseHandler as DB
 import qualified DBTypes as DBT
 import qualified Types as Ty
 import qualified Data.Aeson as Ae
+import Data.Proxy
 
 port :: Int
 port = 5555
@@ -63,7 +72,8 @@ mainServer req = do
     --return $ W.responseLBS status200 [] "Hello, World!\n"
 
 executeAction :: MonadServer m => WhoWhat Action -> m Response
-executeAction (WhoWhat y (AGetPosts x)) = getPosts' (WhoWhat y x)
+--executeAction (WhoWhat y (AGetPosts x)) = getPosts' (WhoWhat y x)
+executeAction (WhoWhat y (AGetPosts x)) = getThis postDummy (WhoWhat y x)
 executeAction (WhoWhat y (AGetCategories x)) = getCategories (WhoWhat y x)
 executeAction (WhoWhat y (AGetAuthors x)) = getAuthors (WhoWhat y x)
 
@@ -99,8 +109,33 @@ getAuthors (WhoWhat token g) = do
     return $ Response NHT.ok200 val
 
 
+--data Permissions = 
+
+class (Ae.ToJSON (MType s), GP.PrettyShow (MType s), PS.FromRow (MType s), Show (Get s))
+        => FromSQL s where
+    type MType s :: * -- main type of this type family
+    type Get s :: *
+    selectQuery :: s -> PS.Query
+
+newtype PostD = PostD ()
+postDummy = PostD ()
+
+instance FromSQL PostD where
+    type MType PostD = Ty.Post
+    type Get PostD = GetPosts
+    selectQuery _ = "SELECT * from news.get_posts"
 
 
+
+getThis :: (FromSQL s, MonadServer m) => s -> WhoWhat (Get s) -> m Response
+getThis x (WhoWhat token g) = do
+    --cat <- query_ $ selectQuery x :: m [a]
+    cat <- f x
+    logDebug $ T.pack $ GP.defaultPretty cat
+    let val = Ae.toJSON cat
+    return $ Response NHT.ok200 val
+  where f :: (FromSQL s, MonadServer m) => s -> m [MType s]
+        f x = query_ $ selectQuery x
 
 
 
