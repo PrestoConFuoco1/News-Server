@@ -1,3 +1,3 @@
 #!/bin/bash
-curl -G -d "tags__all=[123,124,125]" localhost:5555/posts
+curl -G -d "tags__all=[4,5]" localhost:5555/posts
 echo ""

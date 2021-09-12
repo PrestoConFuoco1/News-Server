@@ -10,7 +10,9 @@ import Control.Monad.IO.Class (MonadIO, liftIO)
 import qualified Data.Text as T (Text, pack, unpack)
 import RequestToAction
 import qualified Database.PostgreSQL.Simple as PS
+import qualified Database.PostgreSQL.Simple.ToField as PSF
 import qualified DatabaseHandler as DB
+import qualified Data.ByteString as BS
 
 data ServerHandlers = ServerHandlers {
     logger :: L.Handle,
@@ -28,6 +30,7 @@ class (Monad m) => MonadGetPosts m where
 class (Monad m) => MonadSQL m where
     query :: (PS.ToRow q, PS.FromRow r) => PS.Query -> q -> m [r]
     query_ :: (PS.FromRow r) => PS.Query -> m [r]
+    formatQuery :: (PSF.ToField q) => PS.Query -> [q] -> m BS.ByteString
   
 class (Monad m) => MonadLog m where
     logM :: L.LoggerEntry -> m ()
@@ -43,7 +46,9 @@ instance MonadSQL ServerIO where
     query_ qu = do
         s <- ask
         liftIO $ PS.query_ (DB.conn $ sqlHandler s) qu
-
+    formatQuery qu args = do
+        s <- ask
+        liftIO $ PS.formatQuery (DB.conn $ sqlHandler s) qu args
 
 
 instance MonadLog ServerIO where

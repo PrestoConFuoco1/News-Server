@@ -108,6 +108,7 @@ prettyValue :: Int -> LayoutValue -> String
 prettyValue ind (LStr s) = s ++ "\n"
 prettyValue ind (LLay typ ls) = typ ++ "\n" ++ prettyLayout (ind + 1) ls
 prettyValue ind (LJSON s) = ('\n' :) $ unlines $ map (withIndent $ ind + 1) $ splitToFixedWidth ind s
+prettyValue ind LEmpty    = "empty\n"
 
 prettyLayout :: Int -> Layout -> String
 prettyLayout ind (Layout ls) = concat $ map (prettyUnit ind) ls

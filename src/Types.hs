@@ -61,7 +61,7 @@ instance PSR.FromRow Author where
 data Category = Category {
     _cat_categoryId :: CategoryId,
     _cat_description :: T.Text,
-    _cat_childCategory :: Maybe Category
+    _cat_parentCategory :: Maybe Category
     } deriving (Show, Eq, Generic, GP.PrettyShow)
 
 instance Ae.ToJSON Category where

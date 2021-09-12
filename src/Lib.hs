@@ -25,6 +25,7 @@ import qualified GenericPretty as GP
 import GHC.Generics
 
 import RequestToAction
+import FromSQL
 
 import qualified Logger as L
 import MonadTypes
@@ -45,6 +46,8 @@ someFunc = do
     let serverH = ServerHandlers L.simpleLog (DB.Handle conn)
     Warp.run port $ mainFunc1 serverH
 
+connectToDB :: IO PS.Connection
+connectToDB = PS.connectPostgreSQL "dbname='batadase'"
 
 mainFunc1 :: ServerHandlers -> W.Application
 mainFunc1 handlers req respond = do
@@ -79,12 +82,7 @@ executeAction (WhoWhat y (AGetAuthors x)) = getAuthors (WhoWhat y x)
 
 getPosts' :: MonadServer m => WhoWhat GetPosts -> m Response
 getPosts' (WhoWhat token g) = do
-    let str1 = "SELECT post_id, title, creation_date, \
-               \ author_id, description, used_id, firstname, lastname, image, login, pass, creation_date, NULL as is_admin, \
-               \ arrcid, arrname, \
-               \ content, photo, extra_photos \
-               \ FROM news.get_posts"
-    --let str = "SELECT post_id, title FROM news.post"
+   --let str = "SELECT post_id, title FROM news.post"
     let str = "SELECT * from news.get_posts"
     pt <- query_ str
     logDebug $ T.pack $ GP.defaultPretty (pt :: [Ty.Post])
@@ -111,31 +109,20 @@ getAuthors (WhoWhat token g) = do
 
 --data Permissions = 
 
-class (Ae.ToJSON (MType s), GP.PrettyShow (MType s), PS.FromRow (MType s), Show (Get s))
-        => FromSQL s where
-    type MType s :: * -- main type of this type family
-    type Get s :: *
-    selectQuery :: s -> PS.Query
-
-newtype PostD = PostD ()
-postDummy = PostD ()
-
-instance FromSQL PostD where
-    type MType PostD = Ty.Post
-    type Get PostD = GetPosts
-    selectQuery _ = "SELECT * from news.get_posts"
-
-
-
 getThis :: (FromSQL s, MonadServer m) => s -> WhoWhat (Get s) -> m Response
 getThis x (WhoWhat token g) = do
     --cat <- query_ $ selectQuery x :: m [a]
-    cat <- f x
+    
+    cat <- f x g
     logDebug $ T.pack $ GP.defaultPretty cat
     let val = Ae.toJSON cat
     return $ Response NHT.ok200 val
-  where f :: (FromSQL s, MonadServer m) => s -> m [MType s]
-        f x = query_ $ selectQuery x
+  where f :: (FromSQL s, MonadServer m) => s -> Get s -> m [MType s]
+        f x g = do
+            let qu = selectQuery x g
+            debugStr <- uncurry formatQuery qu
+            logDebug $ T.pack $ show debugStr
+            uncurry query qu
 
 
 

@@ -27,6 +27,7 @@ library
   exposed-modules:
       DatabaseHandler
       DBTypes
+      FromSQL
       General
       GenericPretty
       Lib
