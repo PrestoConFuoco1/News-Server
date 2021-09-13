@@ -57,13 +57,26 @@ instance FromSQL PostD where
     type MType PostD = Ty.Post
     type Get PostD = GetPosts
     selectQuery _ (GetPosts cre tags search sortOpts) = 
-        let selectClause = "SELECT post_id, title, post_creation_date, \
-               \ author_id, description, user_id, firstname, lastname, \
-               \ image, login, pass, user_creation_date, NULL as is_admin, \
-               \ tagids, tagnames, \
-               \ arrcid, arrname, \
+        let selectClause = "SELECT \
+               \ post_id, \
+               \ title, \
+               \ post_creation_date, \
+               \ author_id, \
+               \ author_description, \
+               \ user_id, \
+               \ user_firstname, \
+               \ user_lastname, \
+               \ user_image, \ 
+               \ user_login, \
+               \ user_pass, \
+               \ user_creation_date, \
+               \ NULL as is_admin, \
+               \ tagids, \
+               \ tagnames, \
+               \ catids, \
+               \ catnames, \
                \ content, photo, extra_photos \
-               \ FROM news.get_posts_fnull3 "
+               \ FROM news.get_posts "
             (whereClause, args) = queryIntercalate " AND " $ catMaybes
                 [fmap postsWhereDate cre,
                  fmap postsWhereTags tags,
@@ -94,7 +107,7 @@ postsWhereSearch :: SearchOptions -> (PS.Query, [SqlValue])
 postsWhereSearch (SearchOptions text) =
     let str = "title ILIKE ? OR content ILIKE ?\
               \ OR array_to_string(tagnames, ',') ILIKE ?\
-              \ OR array_to_string(arrname, ',') ILIKE ?"
+              \ OR array_to_string(catnames, ',') ILIKE ?"
     in  (str, replicate 4 $ SqlText $ TL.fromStrict $ enclose "%" text)
 
 queryIntercalate :: PS.Query -> [(PS.Query, [SqlValue])] -> (PS.Query, [SqlValue])
@@ -118,7 +131,7 @@ instance FromSQL CatD where
     type MType CatD = Ty.Category
     type Get CatD = GetCategories
     selectQuery _ (GetCategories) =
-        let selectClause = "SELECT arrcid, arrname FROM news.temp2"
+        let selectClause = "SELECT catids, catnames FROM news.get_categories"
             args = []
         in  (selectClause, args)
 
