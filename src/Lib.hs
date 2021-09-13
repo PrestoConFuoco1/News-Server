@@ -75,10 +75,11 @@ mainServer req = do
     --return $ W.responseLBS status200 [] "Hello, World!\n"
 
 executeAction :: MonadServer m => WhoWhat Action -> m Response
---executeAction (WhoWhat y (AGetPosts x)) = getPosts' (WhoWhat y x)
 executeAction (WhoWhat y (AGetPosts x)) = getThis postDummy (WhoWhat y x)
-executeAction (WhoWhat y (AGetCategories x)) = getCategories (WhoWhat y x)
-executeAction (WhoWhat y (AGetAuthors x)) = getAuthors (WhoWhat y x)
+--executeAction (WhoWhat y (AGetCategories x)) = getCategories (WhoWhat y x)
+executeAction (WhoWhat y (AGetCategories x)) = getThis catDummy (WhoWhat y x)
+--executeAction (WhoWhat y (AGetAuthors x)) = getAuthors (WhoWhat y x)
+executeAction (WhoWhat y (AGetAuthors x)) = getThis authorDummy (WhoWhat y x)
 
 getPosts' :: MonadServer m => WhoWhat GetPosts -> m Response
 getPosts' (WhoWhat token g) = do

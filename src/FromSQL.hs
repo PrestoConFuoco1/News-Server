@@ -93,8 +93,9 @@ postsWhereTags (TagsAll ids) = ("? <@ tagids", [SqlArray $ PSTy.PGArray ids])
 postsWhereSearch :: SearchOptions -> (PS.Query, [SqlValue])
 postsWhereSearch (SearchOptions text) =
     let str = "title ILIKE ? OR content ILIKE ?\
-              \ OR array_to_string(tagnames, ',') ILIKE ?"
-    in  (str, replicate 3 $ SqlText $ TL.fromStrict $ enclose "%" text)
+              \ OR array_to_string(tagnames, ',') ILIKE ?\
+              \ OR array_to_string(arrname, ',') ILIKE ?"
+    in  (str, replicate 4 $ SqlText $ TL.fromStrict $ enclose "%" text)
 
 queryIntercalate :: PS.Query -> [(PS.Query, [SqlValue])] -> (PS.Query, [SqlValue])
 queryIntercalate delim = foldr f ("", [])
@@ -107,3 +108,36 @@ notEmptyDo func qu
     | otherwise = func qu
 enclosePar qu = "(" <> qu <> ")"
 enclose p qu = p <> qu <> p
+-----------------------------------------------------------------
+
+newtype CatD = CatD ()
+catDummy = CatD ()
+
+
+instance FromSQL CatD where
+    type MType CatD = Ty.Category
+    type Get CatD = GetCategories
+    selectQuery _ (GetCategories) =
+        let selectClause = "SELECT arrcid, arrname FROM news.temp2"
+            args = []
+        in  (selectClause, args)
+
+
+newtype AuthorD = AuthorD ()
+authorDummy = AuthorD ()
+
+
+instance FromSQL AuthorD where
+    type MType AuthorD = Ty.Author
+    type Get AuthorD = GetAuthors
+    selectQuery _ (GetAuthors) =
+        let selectClause = "SELECT author_id, description, user_id, firstname, lastname, \
+                           \ image, login, pass, creation_date, NULL as is_admin FROM news.get_authors"
+            args = []
+        in  (selectClause, args)
+
+
+
+
+
+
