@@ -5,10 +5,13 @@ import qualified Network.Wai as W (Request, pathInfo, queryString)
 import qualified Network.HTTP.Types.URI as U (QueryItem)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as E (decodeUtf8)
-import qualified Data.Aeson as Ae (decode)
+import qualified Data.Aeson as Ae (decode, Value)
 import qualified Data.ByteString.Lazy as BSL (fromStrict, unpack, ByteString)
 import qualified Data.ByteString as BS
 import qualified Data.Time as Time
+import qualified Data.HashMap.Strict as HS (HashMap, fromList, lookup)
+import qualified Data.Maybe as Mb (catMaybes)
+import Control.Applicative ((<|>))
 
 import Data.Bifunctor (bimap)
 import GHC.Generics
@@ -16,8 +19,8 @@ import qualified GenericPretty as GP
 
 type TagId = Int
 type Author = T.Text
-type QueryItem = (T.Text, Maybe T.Text)
-type Query = [QueryItem]
+--type QueryItem = (T.Text, Maybe T.Text)
+--type Query = [QueryItem]
 type Token = T.Text
 
 data CreationDateOptions = Created Time.Day
@@ -65,25 +68,65 @@ data GetPosts = GetPosts {
     _gp_sort :: SortOptions
     } deriving (Show, Generic)
 
-
-defaultGetPosts :: GetPosts
-defaultGetPosts = GetPosts Nothing Nothing Nothing defaultSortOptions
-
 requestToAction :: W.Request -> WhoWhat Action
 requestToAction req =
   let --queryText = map (bimap E.decodeUtf8 $ fmap E.decodeUtf8) $ W.queryString req
-      maybeToken = case W.queryString req of
+    maybeToken = case W.queryString req of
         ((tokenPar, Just tokenVal):ys) ->
                 if tokenPar == "token"
                 then Just $ E.decodeUtf8 tokenVal
                 else Nothing
         _ -> Nothing
+    hash :: Query
+    hash = HS.fromList . Mb.catMaybes . map f $ W.queryString req
+    f (x, y) = fmap ((,) x) y
   in  WhoWhat maybeToken $ case W.pathInfo req of 
     (x:xs)
-     | x == "posts" -> AGetPosts $ foldr getPostsStep defaultGetPosts $ W.queryString req
+     | x == "posts" -> AGetPosts $ getPostsAction hash
+    -- | x == "posts" -> AGetPosts $ foldr getPostsStep defaultGetPosts $ W.queryString req
     (y:z:zs)
      | y == "categories" && z == "get" -> AGetCategories GetCategories
      | y == "authors" && z == "get" -> AGetAuthors GetAuthors
+
+--class FromHTTPQuery a where
+
+type Query = HS.HashMap BS.ByteString BS.ByteString
+
+defaultGetPosts :: GetPosts
+defaultGetPosts = GetPosts Nothing Nothing Nothing defaultSortOptions
+
+getPostsAction :: Query -> GetPosts
+getPostsAction qu =
+    let tagopts = foldr (<|>) Nothing
+                           [fmap OneTag $ requireInt qu "tag",
+                            fmap TagsIn $ requireIntList qu "tags__in",
+                            fmap TagsAll $ requireIntList qu "tags__all"]
+        creationopts = foldr (<|>) Nothing $
+                       [fmap Created $ requireDay qu "created_at",
+                        fmap CreatedEarlier $ requireDay qu "created_at__lt",
+                        fmap CreatedLater   $ requireDay qu "created_at__gt"]
+        sortopts = maybe defaultSortOptions id
+                        $ (HS.lookup "sort" qu >>= sortOptions)
+        searchopts = fmap SearchOptions $ requireText qu "search"
+    in  GetPosts creationopts tagopts searchopts sortopts
+    
+
+require :: (BS.ByteString -> Maybe a) -> Query -> BS.ByteString -> Maybe a
+require prse qu arg = HS.lookup arg qu >>= prse
+
+requireText :: Query -> BS.ByteString -> Maybe T.Text
+requireText = require (pure . E.decodeUtf8)
+
+requireInt :: Query -> BS.ByteString -> Maybe Int
+requireInt = require (Ae.decode . BSL.fromStrict)
+
+
+requireIntList :: Query -> BS.ByteString -> Maybe [Int]
+requireIntList = require (Ae.decode . BSL.fromStrict)
+
+requireDay :: Query -> BS.ByteString -> Maybe Time.Day
+requireDay = require
+     (Time.parseTimeM True Time.defaultTimeLocale "%Y-%-m-%-d" . T.unpack . E.decodeUtf8)
 
 
 getPostsStep :: U.QueryItem -> GetPosts -> GetPosts
@@ -111,6 +154,46 @@ getPostsStep (par, Just val)  acc
 
 sortOptions :: BS.ByteString -> Maybe SortOptions
 sortOptions = undefined
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ------------------------ PrettyShow instances ------------------------
 

@@ -149,7 +149,7 @@ instance FromSQL AuthorD where
             args = []
         in  (selectClause, args)
 
-
+--------- other instances for getting
 
 
 
