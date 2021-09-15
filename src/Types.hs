@@ -123,7 +123,7 @@ instance PSR.FromRow Post where
 data Tag = Tag {
     _t_tagId :: TagId,
     _t_tagName :: T.Text
-    } deriving (Show, Eq, Generic, GP.PrettyShow)
+    } deriving (Show, Eq, Generic, GP.PrettyShow, PS.FromRow)
 
 
 instance Ae.ToJSON Tag where

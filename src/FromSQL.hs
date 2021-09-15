@@ -151,6 +151,21 @@ instance FromSQL AuthorD where
 
 --------- other instances for getting
 
+newtype TagD = TagD ()
+tagDummy = TagD ()
+
+
+--class (Ae.ToJSON (MType s), GP.PrettyShow (MType s), PS.FromRow (MType s), Show (Get s), Show (MType s))
+instance FromSQL TagD where
+    type MType TagD = Ty.Tag
+    type Get TagD = GetTags
+    selectQuery _ (GetTags) =
+        let selectClause = "SELECT tag_id, name \
+                           \ FROM news.get_tags"
+            args = []
+        in  (selectClause, args)
+
+
 
 
 

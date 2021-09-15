@@ -75,6 +75,7 @@ executeAction :: MonadServer m => WhoWhat Action -> m Response
 executeAction (WhoWhat y (AGetPosts x)) = getThis postDummy (WhoWhat y x)
 executeAction (WhoWhat y (AGetCategories x)) = getThis catDummy (WhoWhat y x)
 executeAction (WhoWhat y (AGetAuthors x)) = getThis authorDummy (WhoWhat y x)
+executeAction (WhoWhat y (AGetTags x)) = getThis tagDummy (WhoWhat y x)
 
 
 --data Permissions = 

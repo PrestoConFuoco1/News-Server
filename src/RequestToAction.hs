@@ -4,7 +4,7 @@ module RequestToAction where
 import qualified Network.Wai as W (Request, pathInfo, queryString)
 import qualified Network.HTTP.Types.URI as U (QueryItem)
 import qualified Data.Text as T
-import qualified Data.Text.Encoding as E (decodeUtf8)
+import qualified Data.Text.Encoding as E (decodeUtf8, encodeUtf8)
 import qualified Data.Aeson as Ae (decode, Value)
 import qualified Data.ByteString.Lazy as BSL (fromStrict, unpack, ByteString)
 import qualified Data.ByteString as BS
@@ -17,6 +17,7 @@ import Data.Bifunctor (bimap)
 import GHC.Generics
 import qualified GenericPretty as GP
 
+type PostId = Int
 type TagId = Int
 type Author = T.Text
 --type QueryItem = (T.Text, Maybe T.Text)
@@ -41,6 +42,7 @@ data SortOptions = SortOptions {
     _so_order :: SortOrder
     }
     deriving (Show, Generic)
+
 defaultSortOptions :: SortOptions
 defaultSortOptions = SortOptions SEDate SODescending -- newer posts first
 
@@ -50,7 +52,15 @@ data WhoWhat a = WhoWhat {
     _ww_action :: a
     } deriving (Show, Generic) 
 
-data Action = AGetPosts GetPosts | AGetCategories GetCategories | AGetAuthors GetAuthors
+data Action = AGetPosts GetPosts
+            | AGetCategories GetCategories
+            | AGetAuthors GetAuthors
+            | AGetTags GetTags
+            | AGetComments GetComments
+            | AError ActionError
+    deriving (Show, Generic)
+
+data ActionError = EInvalidEndpoint
     deriving (Show, Generic)
 
 data GetCategories = GetCategories
@@ -59,7 +69,12 @@ data GetCategories = GetCategories
 data GetAuthors = GetAuthors
     deriving (Show, Generic)
 
+data GetTags = GetTags
+    deriving (Show, Generic)
 
+data GetComments = GetComments PostId
+    deriving (Show, Generic)
+    
 
 data GetPosts = GetPosts {
     _gp_creationDate :: Maybe CreationDateOptions,
@@ -70,8 +85,10 @@ data GetPosts = GetPosts {
 
 requestToAction :: W.Request -> WhoWhat Action
 requestToAction req =
-  let --queryText = map (bimap E.decodeUtf8 $ fmap E.decodeUtf8) $ W.queryString req
-    maybeToken = case W.queryString req of
+  let
+    queryString = W.queryString req
+    pathInfo = W.pathInfo req
+    maybeToken = case queryString of
         ((tokenPar, Just tokenVal):ys) ->
                 if tokenPar == "token"
                 then Just $ E.decodeUtf8 tokenVal
@@ -80,20 +97,60 @@ requestToAction req =
     hash :: Query
     hash = HS.fromList . Mb.catMaybes . map f $ W.queryString req
     f (x, y) = fmap ((,) x) y
-  in  WhoWhat maybeToken $ case W.pathInfo req of 
-    (x:xs)
-     | x == "posts" -> AGetPosts $ getPostsAction hash
-    -- | x == "posts" -> AGetPosts $ foldr getPostsStep defaultGetPosts $ W.queryString req
-    (y:z:zs)
-     | y == "categories" && z == "get" -> AGetCategories GetCategories
-     | y == "authors" && z == "get" -> AGetAuthors GetAuthors
+  in  WhoWhat maybeToken $ requestToAction' pathInfo hash
 
---class FromHTTPQuery a where
+invalidEP = AError EInvalidEndpoint
+
+requestToAction' :: [T.Text] -> Query -> Action
+requestToAction' path hash = case path of 
+    (x:xs)
+     | x == "posts"      -> requestToActionPosts xs hash
+     | x == "categories" -> requestToActionCats xs hash
+     | x == "authors"    -> requestToActionAuthors xs hash
+     | x == "tags"       -> requestToActionTags xs hash
+    (y:z:zs)
+   --  | y == "categories" && z == "get" -> AGetCategories GetCategories
+   --  | y == "authors" && z == "get" -> AGetAuthors GetAuthors
+   --  | y == "tags" && z == "get" -> AGetTags GetTags
+ --    | y == "users" && z == "get" -> AGetUser GetUser
+     | otherwise -> invalidEP
+
+requestToActionPosts :: [T.Text] -> Query -> Action
+requestToActionPosts path hash = case path of
+  (x:xs)
+    | x == "get" -> AGetPosts $ getPostsAction hash
+    | otherwise -> case readIntText x of
+        (Just id) -> actionWithPost id xs hash
+        Nothing -> invalidEP
+  [] -> invalidEP
+
+actionWithPost :: Int -> [T.Text] -> Query -> Action
+actionWithPost id path hash = case path of
+  (x:xs)
+    | x == "comments" -> AGetComments $ GetComments id
+  [] -> invalidEP
+
+requestToActionCats :: [T.Text] -> Query -> Action
+requestToActionCats path hash = case path of
+  (x:xs)
+    | x == "get" -> AGetCategories GetCategories
+  [] -> invalidEP
+
+requestToActionAuthors :: [T.Text] -> Query -> Action
+requestToActionAuthors path hash = case path of
+  (x:xs)
+    | x == "get" -> AGetAuthors GetAuthors
+  [] -> invalidEP
+
+
+requestToActionTags :: [T.Text] -> Query -> Action
+requestToActionTags path hash = case path of
+  (x:xs)
+    | x == "get" -> AGetTags GetTags
+  [] -> invalidEP
+
 
 type Query = HS.HashMap BS.ByteString BS.ByteString
-
-defaultGetPosts :: GetPosts
-defaultGetPosts = GetPosts Nothing Nothing Nothing defaultSortOptions
 
 getPostsAction :: Query -> GetPosts
 getPostsAction qu =
@@ -109,7 +166,12 @@ getPostsAction qu =
                         $ (HS.lookup "sort" qu >>= sortOptions)
         searchopts = fmap SearchOptions $ requireText qu "search"
     in  GetPosts creationopts tagopts searchopts sortopts
-    
+
+
+
+
+
+
 
 require :: (BS.ByteString -> Maybe a) -> Query -> BS.ByteString -> Maybe a
 require prse qu arg = HS.lookup arg qu >>= prse
@@ -118,8 +180,13 @@ requireText :: Query -> BS.ByteString -> Maybe T.Text
 requireText = require (pure . E.decodeUtf8)
 
 requireInt :: Query -> BS.ByteString -> Maybe Int
-requireInt = require (Ae.decode . BSL.fromStrict)
+requireInt = require readInt
 
+readIntText :: T.Text -> Maybe Int
+readIntText = readInt . E.encodeUtf8
+
+readInt :: BS.ByteString -> Maybe Int
+readInt = Ae.decode . BSL.fromStrict
 
 requireIntList :: Query -> BS.ByteString -> Maybe [Int]
 requireIntList = require (Ae.decode . BSL.fromStrict)
@@ -127,29 +194,6 @@ requireIntList = require (Ae.decode . BSL.fromStrict)
 requireDay :: Query -> BS.ByteString -> Maybe Time.Day
 requireDay = require
      (Time.parseTimeM True Time.defaultTimeLocale "%Y-%-m-%-d" . T.unpack . E.decodeUtf8)
-
-
-getPostsStep :: U.QueryItem -> GetPosts -> GetPosts
-getPostsStep (_, Nothing) acc = acc
-getPostsStep (par, Just val)  acc
-  | par == "tag" = case Ae.decode $ BSL.fromStrict val :: Maybe Int of
-                Just q -> acc { _gp_tags = Just $ OneTag q }
-                _      -> acc
-  | par == "tags__in" = f val acc TagsIn
-  | par == "tags__all" = f val acc TagsAll
-  | par == "created_at" = g val acc Created
-  | par == "created_at__lt" = g val acc CreatedEarlier
-  | par == "created_at__gt" = g val acc CreatedLater
-  | par == "search" = acc { _gp_search = Just $ SearchOptions $ E.decodeUtf8 val }
-  | par == "sort" = maybe acc (\x -> acc { _gp_sort = x }) $ sortOptions val
-  | otherwise = acc
-    -- to be continued
-  where f v acc wrap = case Ae.decode $ BSL.fromStrict v :: Maybe [Int] of
-                Just q@(x:xs) -> acc { _gp_tags = Just $ wrap q }
-                _   -> acc
-        g v acc wrap = case Time.parseTimeM True Time.defaultTimeLocale "%Y-%-m-%-d" $ T.unpack $ E.decodeUtf8 v of
-                Just x -> acc { _gp_creationDate = Just $ wrap x }
-                Nothing -> acc
 
 
 sortOptions :: BS.ByteString -> Maybe SortOptions
@@ -213,6 +257,14 @@ instance GP.PrettyShow GetCategories where
 instance GP.PrettyShow GetAuthors where
     prettyShow = GP.LStr . show
 
+instance GP.PrettyShow GetTags where
+    prettyShow = GP.LStr . show
+
+instance GP.PrettyShow ActionError where
+    prettyShow = GP.LStr . show
+
+instance GP.PrettyShow GetComments where
+    prettyShow = GP.LStr . show
 
 instance GP.PrettyShow SortEntity where
     prettyShow = GP.LStr . drop 2 . show
