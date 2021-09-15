@@ -31,6 +31,7 @@ class (Monad m) => MonadSQL m where
     query :: (PS.ToRow q, PS.FromRow r) => PS.Query -> q -> m [r]
     query_ :: (PS.FromRow r) => PS.Query -> m [r]
     formatQuery :: (PSF.ToField q) => PS.Query -> [q] -> m BS.ByteString
+    execute :: (PS.ToRow q) => PS.Query -> q -> m Int
   
 class (Monad m) => MonadLog m where
     logM :: L.LoggerEntry -> m ()
@@ -49,6 +50,10 @@ instance MonadSQL ServerIO where
     formatQuery qu args = do
         s <- ask
         liftIO $ PS.formatQuery (DB.conn $ sqlHandler s) qu args
+    execute qu args = do    
+        s <- ask
+        res64 <- liftIO $ PS.execute (DB.conn $ sqlHandler s) qu args
+        return $ fromIntegral res64
 
 
 instance MonadLog ServerIO where

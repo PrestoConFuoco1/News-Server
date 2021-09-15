@@ -76,6 +76,7 @@ executeAction (WhoWhat y (AGetPosts x)) = getThis postDummy (WhoWhat y x)
 executeAction (WhoWhat y (AGetCategories x)) = getThis catDummy (WhoWhat y x)
 executeAction (WhoWhat y (AGetAuthors x)) = getThis authorDummy (WhoWhat y x)
 executeAction (WhoWhat y (AGetTags x)) = getThis tagDummy (WhoWhat y x)
+executeAction (WhoWhat y (ACreateCategory x)) = createCategory (WhoWhat y x)
 
 
 --data Permissions = 
@@ -93,5 +94,13 @@ getThis x (WhoWhat token g) = do
             logDebug $ T.pack $ show debugStr
             uncurry query qu
 
+
+createCategory :: (MonadServer m) => WhoWhat CreateCategory -> m Response
+createCategory (WhoWhat token crecat) = do
+    let str = "INSERT INTO news.category (name, parent_category_Id) VALUES (?, ?)"
+    res <- execute str (_cc_catName crecat, _cc_parentCat crecat)
+    if res == 1
+        then return $ Response NHT.ok200 "Category created"
+        else return $ Response NHT.ok200 "Failed"
 
 

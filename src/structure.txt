@@ -84,7 +84,7 @@ author_id={author_id}
 /categories/create
 
 Параметры:
-title={текст}
+name={текст}
 parent_category_id={id род. директории} optional
 
 Коды ответа:

@@ -19,6 +19,7 @@ import qualified GenericPretty as GP
 
 type PostId = Int
 type TagId = Int
+type CatId = Int
 type Author = T.Text
 --type QueryItem = (T.Text, Maybe T.Text)
 --type Query = [QueryItem]
@@ -57,10 +58,11 @@ data Action = AGetPosts GetPosts
             | AGetAuthors GetAuthors
             | AGetTags GetTags
             | AGetComments GetComments
+            | ACreateCategory CreateCategory
             | AError ActionError
     deriving (Show, Generic)
 
-data ActionError = EInvalidEndpoint
+data ActionError = EInvalidEndpoint | ERequiredFieldMissing BS.ByteString
     deriving (Show, Generic)
 
 data GetCategories = GetCategories
@@ -82,6 +84,11 @@ data GetPosts = GetPosts {
     _gp_search :: Maybe SearchOptions,
     _gp_sort :: SortOptions
     } deriving (Show, Generic)
+
+data CreateCategory = CreateCategory {
+    _cc_catName :: T.Text,
+    _cc_parentCat :: CatId
+    } deriving (Show, Generic, GP.PrettyShow)
 
 requestToAction :: W.Request -> WhoWhat Action
 requestToAction req =
@@ -134,7 +141,22 @@ requestToActionCats :: [T.Text] -> Query -> Action
 requestToActionCats path hash = case path of
   (x:xs)
     | x == "get" -> AGetCategories GetCategories
+    | x == "create" -> either AError ACreateCategory $ createCatsToAction hash
   [] -> invalidEP
+
+createCatsToAction :: Query -> Either ActionError CreateCategory
+createCatsToAction hash = do
+--    name <- maybe (Left . ERequiredFieldMissing $ "name") Right
+--                $ requireText hash "name"
+    name <- requireField (requireText hash) "name"
+    parentId <- maybe (Left . ERequiredFieldMissing $ "parent_id") Right
+                $ requireInt hash "parent_id"
+    return $ CreateCategory name parentId
+ 
+
+requireField :: (BS.ByteString -> Maybe a) -> BS.ByteString -> Either ActionError a
+requireField func fieldname =
+    maybe (Left $ ERequiredFieldMissing fieldname) Right $ func fieldname
 
 requestToActionAuthors :: [T.Text] -> Query -> Action
 requestToActionAuthors path hash = case path of
