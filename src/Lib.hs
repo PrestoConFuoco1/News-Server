@@ -82,7 +82,7 @@ executeAction (WhoWhat y (AGetAuthors x)) = getThis authorDummy (WhoWhat y x)
 executeAction (WhoWhat y (AGetTags x)) = getThis tagDummy (WhoWhat y x)
 --executeAction (WhoWhat y (ACreateCategory x)) = createCategory (WhoWhat y x)
 executeAction (WhoWhat y (ACreateCategory x)) =
-    withAuth y (\u -> withAdmin u $ createCategory (WhoWhat y x))
+    withAuth y (\u -> withAdmin u $ createCategory x)
 executeAction (WhoWhat y (ACreateUser x)) = createUser (WhoWhat y x)
 executeAction (WhoWhat y (AError x)) = handleError x
 
@@ -149,17 +149,10 @@ getUserByToken token = do
     users <- query str [token]
     return users
 
-fromJust (Just x) = x
 
-createCategory :: (MonadServer m) => WhoWhat CreateCategory -> m Response
-createCategory (WhoWhat mtoken (CreateCategory{..})) = do
-  case mtoken of
-   Nothing -> return $ unauthorized unauthorizedMsg
-   Just tok -> do
-    user <- getUserByToken tok `CMC.catches` []
-    if (Ty._u_admin $ head user) == Just False
-    then return $ notFound invalidEndpointMsg
-    else do
+createCategory :: (MonadServer m) => CreateCategory -> m Response
+createCategory CreateCategory{..} = do
+
         let str = "INSERT INTO news.category (name, parent_category_Id) VALUES (?, ?)"
         (execute str (_cc_catName, _cc_parentCat) >> (return $ ok "Category successfully created"))
             `CMC.catches` [CMC.Handler sqlH]
