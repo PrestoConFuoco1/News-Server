@@ -15,3 +15,5 @@ defaultModifier ('_':xs) = case dropWhile (/= '_') xs of
     ('_':ys) -> ys
     _ -> xs
 defaultModifier xs = xs
+
+--data NumWrap = forall a . Num a => NumWrap a

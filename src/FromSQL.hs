@@ -18,6 +18,7 @@ import qualified GenericPretty as GP
 import GHC.Generics
 
 import RequestToAction
+import ActionTypes
 
 import qualified Logger as L
 import MonadTypes

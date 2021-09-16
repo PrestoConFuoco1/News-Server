@@ -16,79 +16,8 @@ import Control.Applicative ((<|>))
 import Data.Bifunctor (bimap)
 import GHC.Generics
 import qualified GenericPretty as GP
+import ActionTypes
 
-type PostId = Int
-type TagId = Int
-type CatId = Int
-type Author = T.Text
---type QueryItem = (T.Text, Maybe T.Text)
---type Query = [QueryItem]
-type Token = T.Text
-
-data CreationDateOptions = Created Time.Day
-                         | CreatedEarlier Time.Day
-                         | CreatedLater Time.Day
-            deriving (Show, Generic)
-data TagsOptions = OneTag TagId | TagsIn [TagId] | TagsAll [TagId]
-    deriving (Show, Generic)
-data SearchOptions = SearchOptions T.Text
-    deriving (Show, Generic)
-
-data SortEntity = SEDate | SEAuthor | SECategory | SEPhotoNumber
-    deriving (Show)
-data SortOrder  = SOAscending | SODescending
-    deriving (Show)
-data SortOptions = SortOptions {
-    _so_sortBy :: SortEntity,
-    _so_order :: SortOrder
-    }
-    deriving (Show, Generic)
-
-defaultSortOptions :: SortOptions
-defaultSortOptions = SortOptions SEDate SODescending -- newer posts first
-
-data WhoWhat a = WhoWhat {
-    _ww_token  :: Maybe Token,
-    --_ww_action :: Action
-    _ww_action :: a
-    } deriving (Show, Generic) 
-
-data Action = AGetPosts GetPosts
-            | AGetCategories GetCategories
-            | AGetAuthors GetAuthors
-            | AGetTags GetTags
-            | AGetComments GetComments
-            | ACreateCategory CreateCategory
-            | AError ActionError
-    deriving (Show, Generic)
-
-data ActionError = EInvalidEndpoint | ERequiredFieldMissing BS.ByteString
-    deriving (Show, Generic)
-
-data GetCategories = GetCategories
-    deriving (Show, Generic)
-
-data GetAuthors = GetAuthors
-    deriving (Show, Generic)
-
-data GetTags = GetTags
-    deriving (Show, Generic)
-
-data GetComments = GetComments PostId
-    deriving (Show, Generic)
-    
-
-data GetPosts = GetPosts {
-    _gp_creationDate :: Maybe CreationDateOptions,
-    _gp_tags :: Maybe TagsOptions,
-    _gp_search :: Maybe SearchOptions,
-    _gp_sort :: SortOptions
-    } deriving (Show, Generic)
-
-data CreateCategory = CreateCategory {
-    _cc_catName :: T.Text,
-    _cc_parentCat :: CatId
-    } deriving (Show, Generic, GP.PrettyShow)
 
 requestToAction :: W.Request -> WhoWhat Action
 requestToAction req =
@@ -115,6 +44,7 @@ requestToAction' path hash = case path of
      | x == "categories" -> requestToActionCats xs hash
      | x == "authors"    -> requestToActionAuthors xs hash
      | x == "tags"       -> requestToActionTags xs hash
+     | x == "users"      -> requestToActionUsers xs hash
     (y:z:zs)
    --  | y == "categories" && z == "get" -> AGetCategories GetCategories
    --  | y == "authors" && z == "get" -> AGetAuthors GetAuthors
@@ -152,7 +82,25 @@ createCatsToAction hash = do
     parentId <- maybe (Left . ERequiredFieldMissing $ "parent_id") Right
                 $ requireInt hash "parent_id"
     return $ CreateCategory name parentId
+
  
+requestToActionUsers :: [T.Text] -> Query -> Action
+requestToActionUsers path hash = case path of
+  (x:xs)
+ --   | x == "get" -> AGetCategories GetCategories
+    | x == "create" -> either AError ACreateUser $ createUserToAction hash
+  [] -> invalidEP
+
+createUserToAction :: Query -> Either ActionError CreateUser
+createUserToAction hash = do
+    login <- requireField (requireText hash) "login"
+    passHash <- requireField (requireText hash) "pass_hash"
+    firstName <- requireField (requireText hash) "firstname"
+    lastName <- requireField (requireText hash) "lastname"
+    return $ CreateUser login passHash firstName lastName
+
+
+
 
 requireField :: (BS.ByteString -> Maybe a) -> BS.ByteString -> Either ActionError a
 requireField func fieldname =
