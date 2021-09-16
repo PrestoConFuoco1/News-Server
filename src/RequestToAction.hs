@@ -72,16 +72,31 @@ requestToActionCats path hash = case path of
   (x:xs)
     | x == "get" -> AGetCategories GetCategories
     | x == "create" -> either AError ACreateCategory $ createCatsToAction hash
+    | x == "edit" -> either AError AEditCategory $ editCatsToAction hash
+    | x == "delete" -> either AError ADeleteCategory $ deleteCatsToAction hash
   [] -> invalidEP
 
 createCatsToAction :: Query -> Either ActionError CreateCategory
 createCatsToAction hash = do
---    name <- maybe (Left . ERequiredFieldMissing $ "name") Right
---                $ requireText hash "name"
     name <- requireField (requireText hash) "name"
-    parentId <- maybe (Left . ERequiredFieldMissing $ "parent_id") Right
-                $ requireInt hash "parent_id"
+    parentId <- requireField (requireInt hash) "parent_id"
     return $ CreateCategory name parentId
+
+editCatsToAction :: Query -> Either ActionError EditCategory
+editCatsToAction hash = do
+    id <- requireField (requireInt hash) "category_id"
+    let name = requireText hash "name"
+        parentId = requireInt hash "parent_id"
+    return $ EditCategory id name parentId
+
+deleteCatsToAction :: Query -> Either ActionError DeleteCategory
+deleteCatsToAction hash = do
+    id <- requireField (requireInt hash) "category_id"
+    return $ DeleteCategory id
+
+
+
+
 
  
 requestToActionUsers :: [T.Text] -> Query -> Action
@@ -117,7 +132,16 @@ requestToActionTags :: [T.Text] -> Query -> Action
 requestToActionTags path hash = case path of
   (x:xs)
     | x == "get" -> AGetTags GetTags
+    | x == "create" -> either AError ACreateTag $ createTagToAction hash
+    | x == "edit" -> undefined
+    | x == "delete" -> undefined
   [] -> invalidEP
+
+createTagToAction :: Query -> Either ActionError CreateTag
+createTagToAction hash = do
+    name <- requireField (requireText hash) "name"
+    return $ CreateTag name
+
 
 
 type Query = HS.HashMap BS.ByteString BS.ByteString

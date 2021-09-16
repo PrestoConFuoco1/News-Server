@@ -11,6 +11,7 @@ import qualified Data.ByteString.Lazy as BSL (fromStrict, unpack, ByteString)
 import qualified Data.ByteString as BS
 import qualified Data.Time as Time
 import qualified GenericPretty as GP
+import qualified Database.PostgreSQL.Simple as PS
 
 
 type PostId = Int
@@ -50,12 +51,23 @@ data WhoWhat a = WhoWhat {
     } deriving (Show, Generic) 
 
 data Action = AGetPosts GetPosts
-            | AGetCategories GetCategories
+
             | AGetAuthors GetAuthors
+
             | AGetTags GetTags
+            | ACreateTag CreateTag
+            | AEditTag EditTag
+            | ADeleteTag DeleteTag
+
             | AGetComments GetComments
+
+            | AGetCategories GetCategories
             | ACreateCategory CreateCategory
+            | AEditCategory EditCategory
+            | ADeleteCategory DeleteCategory
+
             | ACreateUser CreateUser
+
             | AError ActionError
     deriving (Show, Generic)
 
@@ -94,4 +106,25 @@ data CreateCategory = CreateCategory {
     _cc_parentCat :: CatId
     } deriving (Show, Generic, GP.PrettyShow)
 
+data EditCategory = EditCategory {
+    _ec_catId :: CatId,
+    _ec_catName :: Maybe T.Text,
+    _ec_parentId :: Maybe CatId
+    } deriving (Show, Generic, GP.PrettyShow)
 
+data DeleteCategory = DeleteCategory {
+    _dc_catId :: CatId
+    } deriving (Show, Generic, GP.PrettyShow)
+
+data CreateTag = CreateTag {
+    _ct_tagName :: T.Text
+    } deriving (Show, Generic, GP.PrettyShow, PS.ToRow)
+
+data EditTag = EditTag {
+    _et_tagId :: TagId,
+    _et_tagName :: T.Text
+    } deriving (Show, Generic, GP.PrettyShow)
+
+data DeleteTag = DeleteTag {
+    _dt_tagId :: TagId
+    } deriving (Show, Generic, GP.PrettyShow)

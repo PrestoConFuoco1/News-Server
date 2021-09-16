@@ -76,15 +76,31 @@ mainServer req = do
     return $ W.responseLBS status [] $ Ae.encode msg
 
 executeAction :: MonadServer m => WhoWhat Action -> m Response
-executeAction (WhoWhat y (AGetPosts x)) = getThis postDummy (WhoWhat y x)
-executeAction (WhoWhat y (AGetCategories x)) = getThis catDummy (WhoWhat y x)
-executeAction (WhoWhat y (AGetAuthors x)) = getThis authorDummy (WhoWhat y x)
-executeAction (WhoWhat y (AGetTags x)) = getThis tagDummy (WhoWhat y x)
---executeAction (WhoWhat y (ACreateCategory x)) = createCategory (WhoWhat y x)
-executeAction (WhoWhat y (ACreateCategory x)) =
-    withAuth y (\u -> withAdmin u $ createCategory x)
-executeAction (WhoWhat y (ACreateUser x)) = createUser (WhoWhat y x)
+executeAction (WhoWhat y (AGetPosts x)) = getThis postDummy x
+
+executeAction (WhoWhat y (AGetAuthors x)) =
+    withAuth y . withAdmin $ getThis authorDummy x
+
+executeAction (WhoWhat y (AGetTags x)) = getThis tagDummy x
+--executeAction (WhoWhat y (ACreateTag x)) = withAuth y . withAdmin $ createTag x
+executeAction (WhoWhat y (ACreateTag x)) = withAuth y . withAdmin $ createThis dummyCTag x
+executeAction (WhoWhat y (AEditTag x)) =  withAuth y . withAdmin $ editTag x
+executeAction (WhoWhat y (ADeleteTag x)) = withAuth y . withAdmin $ deleteTag x
+
+
+executeAction (WhoWhat y (AGetCategories x)) = getThis catDummy x
+executeAction (WhoWhat y (ACreateCategory x)) = withAuth y . withAdmin $ createCategory x
+executeAction (WhoWhat y (AEditCategory x)) =  withAuth y . withAdmin $ editCategory x
+executeAction (WhoWhat y (ADeleteCategory x)) = withAuth y . withAdmin $ deleteCategory x
+
+executeAction (WhoWhat y (ACreateUser x)) = createUser x
+
 executeAction (WhoWhat y (AError x)) = handleError x
+
+editTag = undefined
+deleteTag = undefined
+editCategory = undefined
+deleteCategory = undefined
 
 handleError :: MonadServer m => ActionError -> m Response
 handleError EInvalidEndpoint = do
@@ -105,8 +121,8 @@ msgValue str = Ae.object [("errmsg", Ae.String $ E.decodeUtf8 str)]
 
 --data Permissions = 
 
-getThis :: (FromSQL s, MonadServer m) => s -> WhoWhat (Get s) -> m Response
-getThis x (WhoWhat token g) = do
+getThis :: (FromSQL s, MonadServer m) => s -> Get s -> m Response
+getThis x g = do
     cat <- f x g
     logDebug $ T.pack $ GP.defaultPretty cat
     let val = Ae.toJSON cat
@@ -123,22 +139,22 @@ uniqueConstraintViolated e = PS.sqlState e == "23505"
 foreignKeyViolated e = PS.sqlState e == "23503"
 
 
-withAuth :: (MonadServer m) => Maybe Token -> (Ty.User -> m Response) -> m Response
+withAuth :: (MonadServer m) => Maybe Token -> (Maybe Ty.User -> m Response) -> m Response
 withAuth mtoken m = case mtoken of
-    Nothing -> return $ unauthorized unauthorizedMsg
+    Nothing -> m Nothing
     Just token -> do
         users <- getUserByToken token
         case users of
-            [] -> return $ unauthorized unauthorizedMsg
-            [u] -> m u -- ok
+            [] -> m Nothing
+            [u] -> m (Just u) -- ok
             lst -> undefined
 
 unauthorizedMsg = "Unauthorized, use /auth"
 invalidEndpointMsg = "Invalid endpoint"
 
-withAdmin :: (MonadServer m) => Ty.User -> m Response -> m Response
-withAdmin user m
-  | Ty._u_admin user == Just True = m
+withAdmin :: (MonadServer m) => m Response -> Maybe Ty.User -> m Response
+withAdmin m muser
+  | (muser >>= Ty._u_admin) == Just True = m
   | otherwise = return $ notFound invalidEndpointMsg
 
 getUserByToken :: (MonadServer m) => Token -> m [Ty.User]
@@ -148,6 +164,26 @@ getUserByToken token = do
               \FROM news.token t JOIN news.users u ON t.user_id = u.user_id WHERE t.token = ?"
     users <- query str [token]
     return users
+
+createTag :: (MonadServer m) => CreateTag -> m Response
+createTag CreateTag{..} = do
+
+        let str = "INSERT INTO news.tag (name) VALUES (?)"
+        (execute str [_ct_tagName] >> (return $ ok "Tag successfully created"))
+            `CMC.catches` [CMC.Handler sqlH]
+
+  where name = _ct_tagName
+        sqlH :: (MonadServer m) => PS.SqlError -> m Response
+        sqlH e
+            | uniqueConstraintViolated e = do
+                logError $ E.decodeUtf8 $
+                        "Failed to create new tag, there is one with such name\n\
+                       \ tag_name = " <> E.encodeUtf8 name <> 
+                        "\nSqlError: " <> PS.sqlErrorMsg e 
+                return $ Response NHT.status400 $ "Tag with such name already exists."
+            | otherwise = logError (T.pack $ displayException e)
+                >> return (Response NHT.internalServerError500 $ msgValue "Internal error")
+
 
 
 createCategory :: (MonadServer m) => CreateCategory -> m Response
@@ -164,7 +200,7 @@ createCategory CreateCategory{..} = do
                 logError $ E.decodeUtf8 $
                         "Failed to create new category, there is one with such name\n\
                         \category_name = " <> E.encodeUtf8 name <> 
-                        "SqlError: " <> PS.sqlErrorMsg e 
+                        "\nSqlError: " <> PS.sqlErrorMsg e 
                 return $ Response NHT.status400 $ "Category with such name already exists."
             | foreignKeyViolated e = do
                 logError $ E.decodeUtf8 $
@@ -175,11 +211,10 @@ createCategory CreateCategory{..} = do
 
 
 
-createUser :: (MonadServer m) => WhoWhat CreateUser -> m Response
-createUser (WhoWhat token CreateUser{..}) =
+createUser :: (MonadServer m) => CreateUser -> m Response
+createUser CreateUser{..} =
     let str = "INSERT INTO news.users (firstname, lastname, login, pass_hash) VALUES (?, ?, ?, ?)"
-        
-    --in  logDebug "create user" >> undefined
+
     in  (execute str (_cu_firstName, _cu_lastName, _cu_login, _cu_passHash) >> return  (ok "User successfully created"))
             `CMC.catches` [CMC.Handler sqlH]
   where sqlH :: (MonadServer m) => PS.SqlError -> m Response
@@ -188,13 +223,52 @@ createUser (WhoWhat token CreateUser{..}) =
                 logError $ E.decodeUtf8 $
                         "Failed to create new user, login is already in use\n\
                         \login = " <> E.encodeUtf8 _cu_login <> 
-                        "SqlError: " <> PS.sqlErrorMsg e 
+                        "\nSqlError: " <> PS.sqlErrorMsg e 
                 return $ bad "User with such login already exists."
             | otherwise = logError (T.pack $ displayException e)
                 >> return (Response NHT.internalServerError500 $ msgValue "Internal error")
 
-   
+class (PS.ToRow (Create s)) => CreateSQL s where
+    type Create s :: *
+    createQuery :: s -> PS.Query
+    cName :: s -> B.ByteString
+    cUniqueField :: s -> B.ByteString -- ???
+    cForeign :: s -> B.ByteString -- ?????
 
+createThis :: (MonadServer m, CreateSQL s) => s -> Create s -> m Response
+createThis s cres = do
+    let str = createQuery s
+    (execute str cres) >> return (ok $ cName s <> " successfully created")
+        `CMC.catches` [CMC.Handler (sqlH s)]
+  where sqlH :: (MonadServer m, CreateSQL s) => s -> PS.SqlError -> m Response
+        sqlH s e
+            | uniqueConstraintViolated e = do
+                logError $ E.decodeUtf8 $
+                    "Failed to create new " <> cName s <> ", " <>
+                    cUniqueField s <> " is already in use\n" <>
+                    "\nSqlError: " <> PS.sqlErrorMsg e
+                return $ bad $ cName s <> " with such " <> cUniqueField s <> " already exists."
+            | foreignKeyViolated e = do
+                let errmsg = 
+                     "Failed to create new " <> cName s <> ", " <> cForeign s <> " is invalid"
+                logError $ E.decodeUtf8 $ errmsg
+                return $ bad errmsg
+            | otherwise = logError (T.pack $ displayException e) >> undefined
+                >> return (Response NHT.internalServerError500 $ msgValue "Internal error")
+
+    --query :: (PS.ToRow q, PS.FromRow r) => PS.Query -> q -> m [r]
+    --execute :: (PS.ToRow q) => PS.Query -> q -> m Int
+ 
+
+newtype CTag = CTag ()
+dummyCTag = CTag ()
+
+instance CreateSQL CTag where
+    type Create CTag = CreateTag
+    createQuery _ = "INSERT INTO news.tag (name) VALUES (?)"
+    cName _ = "tag"
+    cUniqueField _ = "name"
+    cForeign _ = "error"
 
 
 

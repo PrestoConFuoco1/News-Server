@@ -24,7 +24,7 @@ else:
 taglist_nums = list(map(int, taglist))
 tagset = set(taglist_nums)
 process = subprocess.run(['curl', '-G', '-d', 'tags__in='
-    + tostring(taglist), 'localhost:5555/posts' ], capture_output=True, text=True)
+    + tostring(taglist), 'localhost:5555/posts/get' ], capture_output=True, text=True)
 print ('getting posts with tags intersecting with ' + tostring(taglist))
 response = json.loads(process.stdout)
 for i in range(len(response)):
@@ -35,7 +35,7 @@ for i in range(len(response)):
 
 
 process = subprocess.run(['curl', '-G', '-d', 'tags__all='
-    + tostring(taglist), 'localhost:5555/posts' ], capture_output=True, text=True)
+    + tostring(taglist), 'localhost:5555/posts/get' ], capture_output=True, text=True)
 
 print ('getting posts with all of tags: ' + tostring(taglist))
 response = json.loads(process.stdout)

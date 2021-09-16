@@ -1,0 +1,1000 @@
+  651  git status
+  652  git commit -a -m "getting categories is ok, no error handling now"
+  653  git branch
+  654  git checkout master 
+  655  git merge dev
+  656  git branch
+  657  git branch -d dev
+  658  git branch dev
+  659  git checkout dev 
+  660  git status
+  661  stack ghci
+  662  git status
+  663  git diff src/Lib.hs
+  664  ls
+  665  cd src/
+  666  ls
+  667  ls -a
+  668  stack ghci
+  669  ls
+  670  vim get_posts.sql
+  671  stack ghci
+  672  git status
+  673  cd ..
+  674  git status
+  675  vim src/get_posts.sql 
+  676  git add src/get_posts.sql 
+  677  git add curl/authors_get.sh 
+  678  git status
+  679  git commit -a -m "request /posts works without any filtering"
+  680  stack ghci
+  681  posts_tag123.sh 
+  682  cd curl/
+  683  ls
+  684  cp posts_all.sh categories_get.sh
+  685  vim categories_get.sh 
+  686  ls
+  687  cd ..
+  688  cd -
+  689  ./categories_get.sh 
+  690  vim categories_get.sh 
+  691  ./categories_get.sh 
+  692  cp categories_get.sh authors_get.sh
+  693  vim authors_get.sh 
+  694  ./authors_get.sh 
+  695  vim authors_get.sh 
+  696  ./authors_get.sh 
+  697  ./posts_all.sh 
+  698  vim posts_all.sh 
+  699  echo "echo -e \"\n\""
+  700  echo "echo -e '\n'"
+  701  `echo "echo -e '\n'"`
+  702  `echo "echo -e \n"`
+  703  echo "echo -e \n" >> posts_all.sh 
+  704  vim posts_
+  705  vim posts_all.sh 
+  706  ./posts_all.sh 
+  707  vim posts_all.sh 
+  708  ./posts_all.sh 
+  709  vim posts_all.sh 
+  710  ./posts_all.sh 
+  711  echo "echo =e 
+  712  echo "echo -e \"\"" >> *.sh
+  713  vim todo.txt
+  714  man find
+  715  find . -exec ls '{}' \;
+  716  man find
+  717  find . -regex '.+\.sh'
+  718  find . -regex '.+\.sh' -exec file '{}' \;
+  719  find . -regex '.+\.sh' -exec echo "echo \"\" >> '{}' \;
+  720  find . -regex '.+\.sh' -exec echo "echo \"\"" >> '{}' \;
+  721  ls
+  722  rm \{\} 
+  723  ls
+  724  vim authors_get.sh 
+  725  cat *.sh
+  726  vim posts_all.sh 
+  727  cd
+  728  cd yuri_old/Jura/prog/haskell/warpt3/curl/
+  729  ls
+  730  find . -regex '.+\.sh' -exec echo "echo \"\"" >> '{}' \;
+  731  find . -regex '.+\.sh' -exec echo "echo \"\"" \;
+  732  find . -regex '.+\.sh' -exec "echo "echo \"\"" '{}'" \;
+  733  find . -regex '.+\.sh' -exec "echo echo \"\"" '{}' \;
+  734  find . -regex '.+\.sh' -exec echo "echo \"\"" '{}' \;
+  735  find . -regex '.+\.sh' -exec echo "echo \"\"" >> '{}' \;
+  736  vim authors_get.sh 
+  737  rm {}
+  738  ls
+  739  find . -regex '.+\.sh' -exec echo "echo \"\"" '>>' '{}' \;
+  740  find . -regex '.+\.sh' -exec echo "echo \"\"" >> '{}' \;
+  741  vim \{\} 
+  742  rm \{\} 
+  743  ls
+  744  find . -regex '.+\.sh' -exec 'echo "echo \"\"" >> '{}'' \;
+  745  find . -regex '.+\.sh' -exec echo "echo \"\"" >> '{}' \;
+  746  ls
+  747  rm \{\} 
+  748  man find
+  749  find . -regex '.+\.sh' -exec \( echo "echo \"\"" >> '{}' \) \;
+  750  find . \( -regex '.+\.sh' -exec echo "echo \"\"" >> '{}' \) \;
+  751  find . \( -regex '.+\.sh' -exec echo "echo \"\"" >> '{}'  \; )
+  752  find . \( -regex '.+\.sh' -exec echo "echo \"\"" >> '{}'  \; \)
+  753  ls
+  754  vim authors_get.sh 
+  755  rm {}
+  756  ls
+  757  man find
+  758  find . \( -regex '.+\.sh' -exec echo "echo \"\"" >> {}  \; \)
+  759  ls
+  760  vim {}
+  761  rm {}
+  762  find . \( -regex '.+\.sh' -exec echo "echo \"\"" {}  \; \)
+  763  find . \( -regex '.+\.sh' -exec echo "echo \"\"" \>\> {}  \; \)
+  764  find . \( -regex '.+\.sh' -exec echo "echo \"\"" >> \{\}  \; \)
+  765  ls
+  766  vim authors_get.sh 
+  767  rm {}
+  768  l
+  769  ls
+  770  vim add_string.sh
+  771  chmod u+x add_string.sh 
+  772  ./add_string.sh hello hello.txt
+  773  ls
+  774  vim hello.txt 
+  775  rm hello.txt 
+  776  find . -regex '.+\.sh' -exec add_string.sh "echo \"\"" '{}' \;
+  777  ls
+  778  vim authors_get.sh 
+  779  cat *.sh
+  780  vim add_string.sh 
+  781  ./posts_all.sh 
+  782  vim posts_all.sh 
+  783  ./categories_get.sh 
+  784  git status
+  785  git branch
+  786  git branch dev
+  787  git checkout dev
+  788  stack build
+  789  stack ghci src/Lib.hs 
+  790  sudo su - postgres
+  791  psql -d batadase 
+  792  св
+  793  cd
+  794  cd yuri_old/Jura/prog/haskell/bot/
+  795  stack build
+  796  stack exec bot
+  797  stack exec bot src/bot.conf 
+  798  cd ../warpt3/
+  799  ls
+  800  stack build
+  801  stack exec warpt3
+  802  cd curl/
+  803  ls
+  804  ./categories_get.sh 
+  805  ./posts_all.sh 
+  806  cd yuri_old/Jura/prog/
+  807  ls
+  808  mkdir python
+  809  cd python/
+  810  ls
+  811  dpkg --get-selections
+  812  dpkg --get-selections | grep python
+  813  python --version
+  814  python --v
+  815  python -v
+  816  python3.8
+  817  ls
+  818  dpkg --get-selections | grep python
+  819  sudo apt update
+  820  sudo apt upgrade
+  821  ls
+  822  rm -rf /tmp/ghcup-16b75b11dcf2015b/
+  823  rm -rf /tmp/ghcup-3ff1fc9ba960e5cc/
+  824  sudo apt install python3-pip python3-dev
+  825  man sudo
+  826  sudo -H pip3 install --upgrade pip
+  827  mueller recovery
+  828  mueller pluha
+  829  mueller pluta
+  830  mueller pluto
+  831  sudo -H pip3 install virtualenv
+  832  mkdir ~/Serverspace
+  833  cd ~/Serverspace
+  834  virtualenv Serverspace
+  835  source Serverspace/bin/activate
+  836  pip install jupyter
+  837  jupyter notebook
+  838  jupyter notebook --generate-config
+  839  vim ~/.jupyter/jupyter_notebook_config.py 
+  840  man source
+  841  source /
+  842  ghci
+  843  cd yuri_old/Jura/prog/haskell/warpt3/
+  844  ls
+  845  cd src/
+  846  ls
+  847  vim Lib.hs 
+  848  cd yuri_old/Jura/prog/python/
+  849  sudo apt install python3-pandas
+  850  sudo apt install python3-numpy
+  851  sudo apt install python3-scipy
+  852  sudo apt install python3-matplotlib
+  853  sudo apt install python3-requests
+  854  sudo apt install python3-plotly
+  855  telegram-desktop &
+  856  man zoom
+  857  zoom -version
+  858  jmeter
+  859  ./jmeter
+  860  apt search jdk
+  861  apt search jdk-8
+  862  sudo apt install openjdk-8-jdk
+  863  ./jmeter
+  864  add_to_path.sh 
+  865  cd
+  866  python3
+  867  echo $PATH
+  868  jmeter
+  869  echo $PATH
+  870  sudo pip install pika==0.9.5
+  871  mueller mandatory
+  872  gedit rabbit.sh
+  873  ls
+  874  chmod u+x rabbit.sh 
+  875  ./rabbit.sh 
+  876  erl 
+  877  echo $ERLANG_HOME
+  878  systemctl start rabbitmq-server
+  879  systemctl status rabbitmq-server.service
+  880  sudo systemctl status rabbitmq-server.service 
+  881  rabbitmq-plugins enable rabbitmq_management
+  882  suod rabbitmq-plugins enable rabbitmq_management
+  883  sudo rabbitmq-plugins enable rabbitmq_managemen
+  884  sudo rabbitmq-plugins enable rabbitmq_management
+  885  dpkg --get-selections | grep rabbit
+  886  sudo systemctl status rabbitmq-server.service 
+  887  cd /usr/sbin/
+  888  ls
+  889  ls | grep rabbit
+  890  ls -l
+  891  rabbitmqctl add_user
+  892  sudo rabbitmqctl add_user
+  893  sudo rabbitmqctl add_user yuri_rab
+  894  sudo rabbitmqctl set_user_tags yuri_rab administrator
+  895  sudo rabbitmqctl set_permissions -p / yuri_rab .* .* .*
+  896  sudo rabbitmqctl set_permissions -p / yuri_rab . * . * . *
+  897  sudo rabbitmqctl set_permissions -p / yuri_rab .* .* .*
+  898  sudo rabbitmqctl set_permissions -p / yuri_rab ".*" ".*" ".*"
+  899  ghci
+  900  ls
+  901  cd
+  902  ls
+  903  clear
+  904  ls
+  905  rm jmeter.log 
+  906  ls
+  907  cat << EOF
+  908  hello
+  909  one
+  910  EOF
+  911  apt search influx
+  912  sudo apt install influxdb
+  913  vim tech_notes.txt
+  914  sudo systemctl start influxdb
+  915  sudo systemctl enable influxdb
+  916  sudo systemctl status influxdb
+  917  influx
+  918  influxdb
+  919  sudo apt install influxdb-client 
+  920  influx
+  921  sudo apt install telegraf
+  922  apt search telegraf
+  923  cat /etc/apt/sources.list
+  924  ls
+  925  cp /etc/apt/sources.list /etc/apt/sources.list.bak
+  926  sudo cp /etc/apt/sources.list /etc/apt/sources.list.bak
+  927  ls /etc/apt/sources.list.d/
+  928  cat << EOF | sudo tee /etc/apt/sources.list.d/influxdb.list
+  929  [influxdb]
+  930  name = InfluxDB Repository - RHEL \$releasever
+  931  baseurl = https://repos.influxdata.com/rhel/\$releasever/\$basearch/stable
+  932  enabled = 1
+  933  gpgcheck
+  934  gpgcheck = 1
+  935  gpgkey = https://repos.influxdata.com/influxdb.key
+  936  EOF
+  937  vim /etc/apt/sources.list.d/influxdb.list 
+  938  sudo vim /etc/apt/sources.list.d/influxdb.list 
+  939  sudo apt update
+  940  vim /etc/apt/sources.list.d/influxdb.list 
+  941  sudo vim /etc/apt/sources.list.d/influxdb.list 
+  942  sudo apt update
+  943  sudo vim /etc/apt/sources.list.d/influxdb.list 
+  944  cd /etc/apt/sources.list.d/
+  945  ls
+  946  vim rabbitmq.list 
+  947  sudo mv influxdb.list influxdb.repo
+  948  sudo apt update
+  949  rm influxdb.repo 
+  950  ls
+  951  sudo rm influxdb.repo 
+  952  ls
+  953  wget -qO- https://repos.influxdata.com/influxdb.key | sudo apt-key add -
+  954  source /etc/lsb-release
+  955  echo "deb https://repos.influxdata.com/${DISTRIB_ID,,} ${DISTRIB_CODENAME} stable" | sudo tee /etc/apt/sources.list.d/influxdb.list
+  956  apt update
+  957  sudo apt update
+  958  sudo apt install influxdb
+  959  sudo systemctl status influxdb.service 
+  960  sudo systemctl start influxdb.service 
+  961  sudo systemctl status influxdb.service 
+  962  sudo systemctl stop influxdb.service 
+  963  sudo systemctl status influxdb.service 
+  964  sudo apt purge influxdb
+  965  sudo apt install influxdb
+  966  sudo apt purge influxdb-client
+  967  dpkg --get-selections
+  968  dpkg --get-selections | influx
+  969  dpkg --get-selections | grepinflux
+  970  dpkg --get-selections | grep influx
+  971  sudo apt install influxdb
+  972  sudo apt install influxdb-client
+  973  influx
+  974  sudo systemctl start influxdb
+  975  sudo systemctl enable influxdb
+  976  influx
+  977  wget https://dl.influxdata.com/telegraf/releases/telegraf_1.14.1-1_amd64.deb
+  978  ls
+  979  cd
+  980  ls
+  981  mkdir telegraf
+  982  cd telegraf/
+  983  wget https://dl.influxdata.com/telegraf/releases/telegraf_1.14.1-1_amd64.deb
+  984  ls
+  985  dpkg -i telegraf_1.14.1-1_amd64.deb 
+  986  sudo dpkg -i telegraf_1.14.1-1_amd64.deb 
+  987  cd /etc/telegraf/
+  988  ls
+  989  telegraf -sample-config > telegraf.conf
+  990  sudo telegraf -sample-config > telegraf.conf
+  991  ls
+  992  sudo telegraf -sample-config > telegraf.conf
+  993  sudo "telegraf -sample-config > telegraf.conf"
+  994  sudo telegraf -sample-config > telegraf.conf
+  995  ls
+  996  ls -l
+  997  vim telegraf.
+  998  vim telegraf.conf 
+  999  sudo telegraf -sample-config >> telegraf.conf
+ 1000  mv telegraf.conf telegraf.conf.bak
+ 1001  sudo mv telegraf.conf telegraf.conf.bak
+ 1002  ls
+ 1003  sudo telegraf -sample-config --input-filter disk:diskio:hddtemp --output-filter influxdb > telegraf.conf
+ 1004  history > log
+ 1005  sudo history > log
+ 1006  history
+ 1007  influx
+ 1008  cd 
+ 1009  cd -
+ 1010  cd ..
+ 1011  ls -l
+ 1012  ls -l | grep tele
+ 1013  cd telegraf/
+ 1014  ls
+ 1015  cd telegraf.d/
+ 1016  ls
+ 1017  cd ..
+ 1018  sudo history > log
+ 1019  vim log
+ 1020  ls
+ 1021  echo $PATH
+ 1022  cd yuri_old/apache-jmeter/apache-jmeter-5.4.1/bin/
+ 1023  ls
+ 1024  nautilus .
+ 1025  jmeter
+ 1026  cd yuri_old/Jura/prog/haskell/warpt3/
+ 1027  ls
+ 1028  cd src/
+ 1029  cd ..
+ 1030  ls
+ 1031  cat "''$'\033*"
+ 1032  cat "''$'\033"*
+ 1033  cat "''\$'\033\033''q'"
+ 1034  ls
+ 1035  find . -name "*q*"
+ 1036  ls
+ 1037  find . -name "*'q'*"
+ 1038  find . -name "*\'q\'*"
+ 1039  nautilus .
+ 1040  cd src/
+ 1041  ls
+ 1042  vim Lib.hs 
+ 1043  cd /etc/telegraf/
+ 1044  ls
+ 1045  sudo history > log
+ 1046  ls
+ 1047  cd
+ 1048  sudo apt purge telegraf 
+ 1049  wget https://dl.influxdata.com/telegraf/releases/telegraf_1.14.1-1_amd64.deb
+ 1050  sudo dpkg -i telegraf_1.14.1-1_amd64.deb 
+ 1051  cd /etc/telegraf/
+ 1052  ls
+ 1053  vim telegraf.conf 
+ 1054  sudo vim telegraf.
+ 1055  sudo vim telegraf.conf 
+ 1056  history > log
+ 1057  sudo history > log
+ 1058  ls
+ 1059  sudo history > log1
+ 1060  sudo - history > log1
+ 1061  vim telegraf.conf 
+ 1062  sudo vim telegraf.conf 
+ 1063  sudo cp telegraf.conf telegraf.conf.bak
+ 1064  sudo rm telegraf.conf
+ 1065  ls
+ 1066  sudo telegraf -sample-config --input-filter disk:diskio:hddtemp --output-filter influxdb > telegraf.conf
+ 1067  sudo telegraf -sample-config --input-filter disk:diskio:hddtemp --output-filter influxdb > ~/telegraf.conf
+ 1068  sudo cp ~/telegraf.conf .
+ 1069  ls
+ 1070  vim telegraf.conf
+ 1071  telegraf --test
+ 1072  sudo telegraf -sample-config --input-filter disk:diskio:cpu --output-filter influxdb > ~/telegraf.conf
+ 1073  sudo cp ~/telegraf.conf .
+ 1074  ls
+ 1075  telegraf --test
+ 1076  sudo telegraf -sample-config --input-filter disk:diskio:cpu:rabbitmq --output-filter influxdb > ~/telegraf.conf
+ 1077  telegraf --test
+ 1078  ls
+ 1079  telegraf --test | grep rabbi
+ 1080  telegraf --test | grep rabbit
+ 1081  vim telegraf.conf
+ 1082  systemctl enable telegraf
+ 1083  systemctl start telegraf
+ 1084  ls
+ 1085  systemctl status telegraf.service
+ 1086  influx
+ 1087  cd
+ 1088  curl https://packagecloud.io/gpg.key | sudo apt-key add -
+ 1089  sudo add-apt-repository "deb https://packagecloud.io/grafana/stable/debian/ stretch main"
+ 1090  sudo apt update
+ 1091  sudo apt install grafana
+ 1092  sudo apt-get install grafana
+ 1093  apt search grafana
+ 1094  curl https://packagecloud.io/gpg.key | sudo apt-key add -
+ 1095  sudo add-apt-repository "deb https://packagecloud.io/grafana/stable/debian/ stretch main"
+ 1096  apt search grafana
+ 1097  sudo apt-get install -y apt-transport-https
+ 1098  sudo apt-get install -y software-properties-common wget
+ 1099  wget -q -O - https://packages.grafana.com/gpg.key | sudo apt-key add -
+ 1100  echo "deb https://packages.grafana.com/oss/deb stable main" | sudo tee -a /etc/apt/sources.list.d/grafana.list
+ 1101  sudo apt update
+ 1102  sudo apt install grafana
+ 1103  sudo /bin/systemctl daemon-reload
+ 1104  sudo systemctl enable grafana-server.service 
+ 1105  sudo systemctl start grafana-server.service 
+ 1106  sudo systemctl status grafana-server.service 
+ 1107  cat /etc/grafana/grafana.ini 
+ 1108  sudo cat /etc/grafana/grafana.ini 
+ 1109  systemctl status influxdb
+ 1110  ss -ltn
+ 1111  influx
+ 1112  sudo vim /etc/telegraf/telegraf.conf
+ 1113  cat /etc/influxdb/influxdb.conf 
+ 1114  cat /etc/influxdb/influxdb.conf > log
+ 1115  vim log
+ 1116  sudo vim /etc/telegraf/telegraf.conf
+ 1117  sudo gedit /etc/telegraf/telegraf.conf
+ 1118  sudo systemctl restart telegraf
+ 1119  telegraf --test
+ 1120  sudo gedit /etc/telegraf/telegraf.conf
+ 1121  influx
+ 1122  netstat -tpln
+ 1123  sudo apt install net-tools
+ 1124  netstat -tpln
+ 1125  netstat -natp
+ 1126  sudo netstat -natp
+ 1127  sudo netstat -natp | grep influx
+ 1128  sudo netstat -natp | grep grafana
+ 1129  sudo netstat -natp
+ 1130  sudo netstat -natp | grep telegraf
+ 1131  vim notes.txt 
+ 1132  cd yuri_old/Jura/prog/haskell/
+ 1133  ls
+ 1134  cd warpt3/src/
+ 1135  ls
+ 1136  vim structure.txt 
+ 1137  evince ../../kholomiev2/ru-haskell-book.pdf 
+ 1138  cd ..
+ 1139  stack ghci src/Lib.hs 
+ 1140  cd ../
+ 1141  ls
+ 1142  cd postgres/
+ 1143  ls
+ 1144  cd postgres-test/
+ 1145  ls
+ 1146  cd src/
+ 1147  ls
+ 1148  vim Lib.hs 
+ 1149  stack ghci src/Lib.hs 
+ 1150  cd -
+ 1151  cd ../../warpt3/
+ 1152  ls
+ 1153  stack ghci src/Lib.hs 
+ 1154  ls
+ 1155  stack ghci src/Lib.hs 
+ 1156  stack ghci src/FromSQL.hs 
+ 1157  find . -print
+ 1158  stack ghci src/FromSQL.hs 
+ 1159  ls
+ 1160  cd test/
+ 1161  ls
+ 1162  vim Spec.hs 
+ 1163  cd -
+ 1164  ls
+ 1165  stack ghci src/FromSQL.hs 
+ 1166  stack ghci src/Lib.hs 
+ 1167  vim src/get_posts.sql 
+ 1168  stack ghci src/Lib.hs 
+ 1169  ls
+ 1170  git status
+ 1171  git add curl/*
+ 1172  git add src/FromSQL.hs 
+ 1173  git status
+ 1174  git commit -a -m "Filtering working, but not tested. Sorting not working yet"
+ 1175  git branch
+ 1176  git checkout master 
+ 1177  git merge dev 
+ 1178  git checkout dev 
+ 1179  ls
+ 1180  git status
+ 1181  123yura
+ 1182  stack ghci src/Lib.hs 
+ 1183  git branch
+ 1184  vim src/*.sql
+ 1185  stack ghci src/Lib.hs 
+ 1186  git status
+ 1187  git commit -a -m "Getting authors and categories working, not tested"
+ 1188  vim src/*.sql
+ 1189  stack ghci src/Lib.hs 
+ 1190  vim src/*.sql
+ 1191  stack ghci src/Lib.hs 
+ 1192  git status
+ 1193  git commit -a -m "All filters working, sorting is not working. Cleared some mess views in the database. No tests yet"
+ 1194  git status
+ 1195  git checkout master 
+ 1196  git merge dev 
+ 1197  git checkout dev 
+ 1198  psql -d batadase 
+ 1199  ls
+ 1200  cd curl/
+ 1201  ./posts_all.sh 
+ 1202  ./categories_get.sh 
+ 1203  ./posts_
+ 1204  ./posts_all.sh 
+ 1205  cd ..
+ 1206  ls
+ 1207  cd..
+ 1208  git status
+ 1209  git commit -a -m "rewrote some code in more abstract way"
+ 1210  git branch
+ 1211  git checkout master 
+ 1212  git merge dev
+ 1213  git checkout dev 
+ 1214  ls
+ 1215  cd curl/
+ 1216  ./posts_
+ 1217  ./posts_all.sh 
+ 1218  ls
+ 1219  vim posts_tags_all.sh 
+ 1220  vim posts_date_search.sh
+ 1221  cat posts_all.sh >> posts_date_search.sh 
+ 1222  vim posts_date_search.sh
+ 1223  ls
+ 1224  chmod u+x posts_date_search.sh 
+ 1225  ./posts_
+ 1226  ./posts_date_search.sh 
+ 1227  ./posts_all.sh 
+ 1228  ls
+ 1229  vim posts_date_search.sh 
+ 1230  ./posts_date_search.sh 
+ 1231  vim posts_date_search.sh 
+ 1232  mv posts_date_search.sh posts_created.sh
+ 1233  cp posts_created.sh posts_created_earlier.sh
+ 1234  cp posts_created.sh posts_created_later.sh
+ 1235  ./posts_created.sh
+ 1236  ./posts_created_earlier.sh 
+ 1237  vim posts_created_earlier.sh 
+ 1238  vim posts_created_later.sh 
+ 1239  ./posts_created_earlier.sh 
+ 1240  ./posts_created_later.sh 
+ 1241  ./posts_created.sh
+ 1242  ./posts_created_earlier.sh 
+ 1243  ./posts_created_later.sh 
+ 1244  ./posts_tag123.sh 
+ 1245  vim posts_tag123.sh 
+ 1246  ./posts_tag123.sh 
+ 1247  vim posts_tag_all.sh
+ 1248  ls
+ 1249  vim posts_tags_all.sh 
+ 1250  ./posts_tags_all.sh 
+ 1251  vim posts_tags_all.sh 
+ 1252  ./posts_tags_all.sh 
+ 1253  vim posts_tags_in.sh 
+ 1254  ./posts_tags_in.sh 
+ 1255  vim posts_tags_in.sh 
+ 1256  ./posts_tags_in.sh 
+ 1257  vim posts_tags_in.sh 
+ 1258  ./posts_tags_in.sh 
+ 1259  cp posts_tags_in.sh posts_tags_in_date.sh
+ 1260  vim posts_tags_in_date.sh 
+ 1261  ./posts_tags_in_date.sh 
+ 1262  cat posts_tags_in_date.sh 
+ 1263  cp posts_tags_in.sh posts_like.sh
+ 1264  vim posts_like.sh 
+ 1265  ./posts_like.sh 
+ 1266  vim posts_like.sh
+ 1267  ./posts_like.sh is
+ 1268  ./posts_like.sh hi
+ 1269  ./posts_like.sh ha
+ 1270  ./posts_like.sh it
+ 1271  ./posts_like.sh ha
+ 1272  ./posts_like.sh it
+ 1273  ./posts_like.sh is
+ 1274  cp posts_like.sh posts_like_date.sh 
+ 1275  vim posts_like_date.sh 
+ 1276  vim posts_like_date.sh is 2021-09-12
+ 1277  ./posts_like_date.sh is 2021-09-12
+ 1278  ./posts_like_date.sh is 2021-09-13
+ 1279  ./posts_like_date.sh is 2021-09-09
+ 1280  ./posts_like_date.sh is 2021-09-9
+ 1281  ./posts_like_date.sh Has 2021-09-9
+ 1282  ./posts_like_date.sh ro 2021-09-9
+ 1283  ./categories_get.sh 
+ 1284  ./authors_get.sh 
+ 1285  ./categories_get.sh 
+ 1286  ./authors_get.sh 
+ 1287  ./categories_get.sh 
+ 1288  ./authors_get.sh 
+ 1289  ./categories_get.sh 
+ 1290  ./authors_get.sh 
+ 1291  ./posts_like.sh is
+ 1292  ls
+ 1293  ./posts_created
+ 1294  ./posts_created.sh 
+ 1295  ./authors_get.sh 
+ 1296  ./categories_get.sh 
+ 1297  ls
+ 1298  vim posts_like_date.sh is 2021-09-12
+ 1299  psql -d batadase 
+ 1300  sudo apt install krusader
+ 1301  krusader &
+ 1302  firefox &
+ 1303  apt search gnuplot
+ 1304  sudo apt install gnuplot
+ 1305  gnuplot
+ 1306  ls
+ 1307  cd yuri_old/Jura/
+ 1308  cd 
+ 1309  mkdir gnuplot
+ 1310  cd gnuplot/
+ 1311  gedit testsin.gpi
+ 1312  chmod +x testsin.gpi 
+ 1313  ./testsin.gpi 
+ 1314  gedit testsin.gpi
+ 1315  ./testsin.gpi 
+ 1316  ls
+ 1317  evince result.png 
+ 1318  nautilus .
+ 1319  nautilus . &
+ 1320  top
+ 1321  man eog
+ 1322  eog result.png
+ 1323  eog result.png result.png 
+ 1324  eog result.png
+ 1325  telegram-desktop &
+ 1326  echo "" > transactions.csv
+ 1327  ls
+ 1328  cp ~/gnuplot/testsin.gpi .
+ 1329  ls
+ 1330  cp testsin.gpi test1.gpi
+ 1331  vim test1.gpi 
+ 1332  ./test1.gpi 
+ 1333  vim test1.gpi 
+ 1334  ./test1.gpi 
+ 1335  man sed
+ 1336  vim test.txt
+ 1337  man sed
+ 1338  mv test.txt input.txt
+ 1339  sed 's/value/sbalue//' input.txt
+ 1340  sed 's/value/sbalue/' input.txt
+ 1341  sed 's/val(*)e/sbalue/' input.txt
+ 1342  sed -E 's/val(*)e/sbalue/' input.txt
+ 1343  sed -E 's/val(u)*e/sbalue/' input.txt
+ 1344  sed -E 's/val(u)*e/sbalue\1/' input.txt
+ 1345  vim input1.txt
+ 1346  sed -E 's/([0-9]+) ([0-9]+)/\1\2/' input.txt
+ 1347  vim input
+ 1348  sed -E 's/([0-9]+) ([0-9]+)/\1\2/' input1.txt
+ 1349  sed -E 's/([0-9]+) ([0-9]+)/\1\2/' input1.txt | sed -E 's/([0-9]),([0-9])/\1\2/'
+ 1350  sed -E 's/([0-9]+) ([0-9]+)/\1\2/' input1.txt | sed -E 's/([0-9]),([0-9])/\1\.\2/'
+ 1351  sed -E 's/([0-9]+) ([0-9]+)/\1\2/' input1.txt | sed -E 's/([0-9]),([0-9])/\1\.\2/' sed -E 's/"([0-9]+)"/\1'
+ 1352  sed -E 's/([0-9]+) ([0-9]+)/\1\2/' input1.txt | sed -E 's/([0-9]),([0-9])/\1\.\2/' | sed -E 's/"([0-9]+)"/\1'
+ 1353  sed -E 's/([0-9]+) ([0-9]+)/\1\2/' input1.txt | sed -E 's/([0-9]),([0-9])/\1\.\2/' | sed -E 's/"([0-9]+)"/\1/'
+ 1354  sed -E 's/([0-9]+) ([0-9]+)/\1\2/' input1.txt | sed -E 's/([0-9]),([0-9])/\1\.\2/' | sed -E 's/\"([0-9]+)\"/\1/'
+ 1355  sed -E 's/([0-9]+) ([0-9]+)/\1\2/' input1.txt | sed -E 's/([0-9]),([0-9])/\1\.\2/' | sed -E 's/"([0-9]+)"/\1/'
+ 1356  vim input1.txt 
+ 1357  vim tonormal.sh
+ 1358  chmod +x tonormal.sh 
+ 1359  ./tonormal.sh 
+ 1360  vim tonormal.sh 
+ 1361  ./tonormal.sh 
+ 1362  vim tonormal.sh 
+ 1363  ./tonormal.sh 
+ 1364  vim tonormal.sh 
+ 1365  ./tonormal.sh 
+ 1366  vim tonormal.sh 
+ 1367  ./tonormal.sh input1.txt 
+ 1368  ./tonormal.sh transactions.csv 
+ 1369  cat transactions.csv 
+ 1370  ./tonormal.sh transactions.csv 
+ 1371  vim tonormal.sh 
+ 1372  man sed
+ 1373  vim tonormal.sh 
+ 1374  ./tonormal.sh transactions.csv 
+ 1375  vim tonormal.sh 
+ 1376  vim input1.txt 
+ 1377  ./tonormal.sh input1.txt 
+ 1378  vim tonormal.sh 
+ 1379  ./tonormal.sh input1.txt 
+ 1380  ./tonormal.sh transactions.csv 
+ 1381  ./tonormal.sh "5 692.63"
+ 1382  ./tonormal.sh "\"5 692.63\""
+ 1383  cat transactions.csv | grep "5 692.63" > log
+ 1384  vim log
+ 1385  cat transactions.csv | grep "5 692,63" > log
+ 1386  vim log
+ 1387  cat transactions.csv 
+ 1388  cat transactions.csv | grep 692 > log
+ 1389  vim log
+ 1390  cat transactions.csv | grep 1,094 > log
+ 1391  vim log
+ 1392  ./tonormal.sh log
+ 1393  cat log
+ 1394  vim tonormal.sh 
+ 1395  cat log
+ 1396  ./tonormal.sh log
+ 1397  vim tonormal.sh 
+ 1398  ./tonormal.sh input1.txt 
+ 1399  vim input1.txt 
+ 1400  echo "\"5 692.63\"" >> input1.txt
+ 1401  vim input1.txt 
+ 1402  ./tonormal.sh input1.txt 
+ 1403  vim input1.txt 
+ 1404  ./tonormal.sh input1.txt 
+ 1405  vim input1.txt 
+ 1406  ./tonormal.sh input1.txt 
+ 1407  cat input1.txt 
+ 1408  vim input1.txt 
+ 1409  ./tonormal.sh input1.txt 
+ 1410  vim input1.txt 
+ 1411  ./tonormal.sh input1.txt 
+ 1412  vim input1.txt 
+ 1413  ./tonormal.sh input1.txt 
+ 1414  cat tonormal.sh 
+ 1415  vim input1.txt 
+ 1416  ./tonormal.sh input1.txt 
+ 1417  hexdump input1.txt 
+ 1418  vim input1.txt 
+ 1419  vim tonormal.sh 
+ 1420  ./tonormal.sh input1.txt 
+ 1421  vim tonormal.sh 
+ 1422  ./tonormal.sh input1.txt 
+ 1423  vim tonormal.sh 
+ 1424  ./tonormal.sh input1.txt 
+ 1425  vim tonormal.sh 
+ 1426  ./tonormal.sh input1.txt 
+ 1427  vim tonormal.sh 
+ 1428  ./tonormal.sh input1.txt 
+ 1429  vim tonormal.sh 
+ 1430  ./tonormal.sh input1.txt 
+ 1431  ./tonormal.sh transactions.csv 
+ 1432  ./tonormal.sh transactions.csv  > tr.csv
+ 1433  vim tr.csv 
+ 1434  ls
+ 1435  ./test1.gpi 
+ 1436  vim test1.gpi 
+ 1437  ./test1.gpi 
+ 1438  vim test1.gpi 
+ 1439  ./test1.gpi 
+ 1440  vim test1.gpi 
+ 1441  ./test1.gpi 
+ 1442  gnuplot
+ 1443  ды
+ 1444  ls
+ 1445  vim input1.txt 
+ 1446  vim testsin.gpi 
+ 1447  ./testsin.gpi 
+ 1448  ls
+ 1449  vim log
+ 1450  history > log
+ 1451  vim log
+ 1452  eog result.png 
+ 1453  ghc --version
+ 1454  mueller glorious
+ 1455  sudo apt install pinta
+ 1456  pinta &
+ 1457  cd curl/
+ 1458  ls
+ 1459  ./posts_
+ 1460  ./posts_all.sh 
+ 1461  ./posts_created
+ 1462  ./posts_created.sh 
+ 1463  vim posts_created
+ 1464  vim posts_created.sh 
+ 1465  vim posts_created_earlier.sh 
+ 1466  ./posts_created_earlier.sh 
+ 1467  ./authors_get.sh 
+ 1468  ./categories_get.sh 
+ 1469  curl localhost
+ 1470  ./categories_get.sh 
+ 1471  ls
+ 1472  vim posts_created_later.sh 
+ 1473  ./posts_created_later.sh 
+ 1474  vim posts_created_later.sh 
+ 1475  ./posts_created_later.sh 
+ 1476  ls /bin/ | grep py
+ 1477  ls /bin/ | grep python
+ 1478  ls /bin/ | grep python3
+ 1479  ls
+ 1480  python3
+ 1481  ls
+ 1482  ./test2.py 
+ 1483  vim test2.py 
+ 1484  python3
+ 1485  vim test2.py 
+ 1486  ./test2.py 
+ 1487  vim test2.py 
+ 1488  ./test2.py 
+ 1489  vim test2.py 
+ 1490  ./test2.py 
+ 1491  vim test2.py 
+ 1492  ./test2.py 
+ 1493  vim test2.py 
+ 1494  ls
+ 1495  cat posts_all.sh 
+ 1496  cat posts_created_earlier.sh 
+ 1497  python3
+ 1498  cat posts_lal.sh 
+ 1499  rm posts_lal.sh 
+ 1500  cat posts_tag123.sh 
+ 1501  rm posts_tag123.sh 
+ 1502  ls
+ 1503  cat posts_like
+ 1504  cat posts_like.sh 
+ 1505  vim test1.py 
+ 1506  mv test2.py testallposts.py
+ 1507  ./testallposts.py 
+ 1508  cp testallposts.py testcreationdate.py
+ 1509  vim testcreationdate.py 
+ 1510  vim posts_created.sh
+ 1511  cat posts_created_earlier.sh 
+ 1512  vim posts_created_earlier.sh 
+ 1513  ./posts_created_earlier.sh 2021-09-13
+ 1514  ./posts_created_earlier.sh 2021-09-10
+ 1515  ./posts_created_earlier.sh 2021-09-08
+ 1516  ls
+ 1517  vim posts_created_later.sh 
+ 1518  vim posts_created
+ 1519  vim posts_created.sh 
+ 1520  vim testallposts.py 
+ 1521  vim testcreationdate.py 
+ 1522  ./testcreationdate.py 
+ 1523  vim testcreationdate.py 
+ 1524  ./testcreationdate.py 
+ 1525  vim testcreationdate.py 
+ 1526  ./testcreationdate.py 
+ 1527  vim testcreationdate.py 
+ 1528  ./testcreationdate.py 
+ 1529  ./testcreationdate.py  | grep False
+ 1530  ./testcreationdate.py  | grep True
+ 1531  vim testcreationdate.py 
+ 1532  ./testcreationdate.py  | grep True
+ 1533  ./testcreationdate.py
+ 1534  ды
+ 1535  ls
+ 1536  vim posts_tags_all.sh 
+ 1537  ./posts_tags_all.sh 4 5
+ 1538* ./posts_tags_all.sh
+ 1539  cp testcreationdate.py testtags.py
+ 1540  vim testtags.py 
+ 1541  ./posts_tags_all.sh 4 5
+ 1542  vim testtags.py 
+ 1543  ./posts_all.sh 
+ 1544  vim testtags.py 
+ 1545  ./testtags.py 
+ 1546  ls
+ 1547  vim testtags.py 
+ 1548  ./testtags.py 
+ 1549  vim testtags.py 
+ 1550  ./testtags.py 
+ 1551  vim testtags.py 
+ 1552  ./testtags.py 
+ 1553  vim testtags.py 
+ 1554  ./testtags.py 
+ 1555  vim testtags.py 
+ 1556  python3
+ 1557  ls
+ 1558  vim testtags.py 
+ 1559  ./testtags.py 
+ 1560  vim testtags.py 
+ 1561  ./testtags.py 
+ 1562  vim testtags.py 
+ 1563  ./testtags.py 
+ 1564  vim testtags.py 
+ 1565  ./testtags.py 
+ 1566  vim testtags.py 
+ 1567  ./testtags.py 
+ 1568  vim testtags.py 
+ 1569  ./testtags.py 
+ 1570  vim testtags.py 
+ 1571  ./testtags.py 
+ 1572  vim testtags.py 
+ 1573  ./testtags.py 
+ 1574  vim testtags.py 
+ 1575  ./testtags.py 
+ 1576  vim testtags.py 
+ 1577  ./testtags.py 
+ 1578  vim testtags.py 
+ 1579  ./testtags.py 
+ 1580  vim testtags.py 
+ 1581  ./testtags.py 
+ 1582  vim testtags.py 
+ 1583  python3
+ 1584  vim testtags.py 
+ 1585  ./testtags.py 
+ 1586  vim testtags.py 
+ 1587  vim posts_tags_all.sh 
+ 1588  vim testtags.py 
+ 1589  ./testtags.py 
+ 1590  vim testtags.py 
+ 1591  ./testtags.py 
+ 1592  vim testtags.py 
+ 1593  ./testtags.py 
+ 1594  vim testtags.py 
+ 1595  ./testtags.py 
+ 1596  vim testtags.py 
+ 1597  ./testtags.py 
+ 1598  vim testtags.py 
+ 1599  ./testtags.py 
+ 1600  vim testtags.py 
+ 1601  ./testtags.py 
+ 1602  vim testtags.py 
+ 1603  ./testtags.py 
+ 1604  vim testtags.py 
+ 1605  ./testtags.py 
+ 1606  vim testtags.py 
+ 1607  ./testtags.py 
+ 1608  vim testtags.py 
+ 1609  ./testtags.py 
+ 1610  vim testtags.py 
+ 1611  ./testtags.py 
+ 1612  vim testtags.py 
+ 1613  ./testtags.py 
+ 1614  vim testtags.py 
+ 1615  ./testtags.py 
+ 1616  ./testtags.py 4 7
+ 1617  ./testtags.py 4 8
+ 1618  vim testtags.py 
+ 1619  ./testtags.py 4 8
+ 1620  ./testtags.py 4 5 8
+ 1621  vim testtags.py 
+ 1622  ./testtags.py 4
+ 1623  vim testtags.py 
+ 1624  ./testtags.py 4
+ 1625  ./testtags.py 4 5 8
+ 1626  ./testtags.py 4 5 8 9
+ 1627  vim testtags.py 
+ 1628  ls
+ 1629  ./testcreationdate.py 
+ 1630  ls
+ 1631  vim test1.py 
+ 1632  cp authors_get.sh tags_get.sh
+ 1633  vim tags_get.sh 
+ 1634  ./tags_get.sh 
+ 1635  ls
+ 1636  cp posts_all.sh create_category.sh
+ 1637  vim create_category.sh 
+ 1638  ./create_category.sh 
+ 1639  vim create_category.sh 
+ 1640  ./create_category.sh 
+ 1641  ды
+ 1642  ls
+ 1643  ./testcreationdate.py 
+ 1644  vim testcreationdate.py 
+ 1645  vim posts_created.sh 
+ 1646  vim posts_created_earlier.sh 
+ 1647  vim posts_created.sh 
+ 1648  ls
+ 1649  vim add_string.sh 
+ 1650  history > log
