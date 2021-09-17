@@ -134,7 +134,7 @@ requestToActionTags path hash = case path of
     | x == "get" -> AGetTags GetTags
     | x == "create" -> either AError ACreateTag $ createTagToAction hash
     | x == "edit" -> undefined
-    | x == "delete" -> undefined
+    | x == "delete" -> either AError ADeleteTag $ deleteTagToAction hash
   [] -> invalidEP
 
 createTagToAction :: Query -> Either ActionError CreateTag
@@ -142,6 +142,10 @@ createTagToAction hash = do
     name <- requireField (requireText hash) "name"
     return $ CreateTag name
 
+deleteTagToAction :: Query -> Either ActionError DeleteTag
+deleteTagToAction hash = do
+    id <- requireField (requireInt hash) "tag_id"
+    return $ DeleteTag id
 
 
 type Query = HS.HashMap BS.ByteString BS.ByteString

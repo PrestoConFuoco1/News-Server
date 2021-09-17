@@ -99,12 +99,12 @@ data CreateUser = CreateUser {
     _cu_passHash :: T.Text,
     _cu_firstName :: T.Text,
     _cu_lastName  :: T.Text
-    } deriving (Show, Generic, GP.PrettyShow)
+    } deriving (Show, Generic, GP.PrettyShow, PS.ToRow)
 
 data CreateCategory = CreateCategory {
     _cc_catName :: T.Text,
     _cc_parentCat :: CatId
-    } deriving (Show, Generic, GP.PrettyShow)
+    } deriving (Show, Generic, GP.PrettyShow, PS.ToRow)
 
 data EditCategory = EditCategory {
     _ec_catId :: CatId,
@@ -127,4 +127,4 @@ data EditTag = EditTag {
 
 data DeleteTag = DeleteTag {
     _dt_tagId :: TagId
-    } deriving (Show, Generic, GP.PrettyShow)
+    } deriving (Show, Generic, GP.PrettyShow, PS.ToRow)

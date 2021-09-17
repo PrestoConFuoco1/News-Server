@@ -28,6 +28,7 @@ import GHC.Generics
 import RequestToAction
 import ActionTypes
 import FromSQL
+import Create
 
 import qualified Logger as L
 import MonadTypes
@@ -82,23 +83,23 @@ executeAction (WhoWhat y (AGetAuthors x)) =
     withAuth y . withAdmin $ getThis authorDummy x
 
 executeAction (WhoWhat y (AGetTags x)) = getThis tagDummy x
---executeAction (WhoWhat y (ACreateTag x)) = withAuth y . withAdmin $ createTag x
 executeAction (WhoWhat y (ACreateTag x)) = withAuth y . withAdmin $ createThis dummyCTag x
 executeAction (WhoWhat y (AEditTag x)) =  withAuth y . withAdmin $ editTag x
-executeAction (WhoWhat y (ADeleteTag x)) = withAuth y . withAdmin $ deleteTag x
+executeAction (WhoWhat y (ADeleteTag x)) = withAuth y . withAdmin $ deleteThis dummyDTag x
 
 
 executeAction (WhoWhat y (AGetCategories x)) = getThis catDummy x
-executeAction (WhoWhat y (ACreateCategory x)) = withAuth y . withAdmin $ createCategory x
+executeAction (WhoWhat y (ACreateCategory x)) = withAuth y . withAdmin $ createThis dummyCCat x
 executeAction (WhoWhat y (AEditCategory x)) =  withAuth y . withAdmin $ editCategory x
 executeAction (WhoWhat y (ADeleteCategory x)) = withAuth y . withAdmin $ deleteCategory x
 
-executeAction (WhoWhat y (ACreateUser x)) = createUser x
+executeAction (WhoWhat y (ACreateUser x)) = createThis dummyCUser x
 
 executeAction (WhoWhat y (AError x)) = handleError x
 
+
+
 editTag = undefined
-deleteTag = undefined
 editCategory = undefined
 deleteCategory = undefined
 
@@ -111,32 +112,20 @@ handleError (ERequiredFieldMissing x) = do
     logError $ E.decodeUtf8 str
     return $ bad str
 
-ok = Response NHT.ok200 . msgValue
-bad = Response NHT.status400 . msgValue
-unauthorized = Response NHT.unauthorized401 . msgValue
-notFound = Response NHT.status404 . msgValue
+ok = Response NHT.ok200 . msgValue "ok"
+bad = Response NHT.status400 . errValue
+unauthorized = Response NHT.unauthorized401 . errValue
+notFound = Response NHT.status404 . errValue
+internal = Response NHT.internalServerError500 . errValue
 
-msgValue :: B.ByteString -> Ae.Value
-msgValue str = Ae.object [("errmsg", Ae.String $ E.decodeUtf8 str)]
+msgValue :: T.Text -> B.ByteString -> Ae.Value
+msgValue field str = Ae.object [(field, Ae.String $ E.decodeUtf8 str)]
 
---data Permissions = 
+errValue str = msgValue "errmsg" str
 
-getThis :: (FromSQL s, MonadServer m) => s -> Get s -> m Response
-getThis x g = do
-    cat <- f x g
-    logDebug $ T.pack $ GP.defaultPretty cat
-    let val = Ae.toJSON cat
-    return $ Response NHT.ok200 val
-  where f :: (FromSQL s, MonadServer m) => s -> Get s -> m [MType s]
-        f x g = do
-            let qu = selectQuery x g
-            debugStr <- uncurry formatQuery qu
-            logDebug $ T.pack $ show debugStr
-            uncurry query qu
-   
+unauthorizedMsg = "Unauthorized, use /auth"
+invalidEndpointMsg = "Invalid endpoint"
 
-uniqueConstraintViolated e = PS.sqlState e == "23505"
-foreignKeyViolated e = PS.sqlState e == "23503"
 
 
 withAuth :: (MonadServer m) => Maybe Token -> (Maybe Ty.User -> m Response) -> m Response
@@ -148,9 +137,6 @@ withAuth mtoken m = case mtoken of
             [] -> m Nothing
             [u] -> m (Just u) -- ok
             lst -> undefined
-
-unauthorizedMsg = "Unauthorized, use /auth"
-invalidEndpointMsg = "Invalid endpoint"
 
 withAdmin :: (MonadServer m) => m Response -> Maybe Ty.User -> m Response
 withAdmin m muser
@@ -165,110 +151,72 @@ getUserByToken token = do
     users <- query str [token]
     return users
 
-createTag :: (MonadServer m) => CreateTag -> m Response
-createTag CreateTag{..} = do
 
-        let str = "INSERT INTO news.tag (name) VALUES (?)"
-        (execute str [_ct_tagName] >> (return $ ok "Tag successfully created"))
-            `CMC.catches` [CMC.Handler sqlH]
-
-  where name = _ct_tagName
-        sqlH :: (MonadServer m) => PS.SqlError -> m Response
-        sqlH e
-            | uniqueConstraintViolated e = do
-                logError $ E.decodeUtf8 $
-                        "Failed to create new tag, there is one with such name\n\
-                       \ tag_name = " <> E.encodeUtf8 name <> 
-                        "\nSqlError: " <> PS.sqlErrorMsg e 
-                return $ Response NHT.status400 $ "Tag with such name already exists."
-            | otherwise = logError (T.pack $ displayException e)
-                >> return (Response NHT.internalServerError500 $ msgValue "Internal error")
+uniqueConstraintViolated e = PS.sqlState e == "23505"
+foreignKeyViolated e = PS.sqlState e == "23503"
 
 
-
-createCategory :: (MonadServer m) => CreateCategory -> m Response
-createCategory CreateCategory{..} = do
-
-        let str = "INSERT INTO news.category (name, parent_category_Id) VALUES (?, ?)"
-        (execute str (_cc_catName, _cc_parentCat) >> (return $ ok "Category successfully created"))
-            `CMC.catches` [CMC.Handler sqlH]
-
-  where name = _cc_catName --crecat
-        sqlH :: (MonadServer m) => PS.SqlError -> m Response
-        sqlH e
-            | uniqueConstraintViolated e = do
-                logError $ E.decodeUtf8 $
-                        "Failed to create new category, there is one with such name\n\
-                        \category_name = " <> E.encodeUtf8 name <> 
-                        "\nSqlError: " <> PS.sqlErrorMsg e 
-                return $ Response NHT.status400 $ "Category with such name already exists."
-            | foreignKeyViolated e = do
-                logError $ E.decodeUtf8 $
-                    "Failed to created new category, parent category id is invalid"
-                return $ bad "Failed to created new category, parent category id is invalid"
-            | otherwise = logError (T.pack $ displayException e)
-                >> return (Response NHT.internalServerError500 $ msgValue "Internal error")
-
-
-
-createUser :: (MonadServer m) => CreateUser -> m Response
-createUser CreateUser{..} =
-    let str = "INSERT INTO news.users (firstname, lastname, login, pass_hash) VALUES (?, ?, ?, ?)"
-
-    in  (execute str (_cu_firstName, _cu_lastName, _cu_login, _cu_passHash) >> return  (ok "User successfully created"))
-            `CMC.catches` [CMC.Handler sqlH]
-  where sqlH :: (MonadServer m) => PS.SqlError -> m Response
-        sqlH e
-            | uniqueConstraintViolated e = do
-                logError $ E.decodeUtf8 $
-                        "Failed to create new user, login is already in use\n\
-                        \login = " <> E.encodeUtf8 _cu_login <> 
-                        "\nSqlError: " <> PS.sqlErrorMsg e 
-                return $ bad "User with such login already exists."
-            | otherwise = logError (T.pack $ displayException e)
-                >> return (Response NHT.internalServerError500 $ msgValue "Internal error")
-
-class (PS.ToRow (Create s)) => CreateSQL s where
-    type Create s :: *
-    createQuery :: s -> PS.Query
-    cName :: s -> B.ByteString
-    cUniqueField :: s -> B.ByteString -- ???
-    cForeign :: s -> B.ByteString -- ?????
 
 createThis :: (MonadServer m, CreateSQL s) => s -> Create s -> m Response
-createThis s cres = do
-    let str = createQuery s
-    (execute str cres) >> return (ok $ cName s <> " successfully created")
-        `CMC.catches` [CMC.Handler (sqlH s)]
+createThis w cres = do
+    let str = createQuery w
+    (execute str cres >> return (ok $ cName w <> " successfully created"))
+        `CMC.catches` [CMC.Handler (sqlH w)]
   where sqlH :: (MonadServer m, CreateSQL s) => s -> PS.SqlError -> m Response
         sqlH s e
             | uniqueConstraintViolated e = do
                 logError $ E.decodeUtf8 $
                     "Failed to create new " <> cName s <> ", " <>
                     cUniqueField s <> " is already in use\n" <>
-                    "\nSqlError: " <> PS.sqlErrorMsg e
+                    "SqlError: " <> PS.sqlErrorMsg e
                 return $ bad $ cName s <> " with such " <> cUniqueField s <> " already exists."
             | foreignKeyViolated e = do
                 let errmsg = 
                      "Failed to create new " <> cName s <> ", " <> cForeign s <> " is invalid"
                 logError $ E.decodeUtf8 $ errmsg
                 return $ bad errmsg
-            | otherwise = logError (T.pack $ displayException e) >> undefined
-                >> return (Response NHT.internalServerError500 $ msgValue "Internal error")
+            | otherwise = logError (T.pack $ displayException e)
+                >> return (internal "Internal error")
 
-    --query :: (PS.ToRow q, PS.FromRow r) => PS.Query -> q -> m [r]
-    --execute :: (PS.ToRow q) => PS.Query -> q -> m Int
- 
+class (PS.ToRow (Del s)) => DeleteSQL s where
+    type Del s :: *
+    deleteQuery :: s -> PS.Query
+    dName :: s -> B.ByteString
 
-newtype CTag = CTag ()
-dummyCTag = CTag ()
+newtype DTag = DTag ()
+dummyDTag = DTag ()
 
-instance CreateSQL CTag where
-    type Create CTag = CreateTag
-    createQuery _ = "INSERT INTO news.tag (name) VALUES (?)"
-    cName _ = "tag"
-    cUniqueField _ = "name"
-    cForeign _ = "error"
+instance DeleteSQL DTag where
+    type Del DTag = DeleteTag
+    deleteQuery _ = "DELETE FROM news.tag WHERE tag_id = ?"
+    dName _ = "tag"
 
+deleteThis :: (MonadServer m, DeleteSQL s) => s -> Del s -> m Response
+deleteThis s d = do
+    let str = deleteQuery s
+    (execute str d >> return (ok $ dName s <> " successfully deleted"))
+        `CMC.catches` [CMC.Handler (sqlH s)]
+  where sqlH :: (MonadServer m, DeleteSQL s) => s -> PS.SqlError -> m Response
+        sqlH w e = logError (T.pack $ displayException e) >> return (internal "Internal error")
+    
+
+
+
+
+
+
+-- добавить обработку исключений!!!
+getThis :: (FromSQL s, MonadServer m) => s -> Get s -> m Response
+getThis x g = do
+    cat <- f x g
+    logDebug $ T.pack $ GP.defaultPretty cat
+    let val = Ae.toJSON cat
+    return $ Response NHT.ok200 val
+  where f :: (FromSQL s, MonadServer m) => s -> Get s -> m [MType s]
+        f x g = do
+            let qu = selectQuery x g
+            debugStr <- uncurry formatQuery qu
+            logDebug $ T.pack $ show debugStr
+            uncurry query qu
 
 
