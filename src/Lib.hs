@@ -25,10 +25,12 @@ import qualified Data.Aeson as Ae (Value, encode)
 import qualified GenericPretty as GP
 import GHC.Generics
 
-import RequestToAction
-import ActionTypes
+import Action.RequestToAction
+import Action.Types
+import Action.Common
 import FromSQL
 import Create
+import Delete
 
 import qualified Logger as L
 import MonadTypes
@@ -68,34 +70,57 @@ data Response = Response {
 mainServer :: MonadServer m => W.Request -> m W.Response
 mainServer req = do
     logDebug $ T.pack $ show req
-    let whowhat@(WhoWhat maybeToken action) = requestToAction req
-    logDebug "Action type is"
-    logDebug $ T.pack $ GP.defaultPretty action
+    --let whowhat@(WhoWhat maybeToken action) = requestToAction req
+    let eithWhowhat = requestToAction req
+    case eithWhowhat of
+        Left err -> fmap coerceResponse $ handleError err
+        Right whowhat -> do
+            logDebug "Action type is"
+            logDebug $ T.pack $ GP.defaultPretty $ _ww_action whowhat
 
-    val <- executeAction whowhat
-    let (Response status msg) = val
-    return $ W.responseLBS status [] $ Ae.encode msg
+            val <- executeAction whowhat
+            return $ coerceResponse val
+ --           let (Response status msg) = val
+   --         return $ W.responseLBS status [] $ Ae.encode msg
+
+coerceResponse :: Response -> W.Response
+coerceResponse (Response status msg) =
+    W.responseLBS status [] $ Ae.encode msg
+
+--executeAction' (WhoWhat y (AError x)) = handleError x
+{-
+data Action = AAuthors ActionAuthors
+            | ACategory ActionCategory
+            | APosts ActionPosts
+            | ATags  ActionTags
+            | AUsers ActionUsers
+-}
 
 executeAction :: MonadServer m => WhoWhat Action -> m Response
-executeAction (WhoWhat y (AGetPosts x)) = getThis postDummy x
+executeAction (WhoWhat y (AAuthors x)) = executeAuthor (WhoWhat y x)
+executeAction (WhoWhat y (ACategory x)) = executeCategory (WhoWhat y x)
+executeAction (WhoWhat y (APosts x)) = executePosts (WhoWhat y x)
+executeAction (WhoWhat y (ATags x)) = executeTags (WhoWhat y x)
+executeAction (WhoWhat y (AUsers x)) = executeUsers (WhoWhat y x)
 
-executeAction (WhoWhat y (AGetAuthors x)) =
+executePosts (WhoWhat y (Read x)) = getThis postDummy x
+
+executeAuthor (WhoWhat y (Read x)) =
     withAuth y . withAdmin $ getThis authorDummy x
 
-executeAction (WhoWhat y (AGetTags x)) = getThis tagDummy x
-executeAction (WhoWhat y (ACreateTag x)) = withAuth y . withAdmin $ createThis dummyCTag x
-executeAction (WhoWhat y (AEditTag x)) =  withAuth y . withAdmin $ editTag x
-executeAction (WhoWhat y (ADeleteTag x)) = withAuth y . withAdmin $ deleteThis dummyDTag x
+executeTags (WhoWhat y (Read x)) = getThis tagDummy x
+executeTags (WhoWhat y (Create x)) = withAuth y . withAdmin $ createThis dummyCTag x
+executeTags (WhoWhat y (Update x)) =  withAuth y . withAdmin $ editTag x
+executeTags (WhoWhat y (Delete x)) = withAuth y . withAdmin $ deleteThis dummyDTag x
 
 
-executeAction (WhoWhat y (AGetCategories x)) = getThis catDummy x
-executeAction (WhoWhat y (ACreateCategory x)) = withAuth y . withAdmin $ createThis dummyCCat x
-executeAction (WhoWhat y (AEditCategory x)) =  withAuth y . withAdmin $ editCategory x
-executeAction (WhoWhat y (ADeleteCategory x)) = withAuth y . withAdmin $ deleteCategory x
+executeCategory (WhoWhat y (Read x)) = getThis catDummy x
+executeCategory (WhoWhat y (Create x)) = withAuth y . withAdmin $ createThis dummyCCat x
+executeCategory (WhoWhat y (Update x)) =  withAuth y . withAdmin $ editCategory x
+executeCategory (WhoWhat y (Delete x)) = withAuth y . withAdmin $ deleteCategory x
 
-executeAction (WhoWhat y (ACreateUser x)) = createThis dummyCUser x
+executeUsers (WhoWhat y (Create x)) = createThis dummyCUser x
 
-executeAction (WhoWhat y (AError x)) = handleError x
 
 
 
@@ -178,28 +203,6 @@ createThis w cres = do
             | otherwise = logError (T.pack $ displayException e)
                 >> return (internal "Internal error")
 
-class (PS.ToRow (Del s)) => DeleteSQL s where
-    type Del s :: *
-    deleteQuery :: s -> PS.Query
-    dName :: s -> B.ByteString
-
-newtype DTag = DTag ()
-dummyDTag = DTag ()
-
-instance DeleteSQL DTag where
-    type Del DTag = DeleteTag
-    deleteQuery _ = "DELETE FROM news.tag WHERE tag_id = ?"
-    dName _ = "tag"
-
-deleteThis :: (MonadServer m, DeleteSQL s) => s -> Del s -> m Response
-deleteThis s d = do
-    let str = deleteQuery s
-    (execute str d >> return (ok $ dName s <> " successfully deleted"))
-        `CMC.catches` [CMC.Handler (sqlH s)]
-  where sqlH :: (MonadServer m, DeleteSQL s) => s -> PS.SqlError -> m Response
-        sqlH w e = logError (T.pack $ displayException e) >> return (internal "Internal error")
-    
-
 
 
 
@@ -220,3 +223,11 @@ getThis x g = do
             uncurry query qu
 
 
+deleteThis :: (MonadServer m, DeleteSQL s) => s -> Del s -> m Response
+deleteThis s d = do
+    let str = deleteQuery s
+    (execute str d >> return (ok $ dName s <> " successfully deleted"))
+        `CMC.catches` [CMC.Handler (sqlH s)]
+  where sqlH :: (MonadServer m, DeleteSQL s) => s -> PS.SqlError -> m Response
+        sqlH w e = logError (T.pack $ displayException e) >> return (internal "Internal error")
+ 

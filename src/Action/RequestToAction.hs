@@ -18,10 +18,29 @@ import Data.Bifunctor (bimap)
 import GHC.Generics
 import qualified GenericPretty as GP
 
+import Action.Authors.Types
+import Action.Authors.Authors
+import Action.Category.Types
+import Action.Category.Category
+import Action.Posts.Types
+import Action.Posts.Posts
+import Action.Tags.Types
+import Action.Tags.Tags
+import Action.Users.Types
+import Action.Users.Users
+
+import Action.Utils
+import Action.Common
 
 
+data Action = AAuthors ActionAuthors
+            | ACategory ActionCategory
+            | APosts ActionPosts
+            | ATags  ActionTags
+            | AUsers ActionUsers
+    deriving (Generic)
 
-requestToAction :: W.Request -> WhoWhat Action
+requestToAction :: W.Request -> Either ActionError (WhoWhat Action)
 requestToAction req =
   let
     queryString = W.queryString req
@@ -35,23 +54,24 @@ requestToAction req =
     hash :: Query
     hash = HS.fromList . Mb.catMaybes . map f $ W.queryString req
     f (x, y) = fmap ((,) x) y
-  in  WhoWhat maybeToken $ requestToAction' pathInfo hash
+  in  fmap (WhoWhat maybeToken) $ requestToAction' pathInfo hash
 
 
-requestToAction' :: [T.Text] -> Query -> Action
+requestToAction' :: [T.Text] -> Query -> Either ActionError Action
 requestToAction' path hash = case path of 
     (x:xs)
-     | x == "posts"      -> requestToActionPosts xs hash
-     | x == "categories" -> requestToActionCats xs hash
-     | x == "authors"    -> requestToActionAuthors xs hash
-     | x == "tags"       -> requestToActionTags xs hash
-     | x == "users"      -> requestToActionUsers xs hash
+     | x == "posts"      -> fmap APosts $ requestToActionPosts xs hash
+     | x == "categories" -> fmap ACategory $ requestToActionCats xs hash
+     | x == "authors"    -> fmap AAuthors $ requestToActionAuthors xs hash
+     | x == "tags"       -> fmap ATags $ requestToActionTags xs hash
+     | x == "users"      -> fmap AUsers $ requestToActionUsers xs hash
     (y:z:zs)
-     | otherwise -> invalidEP
+     | otherwise -> Left EInvalidEndpoint
 
 
 
 ------------------------ PrettyShow instances ------------------------
+
 
 instance GP.PrettyShow CreationDateOptions where
 --    prettyShow = GP.LStr . GP.gprettyShowSum . from
@@ -75,8 +95,8 @@ instance GP.PrettyShow GetTags where
 instance GP.PrettyShow ActionError where
     prettyShow = GP.LStr . show
 
-instance GP.PrettyShow GetComments where
-    prettyShow = GP.LStr . show
+--instance GP.PrettyShow GetComments where
+--    prettyShow = GP.LStr . show
 
 instance GP.PrettyShow SortEntity where
     prettyShow = GP.LStr . drop 2 . show

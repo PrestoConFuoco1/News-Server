@@ -1,4 +1,4 @@
-module Category where
+module Action.Category.Category where
 
 import Action.Category.Types
 import qualified Data.Text as T

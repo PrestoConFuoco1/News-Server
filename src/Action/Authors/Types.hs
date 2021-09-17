@@ -3,11 +3,12 @@ module Action.Authors.Types where
 import GHC.Generics
 import qualified GenericPretty as GP
 import qualified Database.PostgreSQL.Simple as PS
-
+import Action.Common
+import Data.Void
 
 --type Author = T.Text
 
-data ActionAuthors = AGet GetAuthors
+type ActionAuthors = CRUD Void GetAuthors Void Void
 
 
 data GetAuthors = GetAuthors

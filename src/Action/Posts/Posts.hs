@@ -1,4 +1,4 @@
-module Posts where
+module Action.Posts.Posts where
 
 
 import Action.Common

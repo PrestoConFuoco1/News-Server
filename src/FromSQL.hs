@@ -17,8 +17,7 @@ import qualified Data.Aeson as Ae (Value, encode)
 import qualified GenericPretty as GP
 import GHC.Generics
 
-import RequestToAction
-import ActionTypes
+import Action.RequestToAction
 
 import qualified Logger as L
 import MonadTypes
@@ -30,6 +29,14 @@ import qualified Database.PostgreSQL.Simple.ToField as PSF
 import qualified Database.PostgreSQL.Simple.Types as PSTy
 
 import qualified Data.Time as Time
+
+
+import Action.Tags.Types
+import Action.Category.Types
+import Action.Users.Types
+import Action.Authors.Types
+import Action.Posts.Types
+
 
 data SqlValue = SqlDate Time.Day
               | SqlText TL.Text

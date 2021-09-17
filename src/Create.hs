@@ -8,7 +8,11 @@ RecordWildCards
 
 module Create where
 
-import ActionTypes
+--import Action.RequestToAction
+
+import Action.Tags.Types
+import Action.Category.Types
+import Action.Users.Types
 import qualified Database.PostgreSQL.Simple as PS
 import qualified Data.ByteString as B
 

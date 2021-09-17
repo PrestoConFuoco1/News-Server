@@ -20,7 +20,7 @@ import GHC.Generics
 import qualified Data.Text as T (Text)
 import qualified Data.Text.Lazy as TL (Text, pack, unpack)
 
-
+import Data.Void
 import Data.Aeson.Types
 import Data.Aeson (encode)
 import Data.Char
@@ -155,7 +155,8 @@ instance PrettyShow Bool where
 instance PrettyShow Time.Day where
     prettyShow = LStr . Time.formatTime Time.defaultTimeLocale "%F"
 
-
+instance PrettyShow Void where
+    prettyShow _ = LStr ""
 
 
 
