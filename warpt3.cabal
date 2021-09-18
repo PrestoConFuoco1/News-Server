@@ -43,6 +43,7 @@ library
       Create
       DatabaseHandler
       DBTypes
+      Delete
       FromSQL
       General
       GenericPretty

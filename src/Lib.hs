@@ -43,6 +43,8 @@ import Data.Proxy
 import qualified Control.Monad.Catch as CMC
 import qualified Data.Text.Encoding as E (decodeUtf8, encodeUtf8)
 
+import Action.Tags.Types
+
 port :: Int
 port = 5555
 
@@ -124,7 +126,6 @@ executeUsers (WhoWhat y (Create x)) = createThis dummyCUser x
 
 
 
-editTag = undefined
 editCategory = undefined
 deleteCategory = undefined
 
@@ -230,4 +231,14 @@ deleteThis s d = do
         `CMC.catches` [CMC.Handler (sqlH s)]
   where sqlH :: (MonadServer m, DeleteSQL s) => s -> PS.SqlError -> m Response
         sqlH w e = logError (T.pack $ displayException e) >> return (internal "Internal error")
+ 
+
+
+editTag :: (MonadServer m) => EditTag -> m Response
+editTag EditTag{..} = do
+    let str = "UPDATE news.tag SET name = ? WHERE tag_id = ?"
+    (execute str (_et_tagName, _et_tagId) >> return (ok $ "Tag successfully edited"))
+        `CMC.catches` [CMC.Handler (sqlH)]
+  where sqlH :: (MonadServer m) => PS.SqlError -> m Response
+        sqlH e = logError (T.pack $ displayException e) >> return (internal "Internal error")
  
