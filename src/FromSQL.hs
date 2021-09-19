@@ -92,21 +92,21 @@ postsWhereDate (CreatedLater   day) = postsWhereDate' ">=" day
 
 postsWhereDate' compareSym day =
     (" post_creation_date " <> compareSym <> " ? ",
-    [SqlDate day])
+    [SqlValue day])
 
 
 
 postsWhereTags :: TagsOptions -> (PS.Query, [SqlValue])
-postsWhereTags (OneTag id)   = ("? && tagids", [SqlArray $ PSTy.PGArray [id]])
-postsWhereTags (TagsIn ids)  = ("? && tagids", [SqlArray $ PSTy.PGArray ids])
-postsWhereTags (TagsAll ids) = ("? <@ tagids", [SqlArray $ PSTy.PGArray ids])
+postsWhereTags (OneTag id)   = ("? && tagids", [SqlValue $ PSTy.PGArray [id]])
+postsWhereTags (TagsIn ids)  = ("? && tagids", [SqlValue $ PSTy.PGArray ids])
+postsWhereTags (TagsAll ids) = ("? <@ tagids", [SqlValue $ PSTy.PGArray ids])
 
 postsWhereSearch :: SearchOptions -> (PS.Query, [SqlValue])
 postsWhereSearch (SearchOptions text) =
     let str = "title ILIKE ? OR content ILIKE ?\
               \ OR array_to_string(tagnames, ',') ILIKE ?\
               \ OR array_to_string(catnames, ',') ILIKE ?"
-    in  (str, replicate 4 $ SqlTextL $ TL.fromStrict $ enclose "%" text)
+    in  (str, replicate 4 $ SqlValue $ TL.fromStrict $ enclose "%" text)
 
 queryIntercalate :: PS.Query -> [(PS.Query, [SqlValue])] -> (PS.Query, [SqlValue])
 queryIntercalate delim = foldr f ("", [])
@@ -148,7 +148,7 @@ instance FromSQL AuthorD where
             whereClause = " WHERE user_id = ? "
         in  case mu of
             Nothing -> (selectClause, args)
-            Just u  -> (selectClause <> whereClause, [SqlInt u])
+            Just u  -> (selectClause <> whereClause, [SqlValue u])
 
 --------- other instances for getting
 
@@ -178,7 +178,7 @@ instance FromSQL CommentD where
                             \ user_id, firstname, lastname, image, login, \
                             \ pass_hash, creation_date, is_admin \
                             \ FROM news.get_comments WHERE post_id = ?"
-            args = [SqlInt id]
+            args = [SqlValue id]
         in  (selectClause, args)
 
 

@@ -50,6 +50,7 @@ library
       DBTypes
       Delete
       Execute
+      Execute1
       ExecuteTypes
       ExecuteUtils
       FromSQL

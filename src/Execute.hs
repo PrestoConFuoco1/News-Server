@@ -9,6 +9,7 @@ import qualified Data.ByteString as B
 import qualified Data.Text as T
 import Control.Exception
 
+import qualified Database.PostgreSQL.Simple.Types as PSTy
 import qualified GenericPretty as GP
 import GHC.Generics
 
@@ -86,14 +87,27 @@ executeDraft (WhoWhat y (Create x)) =
 executeDraft (WhoWhat y _ ) = undefined
 
 
-createDraft :: (MonadServer m) => WithAuthor CreateDraft -> m Response
-createDraft (WithAuthor a CreateDraft{..}) = do
+withCreateDraft :: (MonadServer m) => WithAuthor CreateDraft -> m Response
+withCreateDraft (WithAuthor a CreateDraft{..}) = do
     let str =
          "INSERT INTO news.draft (title, author_id, category_id, content, photo, extra_photos)\
          \VALUES(?, ?, ?, ?, ?, ?) "
-        args = [SqlValue' _cd_title, SqlValue' a, SqlValue' _cd_categoryId, SqlValue' _cd_content]
-    undefined
-        
+        args = [SqlValue _cd_title, SqlValue a,
+                SqlValue _cd_categoryId, SqlValue _cd_content,
+                SqlValue _cd_mainPhoto, SqlValue $ fmap PSTy.PGArray _cd_extraPhotos]
+    
+    debugStr <- formatQuery str args
+    logDebug $ T.pack $ show debugStr
+
+    withExceptionHandlers [CMC.Handler sqlH] $ do
+        execute str args
+        return (ok $ "Draft successfully created")
+      where sqlH :: (MonadServer m) => PS.SqlError -> m Response
+            sqlH e
+             | otherwise = logError (T.pack $ displayException e)
+                >> return (internal "Failed")
+
+
 
 
 withExceptionHandlers :: (Foldable f, CMC.MonadCatch m) => f (CMC.Handler m a) -> m a-> m a

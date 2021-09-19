@@ -42,7 +42,7 @@ import Data.Maybe (catMaybes)
 
 {-
 idParams :: (UpdateSQL s) => s -> Upd s -> [SqlValue]
-idParams ec = [SqlInt $ _ec_catId ec]
+idParams ec = [SqlValue $ _ec_catId ec]
 -}
 updateParams :: (UpdateSQL s) => s -> Upd s -> Maybe (PS.Query, [SqlValue])
 updateParams s ce = case intercalateQ $ map setUnit qs of
@@ -67,8 +67,8 @@ optionals s = catMaybes . map f . optionalsMaybe s
 {-
 optionalsMaybe :: EditCategory -> [(PS.Query, Maybe SqlValue)]
 optionalsMaybe EditCategory{..} =
-            [("name", fmap SqlText _ec_catName),
-             ("parent_category_id", fmap SqlInt _ec_parentId)]
+            [("name", fmap SqlValue _ec_catName),
+             ("parent_category_id", fmap SqlValue _ec_parentId)]
  -}
 
 class UpdateSQL s where
@@ -87,8 +87,8 @@ instance UpdateSQL UTag where
     updateQuery _ = \p -> "UPDATE news.tag SET " <> p <> " WHERE tag_id = ?"
     uName _ = "tag"
     optionalsMaybe _ EditTag{..} =
-            [("name", Just $ SqlText _et_tagName)]
-    identifParams _ et = [SqlInt $ _et_tagId et]
+            [("name", Just $ SqlValue _et_tagName)]
+    identifParams _ et = [SqlValue $ _et_tagId et]
 
    
 
@@ -101,9 +101,9 @@ instance UpdateSQL UCat where
     updateQuery _ = \p -> "UPDATE news.category SET " <> p <> " WHERE category_id = ?"
     uName _ = "category"
     optionalsMaybe _ EditCategory{..} =
-            [("name", fmap SqlText _ec_catName),
-             ("parent_category_id", fmap SqlInt _ec_parentId)]
-    identifParams _ ec = [SqlInt $ _ec_catId ec]
+            [("name", fmap SqlValue _ec_catName),
+             ("parent_category_id", fmap SqlValue _ec_parentId)]
+    identifParams _ ec = [SqlValue $ _ec_catId ec]
 
 
 
@@ -115,9 +115,9 @@ instance UpdateSQL UAuthor where
     updateQuery _ = \p -> "UPDATE news.author SET " <> p <> " WHERE author_id = ?"
     uName _ = "author"
     optionalsMaybe _ EditAuthor{..} =
-            [("description", fmap SqlText _ea_description),
-             ("user_id", fmap SqlInt _ea_userId)]
-    identifParams _ ea = [SqlInt $ _ea_authorId ea]
+            [("description", fmap SqlValue _ea_description),
+             ("user_id", fmap SqlValue _ea_userId)]
+    identifParams _ ea = [SqlValue $ _ea_authorId ea]
 
 
 
