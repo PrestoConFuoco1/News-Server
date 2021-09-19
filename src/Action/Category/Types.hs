@@ -29,9 +29,9 @@ data EditCategory = EditCategory {
     _ec_catId :: CatId,
     _ec_catName :: Maybe T.Text,
     _ec_parentId :: Maybe CatId
-    } deriving (Show, Generic, GP.PrettyShow)
+    } deriving (Show, Generic, GP.PrettyShow, PS.ToRow)
 
 data DeleteCategory = DeleteCategory {
     _dc_catId :: CatId
-    } deriving (Show, Generic, GP.PrettyShow)
+    } deriving (Show, Generic, GP.PrettyShow, PS.ToRow)
 

@@ -40,17 +40,23 @@ library
       Action.Users.Types
       Action.Users.Users
       Action.Utils
+      ActWithOne
       Create
       DatabaseHandler
       DBTypes
       Delete
+      Execute
+      ExecuteTypes
+      ExecuteUtils
       FromSQL
       General
       GenericPretty
       Lib
       Logger
       MonadTypes
+      SqlValue
       Types
+      Update
   other-modules:
       Paths_warpt3
   hs-source-dirs:

@@ -33,7 +33,8 @@ class (Monad m) => MonadGetPosts m where
 class (Monad m) => MonadSQL m where
     query :: (PS.ToRow q, PS.FromRow r) => PS.Query -> q -> m [r]
     --query_ :: (PS.FromRow r) => PS.Query -> m [r]
-    formatQuery :: (PSF.ToField q) => PS.Query -> [q] -> m BS.ByteString
+    --formatQuery :: (PSF.ToField q) => PS.Query -> [q] -> m BS.ByteString
+    formatQuery :: (PS.ToRow q) => PS.Query -> q -> m BS.ByteString
     execute :: (PS.ToRow q) => PS.Query -> q -> m Int
   
 class (Monad m) => MonadLog m where
@@ -41,6 +42,7 @@ class (Monad m) => MonadLog m where
 
 class (MonadSQL m, MonadLog m, MonadCatch m) => MonadServer m where
     runServer :: ServerHandlers -> m a -> IO a
+    randomString :: Int -> m String
 
 instance CMC.MonadThrow ServerIO where
     throwM e = liftIO $ CE.throwIO e
@@ -70,14 +72,15 @@ instance MonadLog ServerIO where
 
 instance MonadServer ServerIO where
     runServer handlers = flip runReaderT handlers . runServerIO
+    randomString int = undefined
 
 
-
-logDebug, logError, logInfo, logWarn :: (MonadLog m) => T.Text -> m ()
+logDebug, logError, logInfo, logWarn, logFatal :: (MonadLog m) => T.Text -> m ()
 logDebug s = logM (L.Debug, s)
 logError s = logM (L.Error, s)
 logInfo s = logM (L.Info, s)
 logWarn s = logM (L.Warning, s)
+logFatal s = logM (L.Fatal, s)
 
 ------------------------------------------------
 

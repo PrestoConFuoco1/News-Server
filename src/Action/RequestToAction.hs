@@ -38,6 +38,7 @@ data Action = AAuthors ActionAuthors
             | APosts ActionPosts
             | ATags  ActionTags
             | AUsers ActionUsers
+            | AAuth  Authenticate
     deriving (Generic)
 
 requestToAction :: W.Request -> Either ActionError (WhoWhat Action)
@@ -60,6 +61,7 @@ requestToAction req =
 requestToAction' :: [T.Text] -> Query -> Either ActionError Action
 requestToAction' path hash = case path of 
     (x:xs)
+     | x == "auth"       -> fmap AAuth $ requestToActionAuthenticate xs hash
      | x == "posts"      -> fmap APosts $ requestToActionPosts xs hash
      | x == "categories" -> fmap ACategory $ requestToActionCats xs hash
      | x == "authors"    -> fmap AAuthors $ requestToActionAuthors xs hash

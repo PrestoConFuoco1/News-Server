@@ -36,18 +36,7 @@ import Action.Category.Types
 import Action.Users.Types
 import Action.Authors.Types
 import Action.Posts.Types
-
-
-data SqlValue = SqlDate Time.Day
-              | SqlText TL.Text
-              | SqlArray (PSTy.PGArray Int)
-    deriving (Show)
-
-instance PSF.ToField SqlValue where
-    toField (SqlDate day) = PSF.toField day
-    toField (SqlText text) = PSF.toField text
-    toField (SqlArray ints) = PSF.toField ints
-
+import SqlValue
 
 class (Ae.ToJSON (MType s), GP.PrettyShow (MType s), PS.FromRow (MType s), Show (Get s), Show (MType s))
         => FromSQL s where
@@ -116,7 +105,7 @@ postsWhereSearch (SearchOptions text) =
     let str = "title ILIKE ? OR content ILIKE ?\
               \ OR array_to_string(tagnames, ',') ILIKE ?\
               \ OR array_to_string(catnames, ',') ILIKE ?"
-    in  (str, replicate 4 $ SqlText $ TL.fromStrict $ enclose "%" text)
+    in  (str, replicate 4 $ SqlTextL $ TL.fromStrict $ enclose "%" text)
 
 queryIntercalate :: PS.Query -> [(PS.Query, [SqlValue])] -> (PS.Query, [SqlValue])
 queryIntercalate delim = foldr f ("", [])
