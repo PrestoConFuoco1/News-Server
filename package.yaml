@@ -36,6 +36,7 @@ dependencies:
 - postgresql-simple
 - unordered-containers
 - exceptions
+- random
 
 library:
   source-dirs: src

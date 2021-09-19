@@ -120,15 +120,15 @@ authenticate auth = do
         [] -> return $ bad "Login not found" -- invalid login
         x:y:xs -> undefined -- error in the database
         [x] -> do
-            token <- fmap (T.pack) $ randomString 4
+            token <- fmap (T.pack) $ randomString 10
             addToken (Ty._u_id x) token
 
 addToken :: (MonadServer m) => Ty.UserId -> T.Text -> m Response
 addToken id token = do
-    let str = "INSERT INTO news.token (user_id, token) VALUES (?, ?) ON CONFLICT (token) DO UPDATE SET token = ?"
+    let str = "INSERT INTO news.token (user_id, token) VALUES (?, ?) ON CONFLICT (user_id) DO UPDATE SET token = ?"
         token' = (T.pack $ show id) <> token
     execute str (id, token', token')
-    return $ ok $ E.encodeUtf8 token
+    return $ ok $ E.encodeUtf8 token'
 
 
 getUserByLogin :: (MonadServer m) => T.Text -> m [Ty.User]

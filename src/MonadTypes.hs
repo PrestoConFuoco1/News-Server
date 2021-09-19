@@ -17,6 +17,9 @@ import qualified Data.ByteString as BS
 import Control.Monad.Catch as CMC
 import Control.Exception as CE
 
+import System.Random
+import GHC.Arr
+
 data ServerHandlers = ServerHandlers {
     logger :: L.Handle,
     sqlHandler :: DB.Handle
@@ -72,7 +75,15 @@ instance MonadLog ServerIO where
 
 instance MonadServer ServerIO where
     runServer handlers = flip runReaderT handlers . runServerIO
-    randomString int = undefined
+    randomString int = liftIO $ randomString' int
+
+randomString' :: Int -> IO String            
+randomString' int = do
+        let str = "qwertyuiopasdfghjklzxcvbnm"
+            len = length str
+            arr = array (1, len) $ zip [1..len] str
+        xs <- sequence $ replicate int $ randomRIO (1, len)
+        return $ map (arr !) xs
 
 
 logDebug, logError, logInfo, logWarn, logFatal :: (MonadLog m) => T.Text -> m ()
