@@ -1,3 +1,3 @@
 #!/bin/bash
-curl -v -G -d "token=admin&user_id=$1&description=$2" localhost:5555/authors/create
+curl -G -d "token=$1&user_id=$2&description=$3" localhost:5555/authors/create
 echo ""

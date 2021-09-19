@@ -52,8 +52,8 @@ instance (DeleteSQL s) => ActWithOne (AWOd s) where
    
 actWithOne :: (ActWithOne s, MonadServer m) => s -> Int -> m Response
 actWithOne s n
-  | n == 1 = logInfo (E.decodeUtf8 $ success s) >> return (ok $ success s)
-  | n == 0 = logWarn (E.decodeUtf8 $ nothingFound s) >> return (bad $ nothingFound s)
+  | n == 1 = logInfo (E.decodeUtf8 $ success s) >> return (ok $ Ae.toJSON $ E.decodeUtf8 $ success s)
+  | n == 0 = logWarn (E.decodeUtf8 $ nothingFound s) >> return (bad $ E.decodeUtf8 $ nothingFound s)
   | n > 1 = logError (E.decodeUtf8 $ tooMuchFound s) >> return (internal "Internal error")
   | n < 0 = logFatal "program is working incorrectly, number of affected rows in database is negative"
         >> return (internal "Internal error")

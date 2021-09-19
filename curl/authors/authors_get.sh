@@ -1,3 +1,3 @@
 #!/bin/bash
-curl -v -G -d "" localhost:5555/authors/get
+curl -G -d "token=admin" localhost:5555/authors/get
 echo ""

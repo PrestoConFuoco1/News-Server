@@ -49,8 +49,8 @@ library
       DatabaseHandler
       DBTypes
       Delete
+      Exceptions
       Execute
-      Execute1
       ExecuteTypes
       ExecuteUtils
       FromSQL

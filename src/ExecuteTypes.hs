@@ -1,9 +1,11 @@
-
+{-# LANGUAGE DeriveAnyClass #-}
 module ExecuteTypes where
 
 
 import qualified Database.PostgreSQL.Simple as PS
 import qualified Database.PostgreSQL.Simple.ToRow as PSR
+
+import qualified Data.Text as T
 
 import qualified Network.HTTP.Types as NHT
 import qualified Data.Aeson as Ae
@@ -13,6 +15,14 @@ data Response = Response {
     _r_status :: NHT.Status,
     _r_message :: Ae.Value
     }
+
+
+data Result = Result {
+    _ok :: Bool,
+    errMsg :: Maybe T.Text,
+    result :: Maybe Ae.Value
+    } deriving (Show, Eq, Generic, Ae.ToJSON)
+
 
 
 data WithUser a = WithUser {

@@ -8,6 +8,7 @@ import qualified Network.HTTP.Types as NHT
 import qualified Data.ByteString as B
 import qualified Data.Text as T
 import Control.Exception
+import Control.Monad (when)
 
 import qualified Database.PostgreSQL.Simple.Types as PSTy
 import qualified GenericPretty as GP
@@ -35,6 +36,8 @@ import Action.Comments.Types
 import Action.Draft.Types
 import Action.Authors.Types
 
+import Exceptions as Ex
+
 import SqlValue
 
 executeAction :: MonadServer m => WhoWhat Action -> m Response
@@ -49,44 +52,47 @@ executeAction (WhoWhat y (ADrafts x)) = executeDraft (WhoWhat y x)
 
 executePosts (WhoWhat y (Read x)) = getThis postDummy x
 
+
 executeAuthor (WhoWhat y (Read x)) =
-    withAuth y . withAdmin $ getThis authorDummy x
+    withAuthAdmin y >> getThis authorDummy x
 executeAuthor (WhoWhat y (Create x)) =
-    withAuth y . withAdmin $ createThis dummyCAuthor x
+    withAuthAdmin y >> createThis dummyCAuthor x
 executeAuthor (WhoWhat y (Update x)) =
-    withAuth y . withAdmin $ editThis dummyUAuthor x
+    withAuthAdmin y >> editThis dummyUAuthor x
 executeAuthor (WhoWhat y (Delete x)) =
-    withAuth y . withAdmin $ deleteThis dummyDAuthor x
+    withAuthAdmin y >> deleteThis dummyDAuthor x
 
 executeTags (WhoWhat y (Read x)) = getThis tagDummy x
-executeTags (WhoWhat y (Create x)) = withAuth y . withAdmin $ createThis dummyCTag x
-executeTags (WhoWhat y (Update x)) =  withAuth y . withAdmin $ editThis dummyUTag x
-executeTags (WhoWhat y (Delete x)) = withAuth y . withAdmin $ deleteThis dummyDTag x
+executeTags (WhoWhat y (Create x)) = withAuthAdmin y >> createThis dummyCTag x
+executeTags (WhoWhat y (Update x)) =  withAuthAdmin y >> editThis dummyUTag x
+executeTags (WhoWhat y (Delete x)) = withAuthAdmin y >> deleteThis dummyDTag x
 
 
 executeCategory (WhoWhat y (Read x)) = getThis catDummy x
-executeCategory (WhoWhat y (Create x)) = withAuth y . withAdmin $ createThis dummyCCat x
-executeCategory (WhoWhat y (Update x)) =  withAuth y . withAdmin $ editThis dummyUCat x
-executeCategory (WhoWhat y (Delete x)) = withAuth y . withAdmin $ deleteThis dummyDCat x
+executeCategory (WhoWhat y (Create x)) = withAuthAdmin y >> createThis dummyCCat x
+executeCategory (WhoWhat y (Update x)) =  withAuthAdmin y >> editThis dummyUCat x
+executeCategory (WhoWhat y (Delete x)) = withAuthAdmin y >> deleteThis dummyDCat x
 
 executeUsers (WhoWhat y (Create x)) = createThis dummyCUser x
-executeUsers (WhoWhat y (Delete x)) = withAuth y . withAdmin $ deleteThis dummyDUser x
-executeUsers (WhoWhat y (Read GetProfile)) = withAuth y getUser
+executeUsers (WhoWhat y (Delete x)) = withAuthAdmin y >> deleteThis dummyDUser x
+executeUsers (WhoWhat y (Read GetProfile)) = withAuth y >>= getUser
 
 executeComments (WhoWhat y (Read x)) = getThis commentDummy x
-executeComments (WhoWhat y (Create x)) = withAuth y $ createComment x
-executeComments (WhoWhat y (Delete x)) = withAuth y $ withUser $ \u -> deleteThis dummyDComment $ WithUser (Ty._u_id u) x
+executeComments (WhoWhat y (Create x)) = withAuth y >>= createComment x
+executeComments (WhoWhat y (Delete x)) = withAuth y >>= withUser >>= \u -> deleteThis dummyDComment $ WithUser (Ty._u_id u) x
 
 createComment :: (MonadServer m) => CreateComment -> Maybe Ty.User -> m Response
-createComment cc Nothing = return $ unauthorized "Unauthorized, use /auth"
+createComment cc Nothing = Ex.unauthorized
 createComment cc (Just u) = createThis dummyCComment $ WithUser (Ty._u_id u) cc
 
 executeDraft :: (MonadServer m) => WhoWhat ActionDrafts -> m Response
 executeDraft (WhoWhat y (Create x)) =
-    withAuth y $ withUser $ withAuthor $ \a -> createDraft $ WithAuthor (Ty._a_authorId a) x
+    withAuth y >>= withUser >>= withAuthor >>= \a -> createDraft $ WithAuthor (Ty._a_authorId a) x
 executeDraft (WhoWhat y _ ) = undefined
 
-
+createDraft :: (MonadServer m) => WithAuthor CreateDraft -> m Response -- ?
+createDraft = undefined
+{-
 withCreateDraft :: (MonadServer m) => WithAuthor CreateDraft -> m Response
 withCreateDraft (WithAuthor a CreateDraft{..}) = do
     let str =
@@ -106,26 +112,24 @@ withCreateDraft (WithAuthor a CreateDraft{..}) = do
             sqlH e
              | otherwise = logError (T.pack $ displayException e)
                 >> return (internal "Failed")
+-}
 
-
-
-
-withExceptionHandlers :: (Foldable f, CMC.MonadCatch m) => f (CMC.Handler m a) -> m a-> m a
-withExceptionHandlers = flip CMC.catches
 
 getUser :: (MonadServer m) => Maybe Ty.User -> m Response
-getUser Nothing = return $ unauthorized "Unauthorized, use /auth"
+getUser Nothing = Ex.unauthorized
 getUser (Just u) = let val = Ae.toJSON u
                    in  return $ Response NHT.ok200 val
 
-withAuthor :: (MonadServer m) => (Ty.Author -> m Response) -> Ty.User -> m Response
-withAuthor fm u = do
+withAuthor :: (MonadServer m) => Ty.User -> m Ty.Author
+withAuthor u = do
     as <- getThis' authorDummy (GetAuthors $ Just $ Ty._u_id u)
-    case as of
+    a  <- validateUniqueUser Ex.notAnAuthor as
+    return a
+ {-   case as of
         []  -> return $ bad "You are not an author"
         [a] -> fm a
         _   -> return $ internal "program working incorrectly"
-
+-}
 handleError :: MonadServer m => ActionError -> m Response
 handleError EInvalidEndpoint = do
     logError $ "Invalid endpoint"
@@ -133,30 +137,36 @@ handleError EInvalidEndpoint = do
 handleError (ERequiredFieldMissing x) = do
     let str =  "Required field missing (" <> x <> ")"
     logError $ E.decodeUtf8 str
-    return $ notFound str
+    return $ notFound $ E.decodeUtf8 str
 
+withAuthAdmin y = withAuth y >>= withAdmin
 
-withAuth :: (MonadServer m) => Maybe Token -> (Maybe Ty.User -> m Response) -> m Response
-withAuth mtoken m = case mtoken of
-    Nothing -> m Nothing
+withAuth :: (MonadServer m) => Maybe Token -> m (Maybe Ty.User)
+withAuth mtoken = case mtoken of
+    Nothing -> return Nothing
     Just token -> do
-        users <- getUserByToken token
-        case users of
-            [] -> m Nothing
-            [u] -> m (Just u) -- ok
-            lst -> undefined
+        users <- getUsersByToken token
+        case users of 
+            [] -> return Nothing
+            [u] -> return $ Just u
+            us  -> Ex.invalidUnique us
 
-withAdmin :: (MonadServer m) => m Response -> Maybe Ty.User -> m Response
-withAdmin m muser
-  | (muser >>= Ty._u_admin) == Just True = m
-  | otherwise = return $ notFound invalidEndpointMsg
+withAdmin :: (MonadServer m) => Maybe Ty.User -> m ()
+withAdmin muser =
+    when ((muser >>= Ty._u_admin) /= Just True) $ Ex.invalidEndpoint
 
-withUser :: (MonadServer m) => (Ty.User -> m Response) -> Maybe Ty.User -> m Response
-withUser fm Nothing = return $ unauthorized "Unauthorized"
-withUser fm (Just u) = fm u
+validateUniqueUser :: (MonadServer m, GP.PrettyShow a) => m a -> [a] -> m a
+validateUniqueUser x [] = x
+validateUniqueUser _ [a] = return a
+validateUniqueUser _ us  = Ex.invalidUnique us
 
-getUserByToken :: (MonadServer m) => Token -> m [Ty.User]
-getUserByToken token = do
+
+withUser :: (MonadServer m) => Maybe Ty.User -> m Ty.User
+withUser Nothing = Ex.unauthorized
+withUser (Just u) = return u
+
+getUsersByToken :: (MonadServer m) => Token -> m [Ty.User]
+getUsersByToken token = do
     let str = "SELECT u.user_id, u.firstname, u.lastname, \
               \u.image, u.login, u.pass_hash, u.creation_date, u.is_admin \
               \FROM news.token t JOIN news.users u ON t.user_id = u.user_id WHERE t.token = ?"
@@ -164,35 +174,28 @@ getUserByToken token = do
     return users
 
 
-uniqueConstraintViolated e = PS.sqlState e == "23505"
-foreignKeyViolated e = PS.sqlState e == "23503"
-
-
 authenticate :: (MonadServer m) => Authenticate -> m Response
 authenticate auth = do
-    users <- getUserByLogin $ _au_login auth
-    case users of
-        [] -> return $ bad "Login not found" -- invalid login
-        x:y:xs -> undefined -- error in the database
-        [x] -> do
-            token <- fmap (T.pack) $ randomString 10
-            addToken (Ty._u_id x) token
+    user <- getUserByLogin $ _au_login auth
+    token <- fmap (T.pack) $ randomString 10
+    token' <- addToken (Ty._u_id user) token
+    return $ ok $ Ae.toJSON token'
 
-addToken :: (MonadServer m) => Ty.UserId -> T.Text -> m Response
+addToken :: (MonadServer m) => Ty.UserId -> T.Text -> m T.Text
 addToken id token = do
     let str = "INSERT INTO news.token (user_id, token) VALUES (?, ?) ON CONFLICT (user_id) DO UPDATE SET token = ?"
         token' = (T.pack $ show id) <> token
     execute str (id, token', token')
-    return $ ok $ E.encodeUtf8 token'
+    return token'
 
 
-getUserByLogin :: (MonadServer m) => T.Text -> m [Ty.User]
+getUserByLogin :: (MonadServer m) => T.Text -> m Ty.User
 getUserByLogin login = do
     let str = "SELECT u.user_id, u.firstname, u.lastname, \
               \u.image, u.login, u.pass_hash, u.creation_date, u.is_admin \
               \FROM news.users u WHERE u.login = ?"
     users <- query str [login]
-    return users
+    validateUniqueUser Ex.invalidLogin users
 
 
 createThis :: (MonadServer m, CreateSQL s) => s -> Create s -> m Response
@@ -203,7 +206,7 @@ createThis w cres = do
 
     withExceptionHandlers [CMC.Handler (sqlH w)] $ do
         execute str cres
-        return (ok $ cName w <> " successfully created")
+        return (ok $ Ae.toJSON $ E.decodeUtf8 $ cName w <> " successfully created")
   where sqlH :: (MonadServer m, CreateSQL s) => s -> PS.SqlError -> m Response
         sqlH s e
             | uniqueConstraintViolated e = do
@@ -211,12 +214,12 @@ createThis w cres = do
                     "Failed to create new " <> cName s <> ", " <>
                     cUniqueField s <> " is already in use\n" <>
                     "SqlError: " <> PS.sqlErrorMsg e
-                return $ bad $ cName s <> " with such " <> cUniqueField s <> " already exists."
+                return $ bad $ E.decodeUtf8 $ cName s <> " with such " <> cUniqueField s <> " already exists."
             | foreignKeyViolated e = do
                 let errmsg = 
                      "Failed to create new " <> cName s <> ", " <> cForeign s <> " is invalid"
                 logError $ E.decodeUtf8 $ errmsg
-                return $ bad errmsg
+                return $ bad $ E.decodeUtf8 errmsg
             | otherwise = logError (T.pack $ displayException e)
                 >> return (internal "Internal error")
 
@@ -240,12 +243,7 @@ getThis x g = do
     logDebug $ T.pack $ GP.defaultPretty cat
     let val = Ae.toJSON cat
     return $ Response NHT.ok200 val
-  where f :: (FromSQL s, MonadServer m) => s -> Get s -> m [MType s]
-        f x g = do
-            let qu = selectQuery x g
-            debugStr <- uncurry formatQuery qu
-            logDebug $ T.pack $ show debugStr
-            uncurry query qu
+
 
 
 deleteThis :: (MonadServer m, DeleteSQL s) => s -> Del s -> m Response
@@ -254,12 +252,10 @@ deleteThis s d = do
     debugStr <- formatQuery str params
     logDebug $ T.pack $ show debugStr
 
-    withExceptionHandlers [CMC.Handler (sqlH s)] $ do
+    withExceptionHandlers (Ex.defaultHandlers "deleteThis") $ do
         num <- execute str params
         actWithOne (AWOd s) num
 
-  where sqlH :: (MonadServer m, DeleteSQL s) => s -> PS.SqlError -> m Response
-        sqlH w e = logError (T.pack $ displayException e) >> return (internal "Internal error")
 
 
 editThis :: (MonadServer m, UpdateSQL s) => s -> Upd s -> m Response
@@ -271,10 +267,7 @@ editThis s u = case updateParams s u of
     debugStr <- formatQuery str params
     logDebug $ T.pack $ show debugStr
 
-    withExceptionHandlers [CMC.Handler sqlH] $ do
+    withExceptionHandlers (Ex.defaultHandlers "editThis") $ do
         num <- execute str params
         actWithOne (AWOu s) num
-
-  where sqlH :: (MonadServer m) => PS.SqlError -> m Response
-        sqlH e = logError (T.pack $ displayException e) >> return (internal "Internal error")
 

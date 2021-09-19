@@ -24,6 +24,8 @@ import qualified Database.PostgreSQL.Simple as PS (connectPostgreSQL, Connection
 import qualified DatabaseHandler as DB (Handle(..))
 import qualified Data.Aeson as Ae (encode)
 
+import qualified Exceptions as Ex
+import qualified Control.Monad.Catch as CMC
 
 port :: Int
 port = 5555
@@ -54,6 +56,8 @@ mainServer req = fmap coerceResponse $ do
             logDebug $ T.pack $ GP.defaultPretty $ _ww_action whowhat
 
             val <- executeAction whowhat
+                `CMC.catches` [CMC.Handler Ex.mainErrorHandler,
+                               CMC.Handler Ex.defaultMainHandler]
             return val
 
 coerceResponse :: Response -> W.Response
