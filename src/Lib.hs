@@ -1,9 +1,3 @@
-{-# LANGUAGE
-ScopedTypeVariables,
-TypeFamilies,
-FlexibleContexts,
-RecordWildCards
-#-}
 
 
 module Lib
@@ -50,17 +44,17 @@ mainFunc1 handlers req respond = do
 
 
 mainServer :: MonadServer m => W.Request -> m W.Response
-mainServer req = do
+mainServer req = fmap coerceResponse $ do
     logDebug $ T.pack $ show req
     let eithWhowhat = requestToAction req
     case eithWhowhat of
-        Left err -> fmap coerceResponse $ handleError err
+        Left err -> handleError err
         Right whowhat -> do
             logDebug "Action type is"
             logDebug $ T.pack $ GP.defaultPretty $ _ww_action whowhat
 
             val <- executeAction whowhat
-            return $ coerceResponse val
+            return val
 
 coerceResponse :: Response -> W.Response
 coerceResponse (Response status msg) =

@@ -1,0 +1,164 @@
+                                   Table "news.author"
+   Column    |  Type   | Collation | Nullable |                  Default                  
+-------------+---------+-----------+----------+-------------------------------------------
+ author_id   | integer |           | not null | nextval('author_author_id_seq'::regclass)
+ user_id     | integer |           | not null | 1
+ description | text    |           |          | 
+Indexes:
+    "author_pkey" PRIMARY KEY, btree (author_id)
+    "author_user_id_key" UNIQUE CONSTRAINT, btree (user_id)
+Foreign-key constraints:
+    "author_user_id_fkey" FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+Referenced by:
+    TABLE "draft" CONSTRAINT "draft_author_id_fkey" FOREIGN KEY (author_id) REFERENCES author(author_id) ON DELETE SET DEFAULT
+    TABLE "post" CONSTRAINT "post_author_id_fkey" FOREIGN KEY (author_id) REFERENCES author(author_id) ON DELETE SET DEFAULT
+    
+    
+                                            Table "news.category"
+       Column       |  Type   | Collation | Nullable |                    Default                    
+--------------------+---------+-----------+----------+-----------------------------------------------
+ category_id        | integer |           | not null | nextval('category_category_id_seq'::regclass)
+ parent_category_id | integer |           |          | 1
+ name               | text    |           | not null | 
+Indexes:
+    "category_pkey" PRIMARY KEY, btree (category_id)
+    "category_name_key" UNIQUE CONSTRAINT, btree (name)
+Foreign-key constraints:
+    "category_parent_category_id_fkey" FOREIGN KEY (parent_category_id) REFERENCES category(category_id) ON DELETE CASCADE
+Referenced by:
+    TABLE "category" CONSTRAINT "category_parent_category_id_fkey" FOREIGN KEY (parent_category_id) REFERENCES category(category_id) ON DELETE CASCADE
+    TABLE "draft" CONSTRAINT "draft_category_id_fkey" FOREIGN KEY (category_id) REFERENCES category(category_id) ON DELETE SET DEFAULT
+    TABLE "post" CONSTRAINT "post_category_id_fkey" FOREIGN KEY (category_id) REFERENCES category(category_id) ON DELETE SET DEFAULT
+
+ 
+ 
+                                    Table "news.comment"
+   Column   |  Type   | Collation | Nullable |                   Default                   
+------------+---------+-----------+----------+---------------------------------------------
+ comment_id | integer |           | not null | nextval('comment_comment_id_seq'::regclass)
+ post_id    | integer |           | not null | 
+ content    | text    |           | not null | 
+ user_id    | integer |           | not null | 
+Indexes:
+    "comment_pkey" PRIMARY KEY, btree (comment_id)
+Foreign-key constraints:
+    "comment_post_id_fkey" FOREIGN KEY (post_id) REFERENCES post(post_id) ON DELETE CASCADE
+    "comment_user_id_fkey" FOREIGN KEY (user_id) REFERENCES users(user_id)
+
+
+
+                                    Table "news.draft"
+    Column     |  Type   | Collation | Nullable |                 Default                 
+---------------+---------+-----------+----------+-----------------------------------------
+ draft_id      | integer |           | not null | nextval('draft_draft_id_seq'::regclass)
+ title         | text    |           | not null | 
+ creation_date | date    |           | not null | CURRENT_DATE
+ author_id     | integer |           | not null | 1
+ category_id   | integer |           | not null | 1
+ content       | text    |           | not null | 
+ photo         | text    |           |          | 
+ extra_photos  | text[]  |           |          | 
+ post_id       | integer |           |          | 
+Indexes:
+    "draft_pkey" PRIMARY KEY, btree (draft_id)
+    "draft_post_id_key" UNIQUE CONSTRAINT, btree (post_id)
+Foreign-key constraints:
+    "draft_author_id_fkey" FOREIGN KEY (author_id) REFERENCES author(author_id) ON DELETE SET DEFAULT
+    "draft_category_id_fkey" FOREIGN KEY (category_id) REFERENCES category(category_id) ON DELETE SET DEFAULT
+    "draft_post_id_fkey" FOREIGN KEY (post_id) REFERENCES post(post_id)
+Referenced by:
+    TABLE "draft_tag" CONSTRAINT "draft_tag_draft_id_fkey" FOREIGN KEY (draft_id) REFERENCES draft(draft_id)
+
+
+
+               Table "news.draft_tag"
+  Column  |  Type   | Collation | Nullable | Default 
+----------+---------+-----------+----------+---------
+ draft_id | integer |           | not null | 
+ tag_id   | integer |           | not null | 
+Foreign-key constraints:
+    "draft_tag_draft_id_fkey" FOREIGN KEY (draft_id) REFERENCES draft(draft_id)
+    "draft_tag_tag_id_fkey" FOREIGN KEY (tag_id) REFERENCES tag(tag_id)
+
+
+                                   Table "news.post"
+    Column     |  Type   | Collation | Nullable |                Default                
+---------------+---------+-----------+----------+---------------------------------------
+ post_id       | integer |           | not null | nextval('post_post_id_seq'::regclass)
+ title         | text    |           | not null | 
+ creation_date | date    |           | not null | 
+ author_id     | integer |           | not null | 1
+ category_id   | integer |           | not null | 1
+ content       | text    |           | not null | 
+ photo         | text    |           |          | 
+ extra_photos  | text[]  |           |          | 
+Indexes:
+    "post_pkey" PRIMARY KEY, btree (post_id)
+Foreign-key constraints:
+    "post_author_id_fkey" FOREIGN KEY (author_id) REFERENCES author(author_id) ON DELETE SET DEFAULT
+    "post_category_id_fkey" FOREIGN KEY (category_id) REFERENCES category(category_id) ON DELETE SET DEFAULT
+Referenced by:
+    TABLE "comment" CONSTRAINT "comment_post_id_fkey" FOREIGN KEY (post_id) REFERENCES post(post_id) ON DELETE CASCADE
+    TABLE "draft" CONSTRAINT "draft_post_id_fkey" FOREIGN KEY (post_id) REFERENCES post(post_id)
+    TABLE "post_tag" CONSTRAINT "post_tag_post_id_fkey" FOREIGN KEY (post_id) REFERENCES post(post_id) ON DELETE CASCADE
+
+
+               Table "news.post_tag"
+ Column  |  Type   | Collation | Nullable | Default 
+---------+---------+-----------+----------+---------
+ post_id | integer |           | not null | 
+ tag_id  | integer |           | not null | 
+Foreign-key constraints:
+    "post_tag_post_id_fkey" FOREIGN KEY (post_id) REFERENCES post(post_id) ON DELETE CASCADE
+    "post_tag_tag_id_fkey" FOREIGN KEY (tag_id) REFERENCES tag(tag_id) ON DELETE CASCADE
+
+
+
+
+                               Table "news.tag"
+ Column |  Type   | Collation | Nullable |               Default               
+--------+---------+-----------+----------+-------------------------------------
+ tag_id | integer |           | not null | nextval('tag_tag_id_seq'::regclass)
+ name   | text    |           | not null | 
+Indexes:
+    "tag_pkey" PRIMARY KEY, btree (tag_id)
+    "tag_name_key" UNIQUE CONSTRAINT, btree (name)
+Referenced by:
+    TABLE "draft_tag" CONSTRAINT "draft_tag_tag_id_fkey" FOREIGN KEY (tag_id) REFERENCES tag(tag_id)
+    TABLE "post_tag" CONSTRAINT "post_tag_tag_id_fkey" FOREIGN KEY (tag_id) REFERENCES tag(tag_id) ON DELETE CASCADE
+
+
+
+                 Table "news.token"
+ Column  |  Type   | Collation | Nullable | Default 
+---------+---------+-----------+----------+---------
+ user_id | integer |           | not null | 
+ token   | text    |           | not null | 
+Indexes:
+    "token_pkey" PRIMARY KEY, btree (token)
+    "token_user_id_key" UNIQUE CONSTRAINT, btree (user_id)
+Foreign-key constraints:
+    "token_user_id_fkey" FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+
+
+                                    Table "news.users"
+    Column     |  Type   | Collation | Nullable |                Default                 
+---------------+---------+-----------+----------+----------------------------------------
+ user_id       | integer |           | not null | nextval('users_user_id_seq'::regclass)
+ firstname     | text    |           | not null | 
+ lastname      | text    |           | not null | 
+ image         | text    |           |          | 
+ login         | text    |           | not null | 
+ pass_hash     | text    |           | not null | 
+ creation_date | date    |           | not null | CURRENT_DATE
+ is_admin      | boolean |           | not null | false
+Indexes:
+    "user_pkey" PRIMARY KEY, btree (user_id)
+    "users_login_key" UNIQUE CONSTRAINT, btree (login)
+Referenced by:
+    TABLE "author" CONSTRAINT "author_user_id_fkey" FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+    TABLE "token" CONSTRAINT "token_user_id_fkey" FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+
+
+
+

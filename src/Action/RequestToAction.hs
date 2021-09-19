@@ -28,6 +28,8 @@ import Action.Tags.Types
 import Action.Tags.Tags
 import Action.Users.Types
 import Action.Users.Users
+import Action.Comments.Types
+import Action.Comments.Comments
 
 import Action.Utils
 import Action.Common
@@ -39,6 +41,7 @@ data Action = AAuthors ActionAuthors
             | ATags  ActionTags
             | AUsers ActionUsers
             | AAuth  Authenticate
+            | AComments ActionComments
     deriving (Generic)
 
 requestToAction :: W.Request -> Either ActionError (WhoWhat Action)
@@ -67,7 +70,8 @@ requestToAction' path hash = case path of
      | x == "authors"    -> fmap AAuthors $ requestToActionAuthors xs hash
      | x == "tags"       -> fmap ATags $ requestToActionTags xs hash
      | x == "users"      -> fmap AUsers $ requestToActionUsers xs hash
-    (y:z:zs)
+     | x == "comments"   -> fmap AComments $ requestToActionComments xs hash
+    []
      | otherwise -> Left EInvalidEndpoint
 
 

@@ -30,6 +30,7 @@ import ActWithOne (actWithOne, ActWithOne(..), AWOu(..), AWOd(..))
 import ExecuteTypes
 import ExecuteUtils
 import Action.Users.Types
+import Action.Comments.Types
 
 executeAction :: MonadServer m => WhoWhat Action -> m Response
 executeAction (WhoWhat y (AAuthors x)) = executeAuthor (WhoWhat y x)
@@ -38,6 +39,7 @@ executeAction (WhoWhat y (APosts x)) = executePosts (WhoWhat y x)
 executeAction (WhoWhat y (ATags x)) = executeTags (WhoWhat y x)
 executeAction (WhoWhat y (AUsers x)) = executeUsers (WhoWhat y x)
 executeAction (WhoWhat y (AAuth x)) = authenticate x
+executeAction (WhoWhat y (AComments x)) = executeComments (WhoWhat y x)
 
 executePosts (WhoWhat y (Read x)) = getThis postDummy x
 
@@ -65,6 +67,13 @@ executeUsers (WhoWhat y (Create x)) = createThis dummyCUser x
 executeUsers (WhoWhat y (Delete x)) = withAuth y . withAdmin $ deleteThis dummyDUser x
 executeUsers (WhoWhat y (Read GetProfile)) = withAuth y getUser
 
+executeComments (WhoWhat y (Read x)) = getThis commentDummy x
+executeComments (WhoWhat y (Create x)) = withAuth y $ func x
+
+func :: (MonadServer m) => CreateComment -> Maybe Ty.User -> m Response
+func cc Nothing = return $ unauthorized "Unauthorized, use /auth"
+func cc (Just u) = createThis dummyCComment $ WithUser (Ty._u_id u) cc
+--func cc (Just u) = undefined
 
 withExceptionHandlers :: (Foldable f, CMC.MonadCatch m) => f (CMC.Handler m a) -> m a-> m a
 withExceptionHandlers = flip CMC.catches

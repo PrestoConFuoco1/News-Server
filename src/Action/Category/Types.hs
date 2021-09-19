@@ -7,12 +7,8 @@ import qualified GenericPretty as GP
 import qualified Data.Text as T
 import qualified Database.PostgreSQL.Simple as PS
 import Action.Common
-{-
-data ActionCategory = CGet GetCategories
-                 | CCreate CreateCategory
-                 | CEdit EditCategory
-                 | CDelete DeleteCategory
--}
+
+
 type ActionCategory = CRUD CreateCategory GetCategories EditCategory DeleteCategory
 
 type CatId = Int

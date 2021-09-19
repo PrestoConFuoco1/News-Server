@@ -135,8 +135,20 @@ instance Ae.ToJSON Tag where
 
 data Comment = Comment {
     _com_commentId :: CommentId,
-    _com_postId :: PostId,
-    _com_content :: T.Text
-    } deriving (Show, Eq, Generic)
+    _com_content :: T.Text,
+    _com_user :: User
+    } deriving (Show, Eq, Generic, GP.PrettyShow)
+
+
+instance Ae.ToJSON Comment where
+    toJSON = Ae.genericToJSON Ae.defaultOptions { Ae.fieldLabelModifier = defaultModifier }
+
+
+instance PSR.FromRow Comment where
+    fromRow = do
+        id <- PSR.field
+        content <- PSR.field
+        user <- PSR.fromRow
+        return $ Comment id content user
 
 

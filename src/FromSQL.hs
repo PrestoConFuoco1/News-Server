@@ -36,6 +36,7 @@ import Action.Category.Types
 import Action.Users.Types
 import Action.Authors.Types
 import Action.Posts.Types
+import Action.Comments.Types
 import SqlValue
 
 class (Ae.ToJSON (MType s), GP.PrettyShow (MType s), PS.FromRow (MType s), Show (Get s), Show (MType s))
@@ -163,6 +164,18 @@ instance FromSQL TagD where
         in  (selectClause, args)
 
 
+newtype CommentD = CommentD ()
+commentDummy = CommentD ()
 
+instance FromSQL CommentD where
+    type MType CommentD = Ty.Comment
+    type Get CommentD = GetComments
+    selectQuery _ (GetComments id) =
+        let selectClause = "SELECT comment_id, content,  \
+                            \ user_id, firstname, lastname, image, login, \
+                            \ pass_hash, creation_date, is_admin \
+                            \ FROM news.get_comments WHERE post_id = ?"
+            args = [SqlInt id]
+        in  (selectClause, args)
 
 

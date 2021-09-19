@@ -14,8 +14,10 @@ import Action.Tags.Types
 import Action.Category.Types
 import Action.Users.Types
 import Action.Authors.Types
+import Action.Comments.Types
 import qualified Database.PostgreSQL.Simple as PS
 import qualified Data.ByteString as B
+import ExecuteTypes
 
 class (PS.ToRow (Create s)) => CreateSQL s where
     type Create s :: *
@@ -67,6 +69,14 @@ instance CreateSQL CAuthor where
     cUniqueField _ = "user_id"
     cForeign _ = "user_id"
 
+newtype CComment = CComment ()
+dummyCComment = CComment ()
 
-
+instance CreateSQL CComment where
+    type Create CComment = WithUser CreateComment
+    createQuery _ = "INSERT INTO news.comment (user_id, post_id, content) values (?, ?, ?)"
+--insert into comment (post_id, content, user_id) values (1, 'comment to first post', 2);
+    cName _ = "comment"
+    cUniqueField _ = "unique error"
+    cForeign _ = "foreign error"
 
