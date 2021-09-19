@@ -13,8 +13,9 @@ import qualified Data.Text as T
 type ActionAuthors = CRUD CreateAuthor GetAuthors EditAuthor DeleteAuthor
 
 
-data GetAuthors = GetAuthors
-    deriving (Show, Generic)
+data GetAuthors = GetAuthors {
+    _ga_userId :: Maybe Int
+    } deriving (Show, Generic)
 
 data CreateAuthor = CreateAuthor {
     _ca_userId :: Int,

@@ -10,7 +10,7 @@ import qualified Database.PostgreSQL.Simple as PS
 import Action.Common
 import Data.Void
 
-type ActionComments = CRUD CreateComment GetComments Void Void -- DeleteComment
+type ActionComments = CRUD CreateComment GetComments Void DeleteComment
 
 data GetComments = GetComments {
     _gc_postId :: Int
@@ -21,3 +21,10 @@ data CreateComment = CreateComment {
     _ccom_content :: T.Text
     -- user id will be known from auth token
     } deriving (Show, Generic, GP.PrettyShow, PS.ToRow)
+
+data DeleteComment = DeleteComment {
+    _dc_commentId :: Int
+    -- user id will be known from auth token
+    } deriving (Show, Generic, GP.PrettyShow, PS.ToRow)
+
+

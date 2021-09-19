@@ -8,7 +8,7 @@ import Action.Utils
 requestToActionAuthors :: [T.Text] -> Query -> Either ActionError ActionAuthors
 requestToActionAuthors path hash = case path of
   (x:xs)
-    | x == "get" -> Right $ Read GetAuthors
+    | x == "get" -> Right $ Read $ GetAuthors Nothing
     | x == "create" -> fmap Create $ createAuthorToAction hash
     | x == "delete" -> fmap Delete $ deleteAuthorToAction hash
     | x == "edit" -> fmap Update $ editAuthorToAction hash

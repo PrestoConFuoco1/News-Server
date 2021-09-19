@@ -1,4 +1,4 @@
-
+{-# LANGUAGE RecordWildCards #-}
 
 module Execute where
 
@@ -31,6 +31,10 @@ import ExecuteTypes
 import ExecuteUtils
 import Action.Users.Types
 import Action.Comments.Types
+import Action.Draft.Types
+import Action.Authors.Types
+
+import SqlValue
 
 executeAction :: MonadServer m => WhoWhat Action -> m Response
 executeAction (WhoWhat y (AAuthors x)) = executeAuthor (WhoWhat y x)
@@ -40,6 +44,7 @@ executeAction (WhoWhat y (ATags x)) = executeTags (WhoWhat y x)
 executeAction (WhoWhat y (AUsers x)) = executeUsers (WhoWhat y x)
 executeAction (WhoWhat y (AAuth x)) = authenticate x
 executeAction (WhoWhat y (AComments x)) = executeComments (WhoWhat y x)
+executeAction (WhoWhat y (ADrafts x)) = executeDraft (WhoWhat y x)
 
 executePosts (WhoWhat y (Read x)) = getThis postDummy x
 
@@ -68,12 +73,28 @@ executeUsers (WhoWhat y (Delete x)) = withAuth y . withAdmin $ deleteThis dummyD
 executeUsers (WhoWhat y (Read GetProfile)) = withAuth y getUser
 
 executeComments (WhoWhat y (Read x)) = getThis commentDummy x
-executeComments (WhoWhat y (Create x)) = withAuth y $ func x
+executeComments (WhoWhat y (Create x)) = withAuth y $ createComment x
+executeComments (WhoWhat y (Delete x)) = withAuth y $ withUser $ \u -> deleteThis dummyDComment $ WithUser (Ty._u_id u) x
 
-func :: (MonadServer m) => CreateComment -> Maybe Ty.User -> m Response
-func cc Nothing = return $ unauthorized "Unauthorized, use /auth"
-func cc (Just u) = createThis dummyCComment $ WithUser (Ty._u_id u) cc
---func cc (Just u) = undefined
+createComment :: (MonadServer m) => CreateComment -> Maybe Ty.User -> m Response
+createComment cc Nothing = return $ unauthorized "Unauthorized, use /auth"
+createComment cc (Just u) = createThis dummyCComment $ WithUser (Ty._u_id u) cc
+
+executeDraft :: (MonadServer m) => WhoWhat ActionDrafts -> m Response
+executeDraft (WhoWhat y (Create x)) =
+    withAuth y $ withUser $ withAuthor $ \a -> createDraft $ WithAuthor (Ty._a_authorId a) x
+executeDraft (WhoWhat y _ ) = undefined
+
+
+createDraft :: (MonadServer m) => WithAuthor CreateDraft -> m Response
+createDraft (WithAuthor a CreateDraft{..}) = do
+    let str =
+         "INSERT INTO news.draft (title, author_id, category_id, content, photo, extra_photos)\
+         \VALUES(?, ?, ?, ?, ?, ?) "
+        args = [SqlValue' _cd_title, SqlValue' a, SqlValue' _cd_categoryId, SqlValue' _cd_content]
+    undefined
+        
+
 
 withExceptionHandlers :: (Foldable f, CMC.MonadCatch m) => f (CMC.Handler m a) -> m a-> m a
 withExceptionHandlers = flip CMC.catches
@@ -83,6 +104,13 @@ getUser Nothing = return $ unauthorized "Unauthorized, use /auth"
 getUser (Just u) = let val = Ae.toJSON u
                    in  return $ Response NHT.ok200 val
 
+withAuthor :: (MonadServer m) => (Ty.Author -> m Response) -> Ty.User -> m Response
+withAuthor fm u = do
+    as <- getThis' authorDummy (GetAuthors $ Just $ Ty._u_id u)
+    case as of
+        []  -> return $ bad "You are not an author"
+        [a] -> fm a
+        _   -> return $ internal "program working incorrectly"
 
 handleError :: MonadServer m => ActionError -> m Response
 handleError EInvalidEndpoint = do
@@ -108,6 +136,10 @@ withAdmin :: (MonadServer m) => m Response -> Maybe Ty.User -> m Response
 withAdmin m muser
   | (muser >>= Ty._u_admin) == Just True = m
   | otherwise = return $ notFound invalidEndpointMsg
+
+withUser :: (MonadServer m) => (Ty.User -> m Response) -> Maybe Ty.User -> m Response
+withUser fm Nothing = return $ unauthorized "Unauthorized"
+withUser fm (Just u) = fm u
 
 getUserByToken :: (MonadServer m) => Token -> m [Ty.User]
 getUserByToken token = do
@@ -149,7 +181,6 @@ getUserByLogin login = do
     return users
 
 
-
 createThis :: (MonadServer m, CreateSQL s) => s -> Create s -> m Response
 createThis w cres = do
     let str = createQuery w
@@ -177,13 +208,21 @@ createThis w cres = do
 
 
 
+getThis' :: (FromSQL s, MonadServer m) => s -> Get s -> m [MType s]
+getThis' x g = do
+        let (qu, pars) = selectQuery x g
+        debugStr <- formatQuery qu pars
+        logDebug $ T.pack $ show debugStr
+        query qu pars
+
 
 
 
 -- добавить обработку исключений!!!
 getThis :: (FromSQL s, MonadServer m) => s -> Get s -> m Response
 getThis x g = do
-    cat <- f x g
+--    cat <- f x g
+    cat <- getThis' x g
     logDebug $ T.pack $ GP.defaultPretty cat
     let val = Ae.toJSON cat
     return $ Response NHT.ok200 val
@@ -197,12 +236,12 @@ getThis x g = do
 
 deleteThis :: (MonadServer m, DeleteSQL s) => s -> Del s -> m Response
 deleteThis s d = do
-    let str = deleteQuery s
-    debugStr <- formatQuery str d
+    let (str, params) = deleteQuery s d
+    debugStr <- formatQuery str params
     logDebug $ T.pack $ show debugStr
 
     withExceptionHandlers [CMC.Handler (sqlH s)] $ do
-        num <- execute str d
+        num <- execute str params
         actWithOne (AWOd s) num
 
   where sqlH :: (MonadServer m, DeleteSQL s) => s -> PS.SqlError -> m Response
@@ -221,13 +260,7 @@ editThis s u = case updateParams s u of
     withExceptionHandlers [CMC.Handler sqlH] $ do
         num <- execute str params
         actWithOne (AWOu s) num
---        return (ok $ cName w <> " successfully created")
-  --      `CMC.catches` [CMC.Handler (sqlH w)]
 
-
- --   (execute str (vals ++ identifParams s u)
-  --      >> return (ok $ uName s <> " successfully edited"))
-   --     `CMC.catches` [CMC.Handler sqlH]
   where sqlH :: (MonadServer m) => PS.SqlError -> m Response
         sqlH e = logError (T.pack $ displayException e) >> return (internal "Internal error")
 

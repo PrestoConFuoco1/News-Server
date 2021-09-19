@@ -35,8 +35,8 @@ getPostsAction :: Query -> ActionPosts
 getPostsAction qu =
     let tagopts = foldr (<|>) Nothing
                            [fmap OneTag $ requireInt qu "tag",
-                            fmap TagsIn $ requireIntList qu "tags__in",
-                            fmap TagsAll $ requireIntList qu "tags__all"]
+                            fmap TagsIn $ requireList qu "tags__in",
+                            fmap TagsAll $ requireList qu "tags__all"]
         creationopts = foldr (<|>) Nothing $
                        [fmap Created $ requireDay qu "created_at",
                         fmap CreatedEarlier $ requireDay qu "created_at__lt",

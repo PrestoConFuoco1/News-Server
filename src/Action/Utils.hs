@@ -4,7 +4,7 @@ import qualified Network.Wai as W (Request, pathInfo, queryString)
 import qualified Network.HTTP.Types.URI as U (QueryItem)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as E (decodeUtf8, encodeUtf8)
-import qualified Data.Aeson as Ae (decode, Value)
+import qualified Data.Aeson as Ae (decode, Value, FromJSON)
 import qualified Data.ByteString.Lazy as BSL (fromStrict, unpack, ByteString)
 import qualified Data.ByteString as BS
 import qualified Data.Time as Time
@@ -47,11 +47,20 @@ readIntText = readInt . E.encodeUtf8
 readInt :: BS.ByteString -> Maybe Int
 readInt = Ae.decode . BSL.fromStrict
 
-requireIntList :: Query -> BS.ByteString -> Maybe [Int]
-requireIntList = require (Ae.decode . BSL.fromStrict)
-
 requireDay :: Query -> BS.ByteString -> Maybe Time.Day
 requireDay = require
      (Time.parseTimeM True Time.defaultTimeLocale "%Y-%-m-%-d" . T.unpack . E.decodeUtf8)
 
+{-
+requireIntList :: Query -> BS.ByteString -> Maybe [Int]
+--requireIntList = require (Ae.decode . BSL.fromStrict)
+requireIntList = requireList
+
+
+requireTextList :: Query -> BS.ByteString -> Maybe [T.Text]
+--requireTextList = require (Ae.decode . BSL.fromStrict)
+requireTextList = requireList
+-}
+requireList :: (Ae.FromJSON a) => Query -> BS.ByteString -> Maybe [a]
+requireList = require (Ae.decode . BSL.fromStrict)
 

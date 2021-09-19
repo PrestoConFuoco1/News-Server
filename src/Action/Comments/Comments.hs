@@ -12,6 +12,7 @@ requestToActionComments path hash = case path of
     (x:xs)
       | x == "get" -> fmap Read $ getCommentsToAction hash
       | x == "create" -> fmap Create $ createCommentsToAction hash
+      | x == "delete" -> fmap Delete $ deleteCommentsToAction hash
 
 
 getCommentsToAction :: Query -> Either ActionError GetComments
@@ -25,3 +26,11 @@ createCommentsToAction hash = do
     postId <- requireField (requireInt hash) "post_id"
     content <- requireField (requireText hash) "content"
     return $ CreateComment postId content
+
+
+deleteCommentsToAction :: Query -> Either ActionError DeleteComment
+deleteCommentsToAction hash = do
+    commentId <- requireField (requireInt hash) "comment_id"
+    return $ DeleteComment commentId
+
+

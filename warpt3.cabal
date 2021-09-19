@@ -29,7 +29,11 @@ library
       Action.Authors.Types
       Action.Category.Category
       Action.Category.Types
+      Action.Comments.Comments
+      Action.Comments.Types
       Action.Common
+      Action.Draft.Draft
+      Action.Draft.Types
       Action.Posts.Posts
       Action.Posts.Types
       Action.RequestToAction

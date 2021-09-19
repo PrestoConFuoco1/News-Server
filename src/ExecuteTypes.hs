@@ -20,5 +20,14 @@ data WithUser a = WithUser {
     _wu_action :: a
     } deriving (Show, Generic)
 
+data WithAuthor a = WithAuthor {
+    _wa_authorId :: Int,
+    _wa_action :: a
+    } deriving (Show, Generic)
+
 instance PSR.ToRow a => PSR.ToRow (WithUser a) where
     toRow (WithUser int x) = PSR.toRow (PS.Only int PS.:. x)
+
+
+instance PSR.ToRow a => PSR.ToRow (WithAuthor a) where
+    toRow (WithAuthor int x) = PSR.toRow (PS.Only int PS.:. x)

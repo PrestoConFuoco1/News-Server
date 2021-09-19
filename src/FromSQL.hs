@@ -141,11 +141,14 @@ authorDummy = AuthorD ()
 instance FromSQL AuthorD where
     type MType AuthorD = Ty.Author
     type Get AuthorD = GetAuthors
-    selectQuery _ (GetAuthors) =
+    selectQuery _ (GetAuthors mu) =
         let selectClause = "SELECT author_id, description, user_id, firstname, lastname, \
-                           \ image, login, pass, creation_date, NULL as is_admin FROM news.get_authors"
+                           \ image, login, pass, creation_date, NULL as is_admin FROM news.get_authors "
             args = []
-        in  (selectClause, args)
+            whereClause = " WHERE user_id = ? "
+        in  case mu of
+            Nothing -> (selectClause, args)
+            Just u  -> (selectClause <> whereClause, [SqlInt u])
 
 --------- other instances for getting
 

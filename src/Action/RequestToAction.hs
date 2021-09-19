@@ -30,6 +30,9 @@ import Action.Users.Types
 import Action.Users.Users
 import Action.Comments.Types
 import Action.Comments.Comments
+import Action.Draft.Types
+import Action.Draft.Draft
+
 
 import Action.Utils
 import Action.Common
@@ -42,6 +45,7 @@ data Action = AAuthors ActionAuthors
             | AUsers ActionUsers
             | AAuth  Authenticate
             | AComments ActionComments
+            | ADrafts ActionDrafts
     deriving (Generic)
 
 requestToAction :: W.Request -> Either ActionError (WhoWhat Action)
@@ -66,6 +70,7 @@ requestToAction' path hash = case path of
     (x:xs)
      | x == "auth"       -> fmap AAuth $ requestToActionAuthenticate xs hash
      | x == "posts"      -> fmap APosts $ requestToActionPosts xs hash
+     | x == "drafts"      -> fmap ADrafts $ requestToActionDrafts xs hash
      | x == "categories" -> fmap ACategory $ requestToActionCats xs hash
      | x == "authors"    -> fmap AAuthors $ requestToActionAuthors xs hash
      | x == "tags"       -> fmap ATags $ requestToActionTags xs hash
