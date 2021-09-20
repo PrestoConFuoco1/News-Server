@@ -23,8 +23,8 @@ defaultModifier xs = xs
     
 
 {-
-data Create 
-data Update 
+data Database.Create 
+data Database.Update 
 data Filter
 
 -- | Аналог функции `elem` на уровне типов
@@ -45,9 +45,9 @@ data NotForSearch
 
 type family Field action (modifiers :: [*]) a :: *
 
-type instance Field Create constraints a = a 
+type instance Field Database.Create constraints a = a 
 
-type instance Field Update constraints a = 
+type instance Field Database.Update constraints a = 
   --_если_ (список модификаторов содержит Immutable) _тогда_ () _иначе_ (Maybe a)
     If     (Contains Immutable constraints)                  ()         (Maybe a)
 

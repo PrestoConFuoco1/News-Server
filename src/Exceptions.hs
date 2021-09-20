@@ -7,8 +7,8 @@ import qualified Data.Text as T
 import qualified GenericPretty as GP
 
 import qualified Data.Aeson as Ae
-import ExecuteUtils as U
-import ExecuteTypes
+import Execute.Utils as U
+import Execute.Types
 
 data ServerException =
       Default

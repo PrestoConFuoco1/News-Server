@@ -1,4 +1,4 @@
-module DatabaseHandler where
+module Handler.Database where
 
 
 

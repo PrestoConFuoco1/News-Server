@@ -15,10 +15,10 @@ import GHC.Generics
 import Action.RequestToAction
 import Action.Types (WhoWhat (..), Token)
 import Action.Common
-import FromSQL
-import Create
-import Delete
-import Update
+import Database.Read
+import Database.Create
+import Database.Delete
+import Database.Update
 
 import MonadTypes (MonadServer (..), logError, logDebug, execute, query, formatQuery, logInfo, logWarn, logFatal)
 import qualified Database.PostgreSQL.Simple as PS (SqlError(..))
@@ -26,8 +26,8 @@ import qualified Types as Ty
 import qualified Data.Aeson as Ae
 import qualified Control.Monad.Catch as CMC (catches, Handler(..), MonadCatch)
 import qualified Data.Text.Encoding as E (decodeUtf8, encodeUtf8)
-import ExecuteTypes
-import ExecuteUtils
+import Execute.Types
+import Execute.Utils
 
 
 class ActWithOne s where

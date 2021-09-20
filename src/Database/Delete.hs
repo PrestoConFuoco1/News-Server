@@ -21,10 +21,10 @@ import Action.RequestToAction
 import Action.Types
 import Action.Common
 
-import qualified Logger as L
+import qualified Handler.Logger as L
 import MonadTypes
 import qualified Database.PostgreSQL.Simple as PS
-import qualified DatabaseHandler as DB
+import qualified Handler.Database as DB
 import qualified DBTypes as DBT
 import qualified Types as Ty
 import qualified Data.Aeson as Ae
@@ -37,8 +37,8 @@ import Action.Authors.Types
 import Action.Category.Types
 import Action.Users.Types
 import Action.Comments.Types
-import ExecuteTypes
-import SqlValue
+import Execute.Types
+import Database.SqlValue
 
 class (PS.ToRow (Del s)) => DeleteSQL s where
     type Del s :: *

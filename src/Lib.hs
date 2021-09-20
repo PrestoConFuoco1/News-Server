@@ -16,12 +16,12 @@ import qualified GenericPretty as GP (defaultPretty)
 import Action.RequestToAction (requestToAction)
 import Action.Types (WhoWhat(..))
 import Execute (executeAction, handleError)
-import ExecuteTypes (Response(..))
+import Execute.Types (Response(..))
 
-import qualified Logger as L (simpleLog)
+import qualified Handler.Logger as L (simpleLog)
 import MonadTypes (MonadServer, ServerIO, ServerHandlers(..), logDebug, runServer, printS, getCurrentTimeS)
 import qualified Database.PostgreSQL.Simple as PS (connectPostgreSQL, Connection, close)
-import qualified DatabaseHandler as DB (Handle(..))
+import qualified Handler.Database as DB (Handle(..))
 import qualified Data.Aeson as Ae (encode)
 
 import qualified Exceptions as Ex

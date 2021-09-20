@@ -1,4 +1,4 @@
-module Logger (
+module Handler.Logger (
     Handle(..),
     Priority (..),
     logDebug,

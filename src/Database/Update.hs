@@ -23,10 +23,10 @@ import Action.RequestToAction
 import Action.Types
 import Action.Common
 
-import qualified Logger as L
+import qualified Handler.Logger as L
 import MonadTypes
 import qualified Database.PostgreSQL.Simple as PS
-import qualified DatabaseHandler as DB
+import qualified Handler.Database as DB
 import qualified DBTypes as DBT
 import qualified Types as Ty
 import qualified Data.Aeson as Ae
@@ -37,7 +37,7 @@ import qualified Data.Text.Encoding as E (decodeUtf8, encodeUtf8)
 import Action.Tags.Types
 import Action.Authors.Types
 import Action.Category.Types
-import SqlValue
+import Database.SqlValue
 import Data.Maybe (catMaybes)
 
 {-

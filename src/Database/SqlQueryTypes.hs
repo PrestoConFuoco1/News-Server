@@ -1,7 +1,7 @@
 {-# LANGUAGE ExistentialQuantification,
              GeneralizedNewtypeDeriving,
              BangPatterns #-}
-module SqlQueryTypes where
+module Database.SqlQueryTypes where
 
 import qualified Database.PostgreSQL.Simple as PS
 import qualified Database.PostgreSQL.Simple.ToField as PSF
@@ -9,7 +9,7 @@ import qualified Database.PostgreSQL.Simple.Types as PSTy
 import qualified Data.Text as T
 import qualified Data.Time as Time
 import Data.String as S
-import SqlValue
+import Database.SqlValue
 
 data Where =   Or !Where !Where
             | And !Where !Where

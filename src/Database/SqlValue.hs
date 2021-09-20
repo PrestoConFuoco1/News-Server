@@ -1,5 +1,5 @@
 {-# LANGUAGE ExistentialQuantification #-}
-module SqlValue where
+module Database.SqlValue where
 
 import qualified Database.PostgreSQL.Simple.ToField as PSF
 import qualified Database.PostgreSQL.Simple.Types as PSTy

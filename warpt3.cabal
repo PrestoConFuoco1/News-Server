@@ -45,25 +45,27 @@ library
       Action.Users.Users
       Action.Utils
       ActWithOne
-      Create
-      DatabaseHandler
+      Database.Create
+      Database.Delete
+      Database.Read
+      Database.SqlQueryTypes
+      Database.SqlValue
+      Database.Update
       DBTypes
-      Delete
       Exceptions
       Execute
-      ExecuteTypes
-      ExecuteUtils
-      FromSQL
+      Execute.Actions
+      Execute.Permissions
+      Execute.Types
+      Execute.Utils
       General
       GenericPretty
+      Handler.Database
+      Handler.Logger
       Lib
-      Logger
       MonadTypes
       Profiling
-      SqlQueryTypes
-      SqlValue
       Types
-      Update
   other-modules:
       Paths_warpt3
   hs-source-dirs:

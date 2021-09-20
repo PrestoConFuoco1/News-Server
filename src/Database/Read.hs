@@ -9,6 +9,7 @@ FlexibleContexts
 
 module Database.Read where
 
+import Prelude hiding (Read)
 import Data.Maybe
 import qualified Data.ByteString as B
 import qualified Data.Text.Lazy as TL
@@ -19,7 +20,7 @@ import GHC.Generics
 
 import Action.RequestToAction
 
-import qualified Logger as L
+import qualified Handler.Logger as L
 import MonadTypes
 import qualified Database.PostgreSQL.Simple as PS
 import qualified Types as Ty
@@ -38,12 +39,12 @@ import Action.Authors.Types
 import Action.Draft.Types
 import Action.Posts.Types
 import Action.Comments.Types
-import ExecuteTypes
-import SqlValue
-import SqlQueryTypes
+import Execute.Types
+import Database.SqlValue
+import Database.SqlQueryTypes
 
 class (Ae.ToJSON (MType s), GP.PrettyShow (MType s), PS.FromRow (MType s), Show (Get s), Show (MType s))
-        => FromSQL s where
+        => Read s where
     type MType s :: * -- main type of this type family
     type Get s :: *
     selectQuery :: s -> Get s -> (PS.Query, [SqlValue])
@@ -54,7 +55,7 @@ postDummy = PostD ()
 
 
 
-instance FromSQL PostD where
+instance Read PostD where
     type MType PostD = Ty.Post
     type Get PostD = GetPosts
     selectQuery _ (GetPosts cre tags search sortOpts) = 
@@ -155,7 +156,7 @@ newtype CatD = CatD ()
 catDummy = CatD ()
 
 
-instance FromSQL CatD where
+instance Read CatD where
     type MType CatD = Ty.Category
     type Get CatD = GetCategories
     selectQuery _ (GetCategories) =
@@ -168,7 +169,7 @@ newtype AuthorD = AuthorD ()
 authorDummy = AuthorD ()
 
 
-instance FromSQL AuthorD where
+instance Read AuthorD where
     type MType AuthorD = Ty.Author
     type Get AuthorD = GetAuthors
     selectQuery _ (GetAuthors mu) =
@@ -187,7 +188,7 @@ tagDummy = TagD ()
 
 
 --class (Ae.ToJSON (MType s), GP.PrettyShow (MType s), PS.FromRow (MType s), Show (Get s), Show (MType s))
-instance FromSQL TagD where
+instance Read TagD where
     type MType TagD = Ty.Tag
     type Get TagD = GetTags
     selectQuery _ (GetTags) =
@@ -200,7 +201,7 @@ instance FromSQL TagD where
 newtype CommentD = CommentD ()
 commentDummy = CommentD ()
 
-instance FromSQL CommentD where
+instance Read CommentD where
     type MType CommentD = Ty.Comment
     type Get CommentD = GetComments
     selectQuery _ (GetComments id) =
@@ -217,7 +218,7 @@ newtype DraftD = DraftD ()
 draftDummy = DraftD ()
 
 
-instance FromSQL DraftD where
+instance Read DraftD where
     type MType DraftD = Ty.Draft
     type Get DraftD = WithAuthor GetDrafts
     selectQuery _ _ = undefined

@@ -17,7 +17,7 @@ import Action.Authors.Types
 import Action.Comments.Types
 import qualified Database.PostgreSQL.Simple as PS
 import qualified Data.ByteString as B
-import ExecuteTypes
+import Execute.Types
 
 class (PS.ToRow (Create s)) => CreateSQL s where
     type Create s :: *
