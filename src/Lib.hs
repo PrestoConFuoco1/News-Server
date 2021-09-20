@@ -20,7 +20,7 @@ import ExecuteTypes (Response(..))
 
 import qualified Logger as L (simpleLog)
 import MonadTypes (MonadServer, ServerIO, ServerHandlers(..), logDebug, runServer)
-import qualified Database.PostgreSQL.Simple as PS (connectPostgreSQL, Connection)
+import qualified Database.PostgreSQL.Simple as PS (connectPostgreSQL, Connection, close)
 import qualified DatabaseHandler as DB (Handle(..))
 import qualified Data.Aeson as Ae (encode)
 
@@ -32,9 +32,16 @@ port = 5555
 
 someFunc :: IO ()
 someFunc = do
-    conn <- PS.connectPostgreSQL "dbname='batadase'"
-    let serverH = ServerHandlers L.simpleLog (DB.Handle conn)
-    Warp.run port $ mainFunc1 serverH
+ --   conn <- PS.connectPostgreSQL "dbname='batadase'"
+ --   let serverH = ServerHandlers L.simpleLog (DB.Handle conn)
+ --   Warp.run port $ mainFunc1 serverH
+
+    CMC.bracket 
+        (PS.connectPostgreSQL "dbname='batadase'")
+        (\conn -> let serverH = ServerHandlers L.simpleLog (DB.Handle conn) in
+         Warp.run port $ mainFunc1 serverH)
+        (\conn -> PS.close conn) -- close connection
+         
 
 connectToDB :: IO PS.Connection
 connectToDB = PS.connectPostgreSQL "dbname='batadase'"

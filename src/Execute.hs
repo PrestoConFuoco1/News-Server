@@ -79,7 +79,7 @@ executeUsers (WhoWhat y (Read GetProfile)) = withAuth y >>= getUser
 
 executeComments (WhoWhat y (Read x)) = getThis commentDummy x
 executeComments (WhoWhat y (Create x)) = withAuth y >>= createComment x
-executeComments (WhoWhat y (Delete x)) = withAuth y >>= withUser >>= \u -> deleteThis dummyDComment $ WithUser (Ty._u_id u) x
+executeComments (WhoWhat y (Delete x)) = withAuth y >>= maybeUserToUser >>= \u -> deleteThis dummyDComment $ WithUser (Ty._u_id u) x
 
 createComment :: (MonadServer m) => CreateComment -> Maybe Ty.User -> m Response
 createComment cc Nothing = Ex.unauthorized
@@ -87,8 +87,8 @@ createComment cc (Just u) = createThis dummyCComment $ WithUser (Ty._u_id u) cc
 
 executeDraft :: (MonadServer m) => WhoWhat ActionDrafts -> m Response
 executeDraft (WhoWhat y (Create x)) =
-    withAuth y >>= withUser >>= withAuthor >>= \a -> createDraft $ WithAuthor (Ty._a_authorId a) x
-executeDraft (WhoWhat y (Read x)) = withAuth y >>= withUser >>= withAuthor >>= \a -> getThis draftDummy $ WithAuthor (Ty._a_authorId a) x
+    withAuth y >>= maybeUserToUser >>= userAuthor >>= \a -> createDraft $ WithAuthor (Ty._a_authorId a) x
+executeDraft (WhoWhat y (Read x)) = withAuth y >>= maybeUserToUser >>= userAuthor >>= \a -> getThis draftDummy $ WithAuthor (Ty._a_authorId a) x
 executeDraft (WhoWhat y _ ) = undefined
 
 createDraft :: (MonadServer m) => WithAuthor CreateDraft -> m Response -- ?
@@ -136,8 +136,8 @@ getUser Nothing = Ex.unauthorized
 getUser (Just u) = let val = Ae.toJSON u
                    in  return $ Response NHT.ok200 val
 
-withAuthor :: (MonadServer m) => Ty.User -> m Ty.Author
-withAuthor u = do
+userAuthor :: (MonadServer m) => Ty.User -> m Ty.Author
+userAuthor u = do
     as <- getThis' authorDummy (GetAuthors $ Just $ Ty._u_id u)
     a  <- validateUnique Ex.notAnAuthor as
     return a
@@ -174,9 +174,9 @@ validateUnique _ [a] = return a
 validateUnique _ us  = Ex.invalidUnique us
 
 
-withUser :: (MonadServer m) => Maybe Ty.User -> m Ty.User
-withUser Nothing = Ex.unauthorized
-withUser (Just u) = return u
+maybeUserToUser :: (MonadServer m) => Maybe Ty.User -> m Ty.User
+maybeUserToUser Nothing = Ex.unauthorized
+maybeUserToUser (Just u) = return u
 
 getUsersByToken :: (MonadServer m) => Token -> m [Ty.User]
 getUsersByToken token = do
