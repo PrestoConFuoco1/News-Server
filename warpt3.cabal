@@ -59,6 +59,8 @@ library
       Lib
       Logger
       MonadTypes
+      Profiling
+      SqlQueryTypes
       SqlValue
       Types
       Update

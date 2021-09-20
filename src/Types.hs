@@ -172,11 +172,24 @@ instance Ae.ToJSON Draft where
 
 
 instance PSR.FromRow Draft where
-    fromRow = undefined
-{-
+    fromRow = do
         id <- PSR.field
+        title <- PSR.field
+        creationDate <- PSR.field
+        author <- PSR.fromRow
+        tagIds <- PSR.field
+        tagNames <- PSR.field
+        catIds <- PSR.field
+        catNames <- PSR.field
         content <- PSR.field
-        user <- PSR.fromRow
-        return $ Comment id content user
--}
+        photo <- PSR.field
+        extraPhotos <- PSR.field
+        postId <- PSR.field
+        let category = listToCategory $ zip catIds catNames
+            tags = zipWith Tag tagIds tagNames
+        return $ Draft id title creationDate author tags category content photo extraPhotos postId
+
+
+
+
 

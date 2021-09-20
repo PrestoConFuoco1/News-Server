@@ -46,7 +46,7 @@ data Action = AAuthors ActionAuthors
             | AAuth  Authenticate
             | AComments ActionComments
             | ADrafts ActionDrafts
-    deriving (Generic)
+    deriving (Generic, Show)
 
 requestToAction :: W.Request -> Either ActionError (WhoWhat Action)
 requestToAction req =

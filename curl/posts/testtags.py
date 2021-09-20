@@ -16,7 +16,7 @@ def tostring(lst):
 date = '2021-09-12'
 #taglist = ['4', '7']
 if len(sys.argv) < 2:
-    taglist = ['4', '7']
+    taglist = ['2', '4']
 else:
     taglist = sys.argv[1:]
 
@@ -27,8 +27,9 @@ process = subprocess.run(['curl', '-G', '-d', 'tags__in='
     + tostring(taglist), 'localhost:5555/posts/get' ], capture_output=True, text=True)
 print ('getting posts with tags intersecting with ' + tostring(taglist))
 response = json.loads(process.stdout)
-for i in range(len(response)):
-    tags = list(map(tagstruct_to_tagid, response[i]['tags']))
+result = response['result']
+for i in range(len(result)):
+    tags = list(map(tagstruct_to_tagid, result[i]['tags']))
     intersection_ = set(tags).intersection(tagset)
     print(tags)
     print(len(intersection_) > 0)
@@ -39,8 +40,9 @@ process = subprocess.run(['curl', '-G', '-d', 'tags__all='
 
 print ('getting posts with all of tags: ' + tostring(taglist))
 response = json.loads(process.stdout)
-for i in range(len(response)):
-    tags = list(map(tagstruct_to_tagid, response[i]['tags']))
+result = response['result']
+for i in range(len(result)):
+    tags = list(map(tagstruct_to_tagid, result[i]['tags']))
     print(tags)
     print(set(tagset).issubset(tags))
 

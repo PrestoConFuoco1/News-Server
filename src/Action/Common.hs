@@ -16,6 +16,6 @@ data ActionError = EInvalidEndpoint | ERequiredFieldMissing BS.ByteString
     deriving (Show, Generic)
 
 data CRUD c r u d = Create c | Read r | Update u | Delete d
-    deriving (Generic, GP.PrettyShow)
+    deriving (Generic, GP.PrettyShow, Show)
 
 -- invalidEP = AError EInvalidEndpoint

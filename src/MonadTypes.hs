@@ -3,7 +3,7 @@
 
 module MonadTypes where
 
-
+import Data.Time.Clock
 import qualified Logger as L
 import Control.Monad.Reader (MonadReader, ReaderT, asks, ask, runReaderT)
 import Control.Monad.IO.Class (MonadIO, liftIO)
@@ -47,6 +47,9 @@ class (MonadSQL m, MonadLog m, MonadCatch m) => MonadServer m where
     runServer :: ServerHandlers -> m a -> IO a
     randomString :: Int -> m String
 
+    printS :: (Show a) => a -> m ()
+    getCurrentTimeS :: m UTCTime
+
 instance CMC.MonadThrow ServerIO where
     throwM e = (logDebug $ T.pack $ displayException e) >> (liftIO $ CE.throwIO e)
 
@@ -67,7 +70,6 @@ instance MonadSQL ServerIO where
         return $ fromIntegral res64
 
 
-
 instance MonadLog ServerIO where
     logM (pri, text) = do
         s <- ask
@@ -76,6 +78,8 @@ instance MonadLog ServerIO where
 instance MonadServer ServerIO where
     runServer handlers = flip runReaderT handlers . runServerIO
     randomString int = liftIO $ randomString' int
+    printS s = liftIO $ print s
+    getCurrentTimeS = liftIO $ getCurrentTime
 
 randomString' :: Int -> IO String            
 randomString' int = do
@@ -96,7 +100,5 @@ logFatal s = logM (L.Fatal, s)
 ------------------------------------------------
 
 
---getPostsServerIO :: GetPosts -> ServerIO Response
---getPostsServerIO x = undefined
 
 
