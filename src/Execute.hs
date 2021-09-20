@@ -88,6 +88,7 @@ createComment cc (Just u) = createThis dummyCComment $ WithUser (Ty._u_id u) cc
 executeDraft :: (MonadServer m) => WhoWhat ActionDrafts -> m Response
 executeDraft (WhoWhat y (Create x)) =
     withAuth y >>= withUser >>= withAuthor >>= \a -> createDraft $ WithAuthor (Ty._a_authorId a) x
+executeDraft (WhoWhat y (Read x)) = withAuth y >>= withUser >>= withAuthor >>= \a -> getThis draftDummy $ WithAuthor (Ty._a_authorId a) x
 executeDraft (WhoWhat y _ ) = undefined
 
 createDraft :: (MonadServer m) => WithAuthor CreateDraft -> m Response -- ?

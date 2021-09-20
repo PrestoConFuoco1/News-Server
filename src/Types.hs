@@ -19,6 +19,7 @@ import General
 type UserId = Int
 type AuthorId = Int
 type PostId = Int
+type DraftId = Int
 type CategoryId = Int
 type TagId = Int
 type CommentId = Int
@@ -151,4 +152,31 @@ instance PSR.FromRow Comment where
         user <- PSR.fromRow
         return $ Comment id content user
 
+
+data Draft = Draft {
+    _d_draftId :: DraftId,
+    _d_title :: T.Text,
+    _d_creationDate :: Time.Day,
+    _d_author :: Author,
+    _d_tags :: [Tag],
+    _d_category :: Category,
+    _d_content :: T.Text,
+    _d_mainPhoto :: Maybe T.Text,
+    _d_extraPhotos :: Maybe [T.Text],
+    _d_postId :: Maybe PostId
+    } deriving (Show, Eq, Generic, GP.PrettyShow)
+
+
+instance Ae.ToJSON Draft where
+    toJSON = Ae.genericToJSON Ae.defaultOptions { Ae.fieldLabelModifier = defaultModifier }
+
+
+instance PSR.FromRow Draft where
+    fromRow = undefined
+{-
+        id <- PSR.field
+        content <- PSR.field
+        user <- PSR.fromRow
+        return $ Comment id content user
+-}
 

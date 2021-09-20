@@ -35,8 +35,10 @@ import Action.Tags.Types
 import Action.Category.Types
 import Action.Users.Types
 import Action.Authors.Types
+import Action.Draft.Types
 import Action.Posts.Types
 import Action.Comments.Types
+import ExecuteTypes
 import SqlValue
 
 class (Ae.ToJSON (MType s), GP.PrettyShow (MType s), PS.FromRow (MType s), Show (Get s), Show (MType s))
@@ -182,3 +184,12 @@ instance FromSQL CommentD where
         in  (selectClause, args)
 
 
+
+newtype DraftD = DraftD ()
+draftDummy = DraftD ()
+
+
+instance FromSQL DraftD where
+    type MType DraftD = Ty.Draft
+    type Get DraftD = WithAuthor GetDrafts
+    selectQuery _ _ = undefined

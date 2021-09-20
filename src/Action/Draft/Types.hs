@@ -15,7 +15,7 @@ import Data.Void
 
 
 
-type ActionDrafts = CRUD CreateDraft Void Void Void
+type ActionDrafts = CRUD CreateDraft GetDrafts Void Void
 
 
 data CreateDraft = CreateDraft {
@@ -29,3 +29,10 @@ data CreateDraft = CreateDraft {
     _cd_extraPhotos :: Maybe [T.Text]
  
     } deriving (Show, Generic, GP.PrettyShow)
+
+data GetDrafts = GetDrafts
+    deriving (Show, Generic)
+
+instance GP.PrettyShow GetDrafts where
+    prettyShow = undefined
+
