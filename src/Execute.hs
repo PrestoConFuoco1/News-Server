@@ -91,13 +91,10 @@ executeDraft (WhoWhat y (Create x)) =
 executeDraft (WhoWhat y _ ) = undefined
 
 createDraft :: (MonadServer m) => WithAuthor CreateDraft -> m Response -- ?
-createDraft = undefined
-{-
-withCreateDraft :: (MonadServer m) => WithAuthor CreateDraft -> m Response
-withCreateDraft (WithAuthor a CreateDraft{..}) = do
+createDraft (WithAuthor a CreateDraft{..}) = do
     let str =
-         "INSERT INTO news.draft (title, author_id, category_id, content, photo, extra_photos)\
-         \VALUES(?, ?, ?, ?, ?, ?) "
+         "INSERT INTO news.draft (title, author_id, category_id, content, photo, extra_photos) \
+         \VALUES (?, ?, ?, ?, ?, ?) RETURNING draft_id"
         args = [SqlValue _cd_title, SqlValue a,
                 SqlValue _cd_categoryId, SqlValue _cd_content,
                 SqlValue _cd_mainPhoto, SqlValue $ fmap PSTy.PGArray _cd_extraPhotos]
@@ -105,14 +102,32 @@ withCreateDraft (WithAuthor a CreateDraft{..}) = do
     debugStr <- formatQuery str args
     logDebug $ T.pack $ show debugStr
 
-    withExceptionHandlers [CMC.Handler sqlH] $ do
-        execute str args
-        return (ok $ "Draft successfully created")
-      where sqlH :: (MonadServer m) => PS.SqlError -> m Response
-            sqlH e
-             | otherwise = logError (T.pack $ displayException e)
-                >> return (internal "Failed")
--}
+--    id <- query str args >>= fmap (map PSTy.fromOnly) >>= \is -> validateUnique (Ex.invalidUnique is) $ is
+    ids <- fmap (map PSTy.fromOnly) $ query str args
+    id <- validateUnique undefined ids
+    logDebug $ "Created draft with id = " <> (T.pack $ show id)
+    tags <- attachTagsToDraft id _cd_tags
+    return (ok $ "Draft successfully created")
+
+attachTagsToDraft :: (MonadServer m) => Int -> [Int] -> m [Int]
+attachTagsToDraft draftId tagsIds = do
+    let str =
+         "INSERT INTO news.draft_tag (draft_id, tag_id) VALUES "
+        returning = " RETURNING tag_id"
+        count = length tagsIds
+        insertUnit = " ( ?, ? ) "
+        insertUnits = maybe "" id $ intercalateQ $ replicate count insertUnit
+        insertParams = map SqlValue $ foldr f [] tagsIds
+        f x acc = draftId : x : acc
+        qu = str <> insertUnits <> returning
+    debugStr <- formatQuery qu insertParams
+    logDebug $ T.pack $ show debugStr
+
+    ids <- fmap (map PSTy.fromOnly) $ query qu insertParams
+    logDebug $ "Attached tags with id in " <> (T.pack $ show ids)
+    return ids
+
+   
 
 
 getUser :: (MonadServer m) => Maybe Ty.User -> m Response
@@ -123,13 +138,10 @@ getUser (Just u) = let val = Ae.toJSON u
 withAuthor :: (MonadServer m) => Ty.User -> m Ty.Author
 withAuthor u = do
     as <- getThis' authorDummy (GetAuthors $ Just $ Ty._u_id u)
-    a  <- validateUniqueUser Ex.notAnAuthor as
+    a  <- validateUnique Ex.notAnAuthor as
     return a
- {-   case as of
-        []  -> return $ bad "You are not an author"
-        [a] -> fm a
-        _   -> return $ internal "program working incorrectly"
--}
+
+
 handleError :: MonadServer m => ActionError -> m Response
 handleError EInvalidEndpoint = do
     logError $ "Invalid endpoint"
@@ -155,10 +167,10 @@ withAdmin :: (MonadServer m) => Maybe Ty.User -> m ()
 withAdmin muser =
     when ((muser >>= Ty._u_admin) /= Just True) $ Ex.invalidEndpoint
 
-validateUniqueUser :: (MonadServer m, GP.PrettyShow a) => m a -> [a] -> m a
-validateUniqueUser x [] = x
-validateUniqueUser _ [a] = return a
-validateUniqueUser _ us  = Ex.invalidUnique us
+validateUnique :: (MonadServer m, GP.PrettyShow a) => m a -> [a] -> m a
+validateUnique x [] = x
+validateUnique _ [a] = return a
+validateUnique _ us  = Ex.invalidUnique us
 
 
 withUser :: (MonadServer m) => Maybe Ty.User -> m Ty.User
@@ -195,7 +207,7 @@ getUserByLogin login = do
               \u.image, u.login, u.pass_hash, u.creation_date, u.is_admin \
               \FROM news.users u WHERE u.login = ?"
     users <- query str [login]
-    validateUniqueUser Ex.invalidLogin users
+    validateUnique Ex.invalidLogin users
 
 
 createThis :: (MonadServer m, CreateSQL s) => s -> Create s -> m Response
