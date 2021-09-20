@@ -27,6 +27,7 @@ import Action.Users.Types
 import Action.Comments.Types
 import Action.Draft.Types
 import Action.Authors.Types
+import Execute.Draft
 
 import Exceptions as Ex
 
@@ -87,9 +88,18 @@ createComment cc (Just u) = createThis dummyCComment $ WithUser (Ty._u_id u) cc
 
 executeDraft :: (MonadServer m) => WhoWhat ActionDrafts -> m Response
 executeDraft (WhoWhat y (Create x)) =
-    withAuth y >>= maybeUserToUser >>= userAuthor >>= \a -> createDraft $ WithAuthor (Ty._a_authorId a) x
-executeDraft (WhoWhat y (Read x)) = withAuth y >>= maybeUserToUser >>= userAuthor >>= \a -> getThis draftDummy $ WithAuthor (Ty._a_authorId a) x
-executeDraft (WhoWhat y _ ) = undefined
+    withAuth y >>= maybeUserToUser >>= userAuthor >>=
+        \a -> createDraft $ WithAuthor (Ty._a_authorId a) x
+
+executeDraft (WhoWhat y (Read x)) =
+    withAuth y >>= maybeUserToUser >>= userAuthor >>=
+        \a -> getThis draftDummy $ WithAuthor (Ty._a_authorId a) x
+executeDraft (WhoWhat y (Delete x)) =
+    withAuth y >>= maybeUserToUser >>= userAuthor >>=
+        \a -> deleteThis dummyDDraft $ WithAuthor (Ty._a_authorId a) x
+executeDraft (WhoWhat y (Update x)) =
+    withAuth y >>= maybeUserToUser >>= userAuthor >>=
+        \a -> editDraft $ WithAuthor (Ty._a_authorId a) x
 
 handleError :: MonadServer m => ActionError -> m Response
 handleError EInvalidEndpoint = do

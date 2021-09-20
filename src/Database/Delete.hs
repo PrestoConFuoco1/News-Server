@@ -14,6 +14,7 @@ import Action.Authors.Types
 import Action.Category.Types
 import Action.Users.Types
 import Action.Comments.Types
+import Action.Draft.Types
 import Execute.Types
 import Database.SqlValue
 
@@ -71,3 +72,19 @@ instance DeleteSQL DComment where
 
 
     dName _ = "comment"
+
+
+
+newtype DDraft = DDraft ()
+dummyDDraft = DDraft ()
+
+instance DeleteSQL DDraft where
+    type Del DDraft = WithAuthor DeleteDraft
+    deleteQuery _ (WithAuthor a (DeleteDraft d)) = (
+        "\
+\ DELETE FROM news.draft d \
+\ WHERE d.draft_id = ? AND d.author_id = ?"
+        , [SqlValue d, SqlValue a])
+
+
+    dName _ = "draft"

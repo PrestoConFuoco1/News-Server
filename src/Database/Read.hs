@@ -215,4 +215,26 @@ draftDummy = DraftD ()
 instance Read DraftD where
     type MType DraftD = Ty.Draft
     type Get DraftD = WithAuthor GetDrafts
-    selectQuery _ _ = undefined
+    selectQuery _ (WithAuthor a _) = 
+        let selectClause = "SELECT \
+               \ draft_id, \
+               \ title, \
+               \ draft_creation_date, \
+               \ author_id, \
+               \ author_description, \
+               \ user_id, \
+               \ user_firstname, \
+               \ user_lastname, \
+               \ user_image, \ 
+               \ user_login, \
+               \ user_pass, \
+               \ user_creation_date, \
+               \ NULL as is_admin, \
+               \ tagids, \
+               \ tagnames, \
+               \ catids, \
+               \ catnames, \
+               \ content, photo, extra_photos, \
+               \ post_id \
+               \ FROM news.get_drafts WHERE author_id = ?"
+        in  (selectClause, [SqlValue a])

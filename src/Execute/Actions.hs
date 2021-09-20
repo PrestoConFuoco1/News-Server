@@ -34,44 +34,6 @@ import Profiling (withTimePrint)
 
 
 
-createDraft :: (MonadServer m) => WithAuthor CreateDraft -> m Response -- ?
-createDraft (WithAuthor a CreateDraft{..}) = do
-    let str =
-         "INSERT INTO news.draft (title, author_id, category_id, content, photo, extra_photos) \
-         \VALUES (?, ?, ?, ?, ?, ?) RETURNING draft_id"
-        args = [SqlValue _cd_title, SqlValue a,
-                SqlValue _cd_categoryId, SqlValue _cd_content,
-                SqlValue _cd_mainPhoto, SqlValue $ fmap PSTy.PGArray _cd_extraPhotos]
-    
-    debugStr <- formatQuery str args
-    logDebug $ T.pack $ show debugStr
-
---    id <- query str args >>= fmap (map PSTy.fromOnly) >>= \is -> validateUnique (Ex.invalidUnique is) $ is
-    ids <- fmap (map PSTy.fromOnly) $ query str args
-    id <- validateUnique undefined ids
-    logDebug $ "Created draft with id = " <> (T.pack $ show id)
-    tags <- attachTagsToDraft id _cd_tags
-    return (ok $ "Draft successfully created")
-
-attachTagsToDraft :: (MonadServer m) => Int -> [Int] -> m [Int]
-attachTagsToDraft draftId tagsIds = do
-    let str =
-         "INSERT INTO news.draft_tag (draft_id, tag_id) VALUES "
-        returning = " RETURNING tag_id"
-        count = length tagsIds
-        insertUnit = " ( ?, ? ) "
-        insertUnits = maybe "" id $ intercalateQ $ replicate count insertUnit
-        insertParams = map SqlValue $ foldr f [] tagsIds
-        f x acc = draftId : x : acc
-        qu = str <> insertUnits <> returning
-    debugStr <- formatQuery qu insertParams
-    logDebug $ T.pack $ show debugStr
-
-    ids <- fmap (map PSTy.fromOnly) $ query qu insertParams
-    logDebug $ "Attached tags with id in " <> (T.pack $ show ids)
-    return ids
-
-   
 
 
 getUser :: (MonadServer m) => Maybe Ty.User -> m Response
@@ -180,12 +142,16 @@ deleteThis s d = do
     withExceptionHandlers (Ex.defaultHandlers "deleteThis") $ do
         num <- execute str params
         actWithOne (AWOd s) num
+        let succ = dName s <> " successfully deleted"
+        return (ok $ Ae.toJSON $ E.decodeUtf8 succ)
+        
+        
 
 
 
-editThis :: (MonadServer m, UpdateSQL s) => s -> Upd s -> m Response
-editThis s u = case updateParams s u of
-  Nothing -> undefined -- bad request
+editThis' :: (MonadServer m, UpdateSQL s) => s -> Upd s -> m Int
+editThis' s u = case updateParams s u of
+  Nothing -> Ex.invalidUpdDel "No data to edit found, required at least one parameter"
   Just (q, vals) -> do
     let str = updateQuery s q
         params = vals ++ identifParams s u
@@ -194,5 +160,13 @@ editThis s u = case updateParams s u of
 
     withExceptionHandlers (Ex.defaultHandlers "editThis") $ do
         num <- execute str params
-        actWithOne (AWOu s) num
+        return num
+ --       actWithOne (AWOu s) num
+
+editThis :: (MonadServer m, UpdateSQL s) => s -> Upd s -> m Response
+editThis s u = do
+    num <- editThis' s u
+    actWithOne (AWOu s) num
+    let succ = uName s <> " successfully edited"
+    return (ok $ Ae.toJSON $ E.decodeUtf8 succ)
 

@@ -11,7 +11,7 @@ requestToActionDrafts path hash = case path of
     | x == "get" -> Right $ Read GetDrafts
     | x == "create" -> fmap Create $ createDraftToAction hash
 --    | x == "edit" -> fmap Update $ editCatsToAction hash
---    | x == "delete" -> fmap Delete $ deleteCatsToAction hash
+    | x == "delete" -> fmap Delete $ deleteDraftToAction hash
   [] -> Left EInvalidEndpoint
 
 
@@ -24,7 +24,14 @@ createDraftToAction hash = do
     let mainPhoto = requireText hash "main_photo"
         extraPhotos = requireList hash "extra_photos"
     return $ CreateDraft title tags category content mainPhoto extraPhotos
+
+
+deleteDraftToAction :: Query -> Either ActionError DeleteDraft
+deleteDraftToAction hash = do
+    draftId <- requireField (requireInt hash) "draft_id"
+    return $ DeleteDraft draftId
+
 {-
 getDraftsToAction :: Query -> Either ActionError GetDrafts
-getDraftsToAction hash = undefined
+getDraftsToAction hash = 
 -}

@@ -15,7 +15,7 @@ import Data.Void
 
 
 
-type ActionDrafts = CRUD CreateDraft GetDrafts Void Void
+type ActionDrafts = CRUD CreateDraft GetDrafts EditDraft DeleteDraft
 
 
 data CreateDraft = CreateDraft {
@@ -34,5 +34,21 @@ data GetDrafts = GetDrafts
     deriving (Show, Generic)
 
 instance GP.PrettyShow GetDrafts where
-    prettyShow = undefined
+    prettyShow s = GP.LStr $ show s
+
+data EditDraft = EditDraft {
+    _ed_draftId :: Int,
+    _ed_title :: Maybe T.Text,
+    _ed_tags :: Maybe [Int], --[TagId],
+    _ed_categoryId :: Maybe Int, --CategoryId,
+    _ed_content :: Maybe T.Text,
+    _ed_mainPhoto :: Maybe T.Text,
+    _ed_extraPhotos :: Maybe [T.Text] 
+    } deriving (Show, Generic, GP.PrettyShow)
+
+
+
+data DeleteDraft = DeleteDraft {
+    _dd_draft_id :: Int
+    } deriving (Show, Generic, GP.PrettyShow, PS.ToRow)
 

@@ -16,11 +16,15 @@ data ServerException =
     | InvalidEndpoint
     | InvalidLogin
     | NotAnAuthor
+    | InvalidUpdateOrDelete T.Text
     deriving (Show)
 
 instance CMC.Exception ServerException
 
+throwDefault :: (MonadServer m) => m a
+throwDefault = CMC.throwM Default
 
+invalidUpdDel text = CMC.throwM $ InvalidUpdateOrDelete text
 
 unauthorized :: (MonadServer m) => m a
 unauthorized = CMC.throwM $ Unauthorized
@@ -85,6 +89,7 @@ mainErrorHandler InvalidUniqueEntities = return $ U.internal U.internalErrorMsg
 mainErrorHandler InvalidEndpoint = return $ U.bad U.invalidEndpointMsg
 mainErrorHandler InvalidLogin = return $ U.bad $ U.unauthorizedMsg <> " invalid login"
 mainErrorHandler NotAnAuthor = return $ U.bad U.notAnAuthorMsg
+mainErrorHandler (InvalidUpdateOrDelete text) = return $ U.bad text
 
 defaultMainHandler :: (MonadServer m) => SomeException -> m Response
 defaultMainHandler e = do
