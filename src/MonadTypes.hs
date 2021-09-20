@@ -3,14 +3,12 @@
 
 module MonadTypes where
 
-import Data.Time.Clock
+import Data.Time.Clock (UTCTime, getCurrentTime)
 import qualified Handler.Logger as L
 import Control.Monad.Reader (MonadReader, ReaderT, asks, ask, runReaderT)
 import Control.Monad.IO.Class (MonadIO, liftIO)
 import qualified Data.Text as T (Text, pack, unpack)
-import Action.RequestToAction
 import qualified Database.PostgreSQL.Simple as PS
-import qualified Database.PostgreSQL.Simple.ToField as PSF
 import qualified Handler.Database as DB
 import qualified Data.ByteString as BS
 

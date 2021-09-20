@@ -5,7 +5,6 @@ module Lib
     ) where
 
 
-import Data.Time.Clock
 import qualified Network.Wai.Handler.Warp as Warp (run)
 import qualified Network.Wai as W (Request, Response, Application, responseLBS)
 import qualified Data.Text as T (pack)
@@ -24,7 +23,7 @@ import qualified Database.PostgreSQL.Simple as PS (connectPostgreSQL, Connection
 import qualified Handler.Database as DB (Handle(..))
 import qualified Data.Aeson as Ae (encode)
 
-import qualified Exceptions as Ex
+import qualified Exceptions as Ex (mainErrorHandler, defaultMainHandler)
 import qualified Control.Monad.Catch as CMC
 import Profiling
 

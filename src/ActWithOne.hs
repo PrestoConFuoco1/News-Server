@@ -1,33 +1,18 @@
 module ActWithOne where
 
 
-
-
-
-import qualified Network.HTTP.Types as NHT
 import qualified Data.ByteString as B
-import qualified Data.Text as T
-import Control.Exception
 
-import qualified GenericPretty as GP
-import GHC.Generics
 
-import Action.RequestToAction
 import Action.Types (WhoWhat (..), Token)
-import Action.Common
-import Database.Read
-import Database.Create
-import Database.Delete
-import Database.Update
+import Database.Delete (DeleteSQL(..))
+import Database.Update (UpdateSQL(..))
 
 import MonadTypes (MonadServer (..), logError, logDebug, execute, query, formatQuery, logInfo, logWarn, logFatal)
-import qualified Database.PostgreSQL.Simple as PS (SqlError(..))
-import qualified Types as Ty
-import qualified Data.Aeson as Ae
-import qualified Control.Monad.Catch as CMC (catches, Handler(..), MonadCatch)
+import qualified Data.Aeson as Ae (toJSON)
 import qualified Data.Text.Encoding as E (decodeUtf8, encodeUtf8)
-import Execute.Types
-import Execute.Utils
+import Execute.Types (Response)
+import Execute.Utils (ok, bad, internal)
 
 
 class ActWithOne s where

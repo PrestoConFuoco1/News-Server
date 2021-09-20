@@ -10,23 +10,17 @@ FlexibleContexts
 module Database.Read where
 
 import Prelude hiding (Read)
-import Data.Maybe
-import qualified Data.ByteString as B
-import qualified Data.Text.Lazy as TL
+import Data.Maybe (catMaybes, fromJust)
+import qualified Data.Text.Lazy as TL (fromStrict)
 import qualified Data.Aeson as Ae (Value, encode)
 
-import qualified GenericPretty as GP
+import qualified GenericPretty as GP (PrettyShow(..))
 import GHC.Generics
 
-import Action.RequestToAction
 
-import qualified Handler.Logger as L
-import MonadTypes
 import qualified Database.PostgreSQL.Simple as PS
 import qualified Types as Ty
 import qualified Data.Aeson as Ae
-import qualified Database.PostgreSQL.Simple.ToRow as PST
-import qualified Database.PostgreSQL.Simple.ToField as PSF
 import qualified Database.PostgreSQL.Simple.Types as PSTy
 
 import qualified Data.Time as Time

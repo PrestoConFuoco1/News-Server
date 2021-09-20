@@ -4,15 +4,8 @@ module Execute where
 
 
 
-import qualified Network.HTTP.Types as NHT
-import qualified Data.ByteString as B
-import qualified Data.Text as T
-import Control.Exception
-import Control.Monad (when)
+import qualified Data.Text as T (pack)
 
-import qualified Database.PostgreSQL.Simple.Types as PSTy
-import qualified GenericPretty as GP
-import GHC.Generics
 
 import Action.RequestToAction
 import Action.Types (WhoWhat (..), Token)
@@ -25,7 +18,6 @@ import Database.Update
 import MonadTypes (MonadServer (..), logError, logDebug, execute, query, formatQuery, logInfo, logWarn, logFatal)
 import qualified Database.PostgreSQL.Simple as PS (SqlError(..))
 import qualified Types as Ty
-import qualified Data.Aeson as Ae
 import qualified Control.Monad.Catch as CMC (catches, Handler(..), MonadCatch)
 import qualified Data.Text.Encoding as E (decodeUtf8, encodeUtf8)
 import ActWithOne (actWithOne, ActWithOne(..), AWOu(..), AWOd(..))
@@ -38,9 +30,7 @@ import Action.Authors.Types
 
 import Exceptions as Ex
 
-import Database.SqlValue
 import Database.SqlQueryTypes
-import Profiling
 import Execute.Permissions
 import Execute.Actions
 

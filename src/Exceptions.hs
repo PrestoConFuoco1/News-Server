@@ -1,14 +1,13 @@
 module Exceptions where
 
-import Control.Monad.Catch as CMC
-import MonadTypes
-import Database.PostgreSQL.Simple as PS
-import qualified Data.Text as T
-import qualified GenericPretty as GP
+import Control.Monad.Catch as CMC (Handler(..), catches, SomeException, throwM, Exception(..), MonadCatch(..))
+import MonadTypes (MonadServer, logError)
+import Database.PostgreSQL.Simple as PS (sqlState, SqlError, QueryError)
+import qualified Data.Text as T (Text, pack)
+import qualified GenericPretty as GP (PrettyShow(..), defaultPretty)
 
-import qualified Data.Aeson as Ae
 import Execute.Utils as U
-import Execute.Types
+import Execute.Types (Response(..))
 
 data ServerException =
       Default

@@ -2,17 +2,12 @@
 module Execute.Actions where
 
 import Prelude hiding (Read)
-import qualified Network.HTTP.Types as NHT
-import qualified Data.ByteString as B
-import qualified Data.Text as T
+import qualified Data.Text as T (pack, Text)
 import Control.Exception
-import Control.Monad (when)
 
 import qualified Database.PostgreSQL.Simple.Types as PSTy
 import qualified GenericPretty as GP
-import GHC.Generics
 
-import Action.RequestToAction
 import Action.Types (WhoWhat (..), Token)
 import Action.Common
 import Database.Read
@@ -30,15 +25,12 @@ import ActWithOne (actWithOne, ActWithOne(..), AWOu(..), AWOd(..))
 import Execute.Types
 import Execute.Utils
 import Action.Users.Types
-import Action.Comments.Types
 import Action.Draft.Types
-import Action.Authors.Types
 
 import Exceptions as Ex
 
 import Database.SqlValue
-import Database.SqlQueryTypes
-import Profiling
+import Profiling (withTimePrint)
 
 
 
@@ -85,7 +77,7 @@ attachTagsToDraft draftId tagsIds = do
 getUser :: (MonadServer m) => Maybe Ty.User -> m Response
 getUser Nothing = Ex.unauthorized
 getUser (Just u) = let val = Ae.toJSON u
-                   in  return $ Response NHT.ok200 val
+                   in  return $ ok val
 
 validateUnique :: (MonadServer m, GP.PrettyShow a) => m a -> [a] -> m a
 validateUnique x [] = x

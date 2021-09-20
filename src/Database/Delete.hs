@@ -6,31 +6,8 @@ FlexibleContexts
 module Database.Delete where
 
 
-import qualified Network.HTTP.Types as NHT
-import Network.HTTP.Types.Status
-import Network.HTTP.Types.Header
 import qualified Data.ByteString as B
-import qualified Data.Text as T
-import Control.Exception
-import qualified Data.Aeson as Ae (Value, encode)
-
-import qualified GenericPretty as GP
-import GHC.Generics
-
-import Action.RequestToAction
-import Action.Types
-import Action.Common
-
-import qualified Handler.Logger as L
-import MonadTypes
 import qualified Database.PostgreSQL.Simple as PS
-import qualified Handler.Database as DB
-import qualified DBTypes as DBT
-import qualified Types as Ty
-import qualified Data.Aeson as Ae
-import Data.Proxy
-import qualified Control.Monad.Catch as CMC
-import qualified Data.Text.Encoding as E (decodeUtf8, encodeUtf8)
 
 import Action.Tags.Types
 import Action.Authors.Types
