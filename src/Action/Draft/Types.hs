@@ -52,3 +52,8 @@ data DeleteDraft = DeleteDraft {
     _dd_draft_id :: Int
     } deriving (Show, Generic, GP.PrettyShow, PS.ToRow)
 
+
+data Publish = Publish {
+    _p_draftId :: Int
+    } deriving (Show, Generic, GP.PrettyShow, PS.ToRow)
+

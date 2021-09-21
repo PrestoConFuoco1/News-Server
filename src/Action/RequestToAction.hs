@@ -46,6 +46,7 @@ data Action = AAuthors ActionAuthors
             | AAuth  Authenticate
             | AComments ActionComments
             | ADrafts ActionDrafts
+            | APublish Publish
     deriving (Generic, Show)
 
 requestToAction :: W.Request -> Either ActionError (WhoWhat Action)
@@ -70,7 +71,8 @@ requestToAction' path hash = case path of
     (x:xs)
      | x == "auth"       -> fmap AAuth $ requestToActionAuthenticate xs hash
      | x == "posts"      -> fmap APosts $ requestToActionPosts xs hash
-     | x == "drafts"      -> fmap ADrafts $ requestToActionDrafts xs hash
+     | x == "drafts"     -> fmap ADrafts $ requestToActionDrafts xs hash
+     | x == "publish"    -> fmap APublish $ requestToActionPublish xs hash
      | x == "categories" -> fmap ACategory $ requestToActionCats xs hash
      | x == "authors"    -> fmap AAuthors $ requestToActionAuthors xs hash
      | x == "tags"       -> fmap ATags $ requestToActionTags xs hash

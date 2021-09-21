@@ -83,6 +83,7 @@ getUserByLogin login = do
     users <- query str [login]
     validateUnique Ex.invalidLogin users
 
+idInResult = "id is int \"result\" field"
 
 createThis :: (MonadServer m, CreateSQL s) => s -> Create s -> m Response
 createThis w cres = do
@@ -91,21 +92,22 @@ createThis w cres = do
     logDebug $ T.pack $ show debugStr
 
     withExceptionHandlers [CMC.Handler (sqlH w)] $ do
-        execute str cres
-        return (ok $ Ae.toJSON $ E.decodeUtf8 $ cName w <> " successfully created")
-  where sqlH :: (MonadServer m, CreateSQL s) => s -> PS.SqlError -> m Response
-        sqlH s e
+        ints <- fmap (map PSTy.fromOnly) $ query str cres
+        int <- validateUnique undefined ints
+        return $ okCreated (cName w <> " successfully created. " <> idInResult) int
+ where sqlH :: (MonadServer m, CreateSQL s) => s -> PS.SqlError -> m Response
+       sqlH s e
             | uniqueConstraintViolated e = do
-                logError $ E.decodeUtf8 $
+                logError $
                     "Failed to create new " <> cName s <> ", " <>
                     cUniqueField s <> " is already in use\n" <>
-                    "SqlError: " <> PS.sqlErrorMsg e
-                return $ bad $ E.decodeUtf8 $ cName s <> " with such " <> cUniqueField s <> " already exists."
+                    "SqlError: " <> (E.decodeUtf8 $ PS.sqlErrorMsg e)
+                return $ bad $ cName s <> " with such " <> cUniqueField s <> " already exists."
             | foreignKeyViolated e = do
                 let errmsg = 
                      "Failed to create new " <> cName s <> ", " <> cForeign s <> " is invalid"
-                logError $ E.decodeUtf8 $ errmsg
-                return $ bad $ E.decodeUtf8 errmsg
+                logError $ errmsg
+                return $ bad $ errmsg
             | otherwise = logError (T.pack $ displayException e)
                 >> return (internal "Internal error")
 

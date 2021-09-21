@@ -7,7 +7,7 @@ import qualified Data.Aeson as Ae
 import qualified Data.Text as T
 import qualified Data.ByteString as B
 import qualified Data.Text.Encoding as E
-import Execute.Types
+import Execute.Types (Result(..), Response(..))
 
 
 
@@ -19,6 +19,9 @@ internalErrorMsg = "Internal error" :: T.Text
 
 notAnAuthorMsg = "Not an author" :: T.Text
 
+okCreated :: T.Text -> Int -> Response
+okCreated msg id = Response NHT.ok200 val
+  where val = Ae.toJSON $ Result True (Just msg) (Just $ Ae.toJSON id)
 
 ok :: Ae.Value -> Response
 ok res = Response NHT.ok200 val

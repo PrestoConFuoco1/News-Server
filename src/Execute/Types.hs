@@ -19,7 +19,7 @@ data Response = Response {
 
 data Result = Result {
     _ok :: Bool,
-    err_msg :: Maybe T.Text,
+    message :: Maybe T.Text,
     result :: Maybe Ae.Value
     } deriving (Show, Eq, Generic, Ae.ToJSON)
 

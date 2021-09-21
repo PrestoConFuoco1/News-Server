@@ -44,6 +44,7 @@ executeAction (WhoWhat y (AUsers x)) = executeUsers (WhoWhat y x)
 executeAction (WhoWhat y (AAuth x)) = authenticate x
 executeAction (WhoWhat y (AComments x)) = executeComments (WhoWhat y x)
 executeAction (WhoWhat y (ADrafts x)) = executeDraft (WhoWhat y x)
+executeAction (WhoWhat y (APublish x)) = executePublish (WhoWhat y x)
 
 executePosts (WhoWhat y (Read x)) = do
     let where1 = postsWhereClause1 x
@@ -101,12 +102,18 @@ executeDraft (WhoWhat y (Update x)) =
     withAuth y >>= maybeUserToUser >>= userAuthor >>=
         \a -> editDraft $ WithAuthor (Ty._a_authorId a) x
 
+executePublish (WhoWhat y x) =
+    withAuth y >>= maybeUserToUser >>= userAuthor >>=
+        \a -> publish $ WithAuthor (Ty._a_authorId a) x
+
 handleError :: MonadServer m => ActionError -> m Response
 handleError EInvalidEndpoint = do
     logError $ "Invalid endpoint"
     return $ notFound "Invalid endpoint"
-handleError (ERequiredFieldMissing x) = do
+handleError (ERequiredFieldMissing admin x) = do
     let str =  "Required field missing (" <> x <> ")"
     logError $ E.decodeUtf8 str
-    return $ notFound $ E.decodeUtf8 str
-
+    return $ bad $ E.decodeUtf8 str
+handleError (EInvalidFieldValue admin x) = do
+    let str = "Invalid value of the field " <> x
+    return $ bad $ E.decodeUtf8 str

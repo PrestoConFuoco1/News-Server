@@ -72,11 +72,6 @@ defaultHandlers funcMsg = [Handler $ queryErrorHandler funcMsg,
 
 
 
-uniqueConstraintViolated e = PS.sqlState e == "23505"
-foreignKeyViolated e = PS.sqlState e == "23503"
-constraintViolated e = PS.sqlState e == "23514"
-
-
 withExceptionHandlers :: (Foldable f, CMC.MonadCatch m) => f (CMC.Handler m a) -> m a-> m a
 withExceptionHandlers = flip CMC.catches
 
@@ -95,3 +90,16 @@ defaultMainHandler :: (MonadServer m) => SomeException -> m Response
 defaultMainHandler e = do
     logError $ T.pack $ displayException e
     return $ U.internal U.internalErrorMsg
+
+
+uniqueConstraintViolated e = PS.sqlState e == "23505"
+foreignKeyViolated e = PS.sqlState e == "23503"
+constraintViolated e = PS.sqlState e == "23514"
+
+
+
+--SqlError {sqlState = "23514", sqlExecStatus = FatalError,
+--sqlErrorMsg = "new row for relation \"author\" violates check constraint
+-- \"author_description_check\"", sqlErrorDetail =
+-- "Failing row contains (26, 2, ).", sqlErrorHint = ""}
+

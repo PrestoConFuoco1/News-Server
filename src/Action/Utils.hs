@@ -18,12 +18,24 @@ import qualified GenericPretty as GP
 import Action.Common
 
 
+notEmpty :: T.Text -> Bool
+notEmpty = (/= "")
 
+validateRequired :: Bool -> (a -> Bool) -> (BS.ByteString -> Maybe a) -> BS.ByteString -> Either ActionError a
+validateRequired admin p func field = case func field of
+    Nothing ->  Left $ ERequiredFieldMissing admin field
+    Just x  ->  if p x
+                then Right x
+                else Left $ EInvalidFieldValue admin field
 
+validateOptional :: Bool -> (a -> Bool) -> (BS.ByteString -> Maybe a) -> BS.ByteString -> Either ActionError (Maybe a)
+validateOptional admin p func field = case func field of
+    Nothing -> return Nothing
+    Just x  -> if p x then return $ Just x else Left $ EInvalidFieldValue admin field
 
-requireField :: (BS.ByteString -> Maybe a) -> BS.ByteString -> Either ActionError a
-requireField func fieldname =
-    maybe (Left $ ERequiredFieldMissing fieldname) Right $ func fieldname
+requireField :: Bool -> (BS.ByteString -> Maybe a) -> BS.ByteString -> Either ActionError a
+requireField admin func fieldname =
+    maybe (Left $ ERequiredFieldMissing admin fieldname) Right $ func fieldname
 
 
 

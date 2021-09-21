@@ -7,18 +7,19 @@ import Action.Utils
 
 requestToActionAuthors :: [T.Text] -> Query -> Either ActionError ActionAuthors
 requestToActionAuthors path hash = case path of
-  (x:xs)
+  x:[]
     | x == "get" -> Right $ Read $ GetAuthors Nothing
     | x == "create" -> fmap Create $ createAuthorToAction hash
     | x == "delete" -> fmap Delete $ deleteAuthorToAction hash
     | x == "edit" -> fmap Update $ editAuthorToAction hash
-  [] -> Left EInvalidEndpoint
+  _ -> Left EInvalidEndpoint
 
 
 createAuthorToAction :: Query -> Either ActionError CreateAuthor
 createAuthorToAction hash = do
     userId <- requireField (requireInt hash) "user_id"
-    description <- requireField (requireText hash) "description"
+--    description <- requireField (requireText hash) "description"
+    description <- validateRequired notEmpty (requireText hash) "description"
     return $ CreateAuthor userId description
 
 
@@ -33,8 +34,8 @@ editAuthorToAction :: Query -> Either ActionError EditAuthor
 editAuthorToAction hash = do
     authorId <- requireField (requireInt hash) "author_id"
     let userId = requireInt hash "user_id"
-        description = requireText hash "description"
-
+--        description = requireText hash "description"
+    description <- validateOptional notEmpty (requireText hash) "description"
     return $ EditAuthor authorId description userId
 
 

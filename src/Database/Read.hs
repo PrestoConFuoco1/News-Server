@@ -238,3 +238,8 @@ instance Read DraftD where
                \ post_id \
                \ FROM news.get_drafts WHERE author_id = ?"
         in  (selectClause, [SqlValue a])
+
+--newtype DraftRaw = DraftRaw ()
+--publishDummy = DraftRaw ()
+
+
