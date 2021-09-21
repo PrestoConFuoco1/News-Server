@@ -11,6 +11,7 @@ import Execute.Types (Result(..), Response(..))
 
 
 
+idInResult = "id is int \"result\" field" :: T.Text
 
 unauthorizedMsg = "Unauthorized, use /auth" :: T.Text
 
@@ -23,9 +24,9 @@ okCreated :: T.Text -> Int -> Response
 okCreated msg id = Response NHT.ok200 val
   where val = Ae.toJSON $ Result True (Just msg) (Just $ Ae.toJSON id)
 
-ok :: Ae.Value -> Response
-ok res = Response NHT.ok200 val
-  where val = Ae.toJSON $ Result True Nothing $ Just res
+ok :: T.Text -> Ae.Value -> Response
+ok text res = Response NHT.ok200 val
+  where val = Ae.toJSON $ Result True (Just text) (Just res)
 
 errR :: T.Text -> Ae.Value
 errR t = Ae.toJSON $ Result False (Just t) Nothing

@@ -25,7 +25,7 @@ import ActWithOne
 
 import qualified Exceptions as Ex
 
-
+import qualified Data.Aeson as Ae (Value(..))
 
 newtype UDraft = UDraft ()
 draftEditDummy = UDraft ()
@@ -63,7 +63,8 @@ createDraft (WithAuthor a CreateDraft{..}) = do
     id <- validateUnique (logError "Failed to create draft" >> Ex.throwDefault) ids
     logDebug $ "Created draft with id = " <> (T.pack $ show id)
     tags <- attachTagsToDraft id _cd_tags
-    return (ok $ "Draft successfully created")
+    --return (ok "Draft successfully created" )
+    return $ okCreated ("Draft successfully created. " <> idInResult) id
 
 editDraft :: (MonadServer m) => WithAuthor EditDraft -> m Response -- ?
 editDraft x@(WithAuthor a EditDraft{..}) = do
@@ -75,7 +76,7 @@ editDraft x@(WithAuthor a EditDraft{..}) = do
         Just tags -> do
             ts <- attachTagsToDraft _ed_draftId tags
             return ()
-    return (ok $ "Draft successfully edited")
+    return (ok "Draft successfully edited" Ae.Null)
    
 {-
 -}
@@ -94,7 +95,7 @@ publish (WithAuthor a Publish{..}) = do
     id <- validateUnique (logError "Failed to create post" >> Ex.throwDefault) ids
     logDebug $ "Created post with id = " <> (T.pack $ show id)
     tags <- attachTagsToPost _p_draftId id
-    return (ok $ "Post successfully created")
+    return (ok "Post successfully created" Ae.Null)
 
 
 attachTagsToPost :: (MonadServer m) => Int -> Int -> m [Int]

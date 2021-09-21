@@ -26,22 +26,15 @@ source-repository head
 library
   exposed-modules:
       Action.Authors
-      Action.Authors1.Types
       Action.Category
-      Action.Category1.Types
       Action.Comments
-      Action.Comments1.Types
       Action.Common
       Action.Draft
-      Action.Draft1.Types
       Action.Posts
-      Action.Posts1.Types
       Action.RequestToAction
       Action.Tags
-      Action.Tags1.Types
       Action.Types
       Action.Users
-      Action.Users1.Types
       Action.Utils
       ActWithOne
       Database.Create

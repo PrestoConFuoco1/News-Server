@@ -39,7 +39,7 @@ import Profiling (withTimePrint)
 getUser :: (MonadServer m) => Maybe Ty.User -> m Response
 getUser Nothing = Ex.unauthorized
 getUser (Just u) = let val = Ae.toJSON u
-                   in  return $ ok val
+                   in  return $ ok "Success" val
 
 validateUnique :: (MonadServer m, GP.PrettyShow a) => m a -> [a] -> m a
 validateUnique x [] = x
@@ -65,7 +65,7 @@ authenticate auth = do
     user <- getUserByLogin $ _au_login auth
     token <- fmap (T.pack) $ randomString 10
     token' <- addToken (Ty._u_id user) token
-    return $ ok $ Ae.toJSON token'
+    return $ ok "Success" $ Ae.toJSON token'
 
 addToken :: (MonadServer m) => Ty.UserId -> T.Text -> m T.Text
 addToken id token = do
@@ -83,7 +83,6 @@ getUserByLogin login = do
     users <- query str [login]
     validateUnique Ex.invalidLogin users
 
-idInResult = "id is int \"result\" field"
 
 createThis :: (MonadServer m, CreateSQL s) => s -> Create s -> m Response
 createThis w cres = do
@@ -131,7 +130,7 @@ getThis x g = do
     logDebug $ T.pack $ GP.defaultPretty cat
     let val = Ae.toJSON cat
     --return $ Response NHT.ok200 val
-    return $ ok val
+    return $ ok "Success" val
 
 
 
@@ -145,7 +144,7 @@ deleteThis s d = do
         num <- execute str params
         actWithOne (AWOd s) num
         let succ = dName s <> " successfully deleted"
-        return (ok $ Ae.toJSON $ E.decodeUtf8 succ)
+        return (ok (E.decodeUtf8 succ) Ae.Null)
         
         
 
@@ -170,5 +169,5 @@ editThis s u = do
     num <- editThis' s u
     actWithOne (AWOu s) num
     let succ = uName s <> " successfully edited"
-    return (ok $ Ae.toJSON $ E.decodeUtf8 succ)
+    return (ok (E.decodeUtf8 succ) Ae.Null)
 
