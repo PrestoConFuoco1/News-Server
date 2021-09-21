@@ -26,13 +26,13 @@ import qualified Database.PostgreSQL.Simple.Types as PSTy
 import qualified Data.Time as Time
 
 
-import Action.Tags.Types
-import Action.Category.Types
-import Action.Users.Types
-import Action.Authors.Types
-import Action.Draft.Types
-import Action.Posts.Types
-import Action.Comments.Types
+import Action.Tags
+import Action.Category
+import Action.Users
+import Action.Authors
+import Action.Draft
+import Action.Posts
+import Action.Comments
 import Execute.Types
 import Database.SqlValue
 import Database.SqlQueryTypes

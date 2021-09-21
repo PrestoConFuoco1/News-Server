@@ -10,11 +10,11 @@ module Database.Create where
 
 --import Action.RequestToAction
 
-import Action.Tags.Types
-import Action.Category.Types
-import Action.Users.Types
-import Action.Authors.Types
-import Action.Comments.Types
+import Action.Tags
+import Action.Category
+import Action.Users
+import Action.Authors
+import Action.Comments
 import qualified Database.PostgreSQL.Simple as PS
 import qualified Data.ByteString as B
 import Execute.Types

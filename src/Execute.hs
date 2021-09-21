@@ -14,19 +14,21 @@ import Database.Read
 import Database.Create
 import Database.Delete
 import Database.Update
+import Control.Exception (SomeException)
 
 import MonadTypes (MonadServer (..), logError, logDebug, execute, query, formatQuery, logInfo, logWarn, logFatal)
 import qualified Database.PostgreSQL.Simple as PS (SqlError(..))
 import qualified Types as Ty
-import qualified Control.Monad.Catch as CMC (catches, Handler(..), MonadCatch)
+import qualified Control.Monad.Catch as CMC (catches, Handler(..), MonadCatch, catch)
 import qualified Data.Text.Encoding as E (decodeUtf8, encodeUtf8)
 import ActWithOne (actWithOne, ActWithOne(..), AWOu(..), AWOd(..))
 import Execute.Types
 import Execute.Utils
-import Action.Users.Types
-import Action.Comments.Types
-import Action.Draft.Types
-import Action.Authors.Types
+import Action.Users
+import Action.Comments
+import Action.Draft
+import Action.Authors
+import Action.Posts
 import Execute.Draft
 
 import Exceptions as Ex
@@ -46,7 +48,9 @@ executeAction (WhoWhat y (AComments x)) = executeComments (WhoWhat y x)
 executeAction (WhoWhat y (ADrafts x)) = executeDraft (WhoWhat y x)
 executeAction (WhoWhat y (APublish x)) = executePublish (WhoWhat y x)
 
-executePosts (WhoWhat y (Read x)) = do
+executePosts (WhoWhat y (GC x)) = getThis commentDummy x
+
+executePosts (WhoWhat y (AP (Read x))) = do
     let where1 = postsWhereClause1 x
         (SqlQuery clause params) = whereToQuery where1
     logDebug $ T.pack $ show $ where1
@@ -106,14 +110,30 @@ executePublish (WhoWhat y x) =
     withAuth y >>= maybeUserToUser >>= userAuthor >>=
         \a -> publish $ WithAuthor (Ty._a_authorId a) x
 
-handleError :: MonadServer m => ActionError -> m Response
-handleError EInvalidEndpoint = do
+handleError :: MonadServer m => (WhoWhat ActionErrorPerms) -> m Response
+---handleError = undefined
+handleError (WhoWhat y (ActionErrorPerms admin@(False) (ERequiredFieldMissing x))) =
+    handleFieldMissing x
+handleError (WhoWhat y (ActionErrorPerms admin@(False) (EInvalidFieldValue x))) =
+    handleInvalidValue x
+handleError (WhoWhat y (ActionErrorPerms admin@(False) EInvalidEndpoint)) = do
     logError $ "Invalid endpoint"
     return $ notFound "Invalid endpoint"
-handleError (ERequiredFieldMissing admin x) = do
+handleError (WhoWhat y (ActionErrorPerms admin@(True) x)) =
+    (withAuth y >>= withAdmin >> handleError (WhoWhat y (ActionErrorPerms False x)))
+        `CMC.catch` f
+  where
+    f :: (MonadServer m) => SomeException -> m Response
+    f e = logError forbidden >> return (notFound "Invalid endpoint")
+
+
+
+handleFieldMissing x = do
     let str =  "Required field missing (" <> x <> ")"
     logError $ E.decodeUtf8 str
     return $ bad $ E.decodeUtf8 str
-handleError (EInvalidFieldValue admin x) = do
+handleInvalidValue x = do
     let str = "Invalid value of the field " <> x
     return $ bad $ E.decodeUtf8 str
+
+forbidden = "Access only for administrators, sending 404 invalid endpoint."

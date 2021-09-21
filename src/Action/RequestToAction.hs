@@ -18,21 +18,13 @@ import Data.Bifunctor (bimap)
 import GHC.Generics
 import qualified GenericPretty as GP
 
-import Action.Authors.Types
-import Action.Authors.Authors
-import Action.Category.Types
-import Action.Category.Category
-import Action.Posts.Types
-import Action.Posts.Posts
-import Action.Tags.Types
-import Action.Tags.Tags
-import Action.Users.Types
-import Action.Users.Users
-import Action.Comments.Types
-import Action.Comments.Comments
-import Action.Draft.Types
-import Action.Draft.Draft
-
+import Action.Authors
+import Action.Category
+import Action.Posts
+import Action.Tags
+import Action.Users
+import Action.Comments
+import Action.Draft
 
 import Action.Utils
 import Action.Common
@@ -40,7 +32,7 @@ import Action.Common
 
 data Action = AAuthors ActionAuthors
             | ACategory ActionCategory
-            | APosts ActionPosts
+            | APosts ActionPosts1
             | ATags  ActionTags
             | AUsers ActionUsers
             | AAuth  Authenticate
@@ -49,7 +41,9 @@ data Action = AAuthors ActionAuthors
             | APublish Publish
     deriving (Generic, Show)
 
-requestToAction :: W.Request -> Either ActionError (WhoWhat Action)
+
+
+requestToAction :: W.Request -> Either (WhoWhat ActionErrorPerms) (WhoWhat Action)
 requestToAction req =
   let
     queryString = W.queryString req
@@ -63,13 +57,13 @@ requestToAction req =
     hash :: Query
     hash = HS.fromList . Mb.catMaybes . map f $ W.queryString req
     f (x, y) = fmap ((,) x) y
-  in  fmap (WhoWhat maybeToken) $ requestToAction' pathInfo hash
+  in  bimap (WhoWhat maybeToken) (WhoWhat maybeToken) $ requestToAction' pathInfo hash
 
 
-requestToAction' :: [T.Text] -> Query -> Either ActionError Action
+requestToAction' :: [T.Text] -> Query -> Either ActionErrorPerms Action
 requestToAction' path hash = case path of 
     (x:xs)
-     | x == "auth"       -> fmap AAuth $ requestToActionAuthenticate xs hash
+     | x == "auth"       -> fmap AAuth $ runRouter (renv False hash) requestToActionAuthenticate
      | x == "posts"      -> fmap APosts $ requestToActionPosts xs hash
      | x == "drafts"     -> fmap ADrafts $ requestToActionDrafts xs hash
      | x == "publish"    -> fmap APublish $ requestToActionPublish xs hash
@@ -79,46 +73,92 @@ requestToAction' path hash = case path of
      | x == "users"      -> fmap AUsers $ requestToActionUsers xs hash
      | x == "comments"   -> fmap AComments $ requestToActionComments xs hash
     []
-     | otherwise -> Left EInvalidEndpoint
+     | otherwise -> Left  $ ActionErrorPerms False EInvalidEndpoint
 
 
 
------------------------- PrettyShow instances ------------------------
+requestToActionAuthenticate :: Router Authenticate
+requestToActionAuthenticate = do
+    login <- requireField validateNotEmpty "login"
+    passHash <- requireField validateNotEmpty "pass_hash"
+    return $ Authenticate login passHash
+
+requestToActionPosts :: [T.Text] -> Query -> Either ActionErrorPerms ActionPosts1
+requestToActionPosts path hash = case path of
+  (x:xs)
+    | x == "get" -> fmap AP $ runRouter (renv False hash) getPostsAction
+    | otherwise -> case readIntText x of
+        (Just id) -> fmap GC $ actionWithPost id xs hash
+        Nothing -> Left  $ ActionErrorPerms False EInvalidEndpoint
+  [] -> Left  $ ActionErrorPerms False EInvalidEndpoint
+
+requestToActionDrafts :: [T.Text] -> Query -> Either ActionErrorPerms ActionDrafts
+requestToActionDrafts path hash = case path of
+  (x:xs)
+    | x == "get" -> Right $ Read GetDrafts
+    | x == "create" -> fmap Create $ runRouter (renv False hash) $ createDraftToAction
+    | x == "edit" -> fmap Update $ runRouter (renv False hash) $ editDraftToAction
+    | x == "delete" -> fmap Delete $ runRouter (renv False hash) $ deleteDraftToAction
+  [] -> Left  $ ActionErrorPerms False EInvalidEndpoint
+
+requestToActionPublish :: [T.Text] -> Query -> Either ActionErrorPerms Publish
+requestToActionPublish path hash = case path of
+    (x:xs) -> Left  $ ActionErrorPerms False EInvalidEndpoint
+    [] -> runRouter (renv False hash) $ publishAction
 
 
-instance GP.PrettyShow CreationDateOptions where
---    prettyShow = GP.LStr . GP.gprettyShowSum . from
-    prettyShow = GP.LStr . show
-instance GP.PrettyShow TagsOptions where
---    prettyShow = GP.LStr . GP.gprettyShowSum . from
-    prettyShow = GP.LStr . show
-instance GP.PrettyShow SearchOptions where
---    prettyShow = GP.LStr . GP.gprettyShowSum . from
-    prettyShow = GP.LStr . show
 
-instance GP.PrettyShow GetCategories where
-    prettyShow = GP.LStr . show
+requestToActionCats :: [T.Text] -> Query -> Either ActionErrorPerms ActionCategory
+requestToActionCats path hash = case path of
+  x:[]
+    | x == "get" -> Right $ Read GetCategories
+    | x == "create" -> fmap Create $ runRouter (renv True hash) $ createCatsToAction
+    | x == "edit" -> fmap Update $ runRouter (renv True hash) $ editCatsToAction
+    | x == "delete" -> fmap Delete $ runRouter (renv True hash) $ deleteCatsToAction
+  _ -> Left  $ ActionErrorPerms False EInvalidEndpoint
 
-instance GP.PrettyShow GetAuthors where
-    prettyShow = GP.LStr . show
 
-instance GP.PrettyShow GetTags where
-    prettyShow = GP.LStr . show
 
-instance GP.PrettyShow ActionError where
-    prettyShow = GP.LStr . show
 
---instance GP.PrettyShow GetComments where
---    prettyShow = GP.LStr . show
+requestToActionTags :: [T.Text] -> Query -> Either ActionErrorPerms ActionTags
+requestToActionTags path hash = case path of
+  (x:xs)
+    | x == "get" -> pure $ Read GetTags
+    | x == "create" -> fmap Create $ runRouter (renv True hash) $ createTagToAction
+    | x == "edit" -> fmap Update $ runRouter (renv True hash) $ editTagToAction
+    | x == "delete" -> fmap Delete $ runRouter (renv True hash) $ deleteTagToAction
+  [] -> Left  $ ActionErrorPerms False EInvalidEndpoint
 
-instance GP.PrettyShow SortEntity where
-    prettyShow = GP.LStr . drop 2 . show
-instance GP.PrettyShow SortOrder where
-    prettyShow = GP.LStr . drop 2 . show
 
-instance GP.PrettyShow SortOptions where
- 
-instance GP.PrettyShow GetPosts
+
+
+requestToActionUsers :: [T.Text] -> Query -> Either ActionErrorPerms ActionUsers
+requestToActionUsers path hash = case path of
+  (x:[])
+    | x == "profile" -> return $ Read GetProfile
+    | x == "create" -> fmap Create $ runRouter (renv True hash) $ createUserToAction
+    | x == "delete" -> fmap Delete $ runRouter (renv True hash) $ deleteUserToAction
+  _ -> Left  $ ActionErrorPerms False EInvalidEndpoint
+
+requestToActionAuthors :: [T.Text] -> Query -> Either ActionErrorPerms ActionAuthors
+requestToActionAuthors path hash = case path of
+  x:[]
+    | x == "get" -> Right $ Read $ GetAuthors Nothing
+    | x == "create" -> fmap Create $ runRouter (renv True hash) $ createAuthorToAction
+    | x == "delete" -> fmap Delete $ runRouter (renv True hash) $ deleteAuthorToAction
+    | x == "edit" -> fmap Update $ runRouter (renv True hash) $ editAuthorToAction
+  _ -> Left  $ ActionErrorPerms False EInvalidEndpoint
+
+
+
+requestToActionComments :: [T.Text] -> Query -> Either ActionErrorPerms ActionComments
+requestToActionComments path hash = case path of
+    x:[]
+      | x == "get" -> fmap Read $ runRouter (renv False hash) $ getCommentsToAction
+      | x == "create" -> fmap Create $ runRouter (renv False hash) $ createCommentsToAction
+      | x == "delete" -> fmap Delete $ runRouter (renv False hash) $ deleteCommentsToAction
+    _ -> Left $ ActionErrorPerms False EInvalidEndpoint
+
 
 instance GP.PrettyShow Action
 

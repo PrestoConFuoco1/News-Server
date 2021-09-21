@@ -1,5 +1,8 @@
 {-# LANGUAGE DeriveAnyClass #-}
-module Action.Tags.Types where
+module Action.Tags where
+
+import qualified Data.Text as T
+import Action.Utils
 
 import GHC.Generics
 import qualified GenericPretty as GP
@@ -29,6 +32,32 @@ data EditTag = EditTag {
 data DeleteTag = DeleteTag {
     _dt_tagId :: TagId
     } deriving (Show, Generic, GP.PrettyShow, PS.ToRow)
+
+instance GP.PrettyShow GetTags where
+    prettyShow = GP.LStr . show
+
+
+
+
+createTagToAction :: Router CreateTag
+createTagToAction = do
+    name <- requireField validateNotEmpty "name"
+    return $ CreateTag name
+
+editTagToAction :: Router EditTag
+editTagToAction = do
+    id <- requireField readInt "tag_id"
+    name <- requireField validateNotEmpty "name"
+    return $ EditTag id name
+
+deleteTagToAction :: Router DeleteTag
+deleteTagToAction = do
+    id <- requireField readInt "tag_id"
+    return $ DeleteTag id
+
+
+
+
 
 
 

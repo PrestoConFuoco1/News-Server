@@ -9,12 +9,12 @@ module Database.Delete where
 import qualified Data.ByteString as B
 import qualified Database.PostgreSQL.Simple as PS
 
-import Action.Tags.Types
-import Action.Authors.Types
-import Action.Category.Types
-import Action.Users.Types
-import Action.Comments.Types
-import Action.Draft.Types
+import Action.Tags
+import Action.Authors
+import Action.Category
+import Action.Users
+import Action.Comments
+import Action.Draft
 import Execute.Types
 import Database.SqlValue
 

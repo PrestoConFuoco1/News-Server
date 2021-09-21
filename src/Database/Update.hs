@@ -13,9 +13,9 @@ import qualified Data.Aeson as Ae (Value, encode)
 
 import qualified Database.PostgreSQL.Simple as PS
 
-import Action.Tags.Types
-import Action.Authors.Types
-import Action.Category.Types
+import Action.Tags
+import Action.Authors
+import Action.Category
 import Database.SqlValue
 import Data.Maybe (catMaybes)
 

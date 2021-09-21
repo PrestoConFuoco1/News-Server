@@ -25,24 +25,23 @@ source-repository head
 
 library
   exposed-modules:
-      Action.Authors.Authors
-      Action.Authors.Types
-      Action.Category.Category
-      Action.Category.Types
-      Action.Comments.Comments
-      Action.Comments.Types
+      Action.Authors
+      Action.Authors1.Types
+      Action.Category
+      Action.Category1.Types
+      Action.Comments
+      Action.Comments1.Types
       Action.Common
-      Action.Draft.Draft
-      Action.Draft.Types
-      Action.Posts.Posts
-      Action.Posts.Types
+      Action.Draft
+      Action.Draft1.Types
+      Action.Posts
+      Action.Posts1.Types
       Action.RequestToAction
-      Action.RequestToAction3
-      Action.Tags.Tags
-      Action.Tags.Types
+      Action.Tags
+      Action.Tags1.Types
       Action.Types
-      Action.Users.Types
-      Action.Users.Users
+      Action.Users
+      Action.Users1.Types
       Action.Utils
       ActWithOne
       Database.Create
@@ -51,7 +50,6 @@ library
       Database.SqlQueryTypes
       Database.SqlValue
       Database.Update
-      DBTypes
       Exceptions
       Execute
       Execute.Actions

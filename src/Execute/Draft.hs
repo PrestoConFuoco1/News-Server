@@ -14,7 +14,7 @@ import Database.Update
 import MonadTypes (MonadServer (..), logError, logDebug, execute, query, formatQuery, logInfo, logWarn, logFatal)
 import Execute.Types
 import Execute.Utils
-import Action.Draft.Types
+import Action.Draft
 
 
 import Database.SqlValue

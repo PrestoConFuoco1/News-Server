@@ -1,6 +1,8 @@
 {-# LANGUAGE DeriveAnyClass #-}
-module Action.Users.Types where
+module Action.Users where
 
+
+import Action.Utils
 
 import GHC.Generics
 import qualified GenericPretty as GP
@@ -32,3 +34,19 @@ data Authenticate = Authenticate {
     _au_login :: T.Text,
     _au_passHash :: T.Text
     } deriving (Show, Generic, GP.PrettyShow)
+
+
+createUserToAction :: Router CreateUser
+createUserToAction = do
+    login <- requireField validateNotEmpty "login"
+    passHash <- requireField validateNotEmpty "pass_hash"
+    firstName <- requireField validateNotEmpty "firstname"
+    lastName <- requireField validateNotEmpty "lastname"
+    return $ CreateUser login passHash firstName lastName
+
+
+deleteUserToAction :: Router DeleteUser
+deleteUserToAction = do
+    id <- requireField readInt "user_id"
+    return $ DeleteUser id
+

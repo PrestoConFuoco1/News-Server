@@ -24,8 +24,8 @@ import qualified Data.Text.Encoding as E (decodeUtf8, encodeUtf8)
 import ActWithOne (actWithOne, ActWithOne(..), AWOu(..), AWOd(..))
 import Execute.Types
 import Execute.Utils
-import Action.Users.Types
-import Action.Draft.Types
+import Action.Users
+import Action.Draft
 
 import Exceptions as Ex
 

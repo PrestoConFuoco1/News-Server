@@ -8,7 +8,7 @@ import Action.Types (WhoWhat (..), Token)
 import Database.Read
 import MonadTypes (MonadServer (..), logError, logDebug, execute, query, formatQuery, logInfo, logWarn, logFatal)
 import qualified Types as Ty
-import Action.Authors.Types
+import Action.Authors
 import Exceptions as Ex
 
 
