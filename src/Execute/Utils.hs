@@ -14,6 +14,8 @@ import Execute.Types (Result(..), Response(..))
 idInResult = "id is int \"result\" field" :: T.Text
 
 unauthorizedMsg = "Unauthorized, use /auth" :: T.Text
+invalidPasswordMsg = "Invalid password" :: T.Text
+invalidLoginMsg = "Invalid login" :: T.Text
 
 invalidEndpointMsg = "Invalid endpoint" :: T.Text
 internalErrorMsg = "Internal error" :: T.Text

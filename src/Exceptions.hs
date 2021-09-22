@@ -15,6 +15,7 @@ data ServerException =
     | InvalidUniqueEntities
     | InvalidEndpoint
     | InvalidLogin
+    | InvalidPassword
     | NotAnAuthor
     | InvalidUpdateOrDelete T.Text
     deriving (Show)
@@ -82,7 +83,8 @@ mainErrorHandler Default = return $ U.internal U.internalErrorMsg
 mainErrorHandler Unauthorized = return $ U.unauthorized U.unauthorizedMsg
 mainErrorHandler InvalidUniqueEntities = return $ U.internal U.internalErrorMsg
 mainErrorHandler InvalidEndpoint = return $ U.bad U.invalidEndpointMsg
-mainErrorHandler InvalidLogin = return $ U.bad $ U.unauthorizedMsg <> " invalid login"
+mainErrorHandler InvalidLogin = return $ U.bad $ U.invalidLoginMsg
+mainErrorHandler InvalidPassword = return $ U.bad U.invalidPasswordMsg
 mainErrorHandler NotAnAuthor = return $ U.bad U.notAnAuthorMsg
 mainErrorHandler (InvalidUpdateOrDelete text) = return $ U.bad text
 

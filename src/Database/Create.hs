@@ -55,7 +55,7 @@ dummyCUser = CUser ()
 
 instance CreateSQL CUser where
     type Create CUser = CreateUser
-    createQuery _ = "INSERT INTO news.users (firstname, lastname, login, pass_hash) VALUES (?, ?, ?, ?) RETURNING user_id"
+    createQuery _ = "INSERT INTO news.users (login, pass_hash, firstname, lastname) VALUES (?, ?, ?, ?) RETURNING user_id"
     cName _ = "user"
     cUniqueField _ = "login"
     cForeign _ = "error"

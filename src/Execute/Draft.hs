@@ -118,6 +118,7 @@ attachTagsToPost draftId postId = do
     
 
 attachTagsToDraft :: (MonadServer m) => Int -> [Int] -> m [Int]
+attachTagsToDraft draftId [] = removeTagsFromDraft draftId >> return []
 attachTagsToDraft draftId tagsIds = do
     let str =
          "INSERT INTO news.draft_tag (draft_id, tag_id) VALUES "
@@ -145,4 +146,15 @@ attachTagsToDraft draftId tagsIds = do
     logDebug $ "Removed " <> (T.pack $ show num) <> " tags from draft with id = " <> (T.pack $ show draftId)
     return ids
 
+removeTagsFromDraft :: (MonadServer m) => Int -> m Int
+removeTagsFromDraft draftId = do
+    let str =
+            "DELETE FROM news.draft_tag WHERE draft_id = ?"
+        params = [SqlValue draftId]
+    debugStr <- formatQuery str params
+    logDebug $ T.pack $ show debugStr
+
+    num <- execute str params
+    logDebug $ "Removed " <> (T.pack $ show num) <> " tags from draft with id = " <> (T.pack $ show draftId)
+    return num
 

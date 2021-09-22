@@ -4,6 +4,7 @@ module Execute.Actions where
 import Prelude hiding (Read)
 import qualified Data.Text as T (pack, Text)
 import Control.Exception
+import Control.Monad (when)
 
 import qualified Database.PostgreSQL.Simple.Types as PSTy
 import qualified GenericPretty as GP
@@ -19,7 +20,7 @@ import MonadTypes (MonadServer (..), logError, logDebug, execute, query, formatQ
 import qualified Database.PostgreSQL.Simple as PS (SqlError(..))
 import qualified Types as Ty
 import qualified Data.Aeson as Ae
-import qualified Control.Monad.Catch as CMC (catches, Handler(..), MonadCatch)
+import qualified Control.Monad.Catch as CMC (catches, Handler(..), MonadCatch, throwM)
 import qualified Data.Text.Encoding as E (decodeUtf8, encodeUtf8)
 import ActWithOne (actWithOne, ActWithOne(..), AWOu(..), AWOd(..))
 import Execute.Types
@@ -63,6 +64,8 @@ getUsersByToken token = do
 authenticate :: (MonadServer m) => Authenticate -> m Response
 authenticate auth = do
     user <- getUserByLogin $ _au_login auth
+    when (Ty._u_passHash user /= _au_passHash auth) $
+        CMC.throwM Ex.InvalidPassword
     token <- fmap (T.pack) $ randomString 10
     token' <- addToken (Ty._u_id user) token
     return $ ok "Success" $ Ae.toJSON token'
@@ -127,7 +130,7 @@ getThis :: (Read s, MonadServer m) => s -> Get s -> m Response
 getThis x g = do
 --    cat <- f x g
     cat <- getThis' x g
-    logDebug $ T.pack $ GP.defaultPretty cat
+    --logDebug $ T.pack $ GP.defaultPretty cat -- слишком много уже выдаётся
     let val = Ae.toJSON cat
     --return $ Response NHT.ok200 val
     return $ ok "Success" val

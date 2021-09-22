@@ -136,7 +136,7 @@ requestToActionUsers :: [T.Text] -> Query -> Either ActionErrorPerms ActionUsers
 requestToActionUsers path hash = case path of
   (x:[])
     | x == "profile" -> return $ Read GetProfile
-    | x == "create" -> fmap Create $ runRouter (renv True hash) $ createUserToAction
+    | x == "create" -> fmap Create $ runRouter (renv False hash) $ createUserToAction
     | x == "delete" -> fmap Delete $ runRouter (renv True hash) $ deleteUserToAction
   _ -> Left  $ ActionErrorPerms False EInvalidEndpoint
 
