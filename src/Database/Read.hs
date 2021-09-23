@@ -25,6 +25,7 @@ import qualified Database.PostgreSQL.Simple.Types as PSTy
 
 import qualified Data.Time as Time
 
+import Utils
 
 import Action.Tags
 import Action.Category
@@ -33,6 +34,7 @@ import Action.Authors
 import Action.Draft
 import Action.Posts
 import Action.Comments
+import Action.Types
 import Execute.Types
 import Database.SqlValue
 import Database.SqlQueryTypes
@@ -56,7 +58,9 @@ getThis' x g = do
     debugStr <- formatQuery qu pars
     logDebug $ T.pack $ show debugStr
     --withTimePrint $
-    query qu pars
+    res <- query qu pars
+    logInfo $ "Fetched " <> showText (length res) <> " entities"
+    return res
 
 
 
@@ -269,5 +273,33 @@ instance Read DraftR where
                \ post_id \
                \ FROM news.draft_tag_total WHERE author_id = ? AND draft_id = ?"
         in  (selectClause, [SqlValue a, SqlValue draft])
+
+{-
+getUsersByToken' :: (MonadServer m) => Token -> m (Maybe Ty.User)
+getUsersByToken' token = do
+    let str = "SELECT user_id, firstname, lastname, \
+              \image, login, pass_hash, creation_date, is_admin \
+              \FROM news.get_users_by_token WHERE token = ?"
+   
+    users <- query str [token]
+    user <- validateUnique2 (return Nothing) (Ex.throwTokenShared $ map Ty._u_id users) $ map Just users
+    return user
+-}
+
+
+
+newtype UserTokenR = UserTokenR ()
+userTokenDummy = UserTokenR ()
+
+
+instance Read UserTokenR where
+    type MType UserTokenR = Ty.User
+    type Get UserTokenR = Token
+    selectQuery _ y = 
+        let str = "SELECT user_id, firstname, lastname, \
+              \image, login, pass_hash, creation_date, is_admin \
+              \FROM news.get_users_by_token WHERE token = ?"
+ 
+        in  (str, [SqlValue y])
 
 

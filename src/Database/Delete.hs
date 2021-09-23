@@ -22,6 +22,7 @@ import MonadTypes
 import qualified Database.PostgreSQL.Simple.Types as PSTy
 import qualified Exceptions as Ex
 import qualified Types as Ty
+import Utils
 
 --import Execute.Permissions
 
@@ -33,7 +34,9 @@ deleteThis' s del = do
 
     --withExceptionHandlers (Ex.defaultHandlers "deleteThis") $ do
     ids <- fmap (map PSTy.fromOnly) $ query str params
-    logInfo $ "Deleted " <> dName s <> " with id = " <> showList ids
+    case ids of
+        [] -> logInfo $ "No " <> dName s <> " deleted"
+        _  -> logInfo $ "Deleted " <> dName s <> " with id = " <> showText ids
     return ids
 
 

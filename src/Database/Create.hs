@@ -25,6 +25,7 @@ import qualified Exceptions as Ex
 import Execute.Utils
 import Database.SqlValue
 import qualified Types as Ty
+import Utils
 
 class CreateSQL s where
     type Create s :: *
@@ -42,6 +43,7 @@ createThis' w cres = do
 
     ints <- fmap (map PSTy.fromOnly) $ query str params
     int <- validateUnique (Ex.throwBadInsert (cName w)) ints
+    logInfo $ "Created " <> cName w <> " with id = " <> showText int
     return int
 
 

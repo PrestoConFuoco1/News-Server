@@ -24,6 +24,7 @@ import qualified Database.PostgreSQL.Simple.Types as PSTy
 import qualified Exceptions as Ex
 import Action.Posts
 import Execute.Utils
+import Utils
 
 updateParams :: (UpdateSQL s) => s -> Upd s -> Maybe (PS.Query, [SqlValue])
 updateParams s ce = case intercalateQ $ map setUnit qs of
@@ -69,6 +70,7 @@ editThis' s u = case updateParams s u of
 
     ids <- fmap (map PSTy.fromOnly) $ query str params
     id <- validateUnique (Ex.throwUpdNotFound $ uName s) ids
+    logInfo $ "Updated " <> uName s <> " with id = " <> showText id
     return id
 
 
