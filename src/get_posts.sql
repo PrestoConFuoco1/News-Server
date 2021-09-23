@@ -87,4 +87,6 @@ FROM draft_tag_total td
             INNER JOIN users u ON a.user_id = u.user_id
             INNER JOIN get_categories c ON td.category_id = c.category_id;
 
+-------------------------------
+
 

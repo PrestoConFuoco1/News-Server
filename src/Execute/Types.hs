@@ -6,6 +6,7 @@ import qualified Database.PostgreSQL.Simple as PS
 import qualified Database.PostgreSQL.Simple.ToRow as PSR
 
 import qualified Data.Text as T
+import qualified Types as Ty
 
 import qualified Network.HTTP.Types as NHT
 import qualified Data.Aeson as Ae
@@ -26,7 +27,7 @@ data Result = Result {
 
 
 data WithUser a = WithUser {
-    _wu_userId :: Int,
+    _wu_userId :: Ty.User,
     _wu_action :: a
     } deriving (Show, Generic)
 
@@ -35,9 +36,11 @@ data WithAuthor a = WithAuthor {
     _wa_action :: a
     } deriving (Show, Generic)
 
+{-
 instance PSR.ToRow a => PSR.ToRow (WithUser a) where
     toRow (WithUser int x) = PSR.toRow (PS.Only int PS.:. x)
 
 
 instance PSR.ToRow a => PSR.ToRow (WithAuthor a) where
     toRow (WithAuthor int x) = PSR.toRow (PS.Only int PS.:. x)
+-}

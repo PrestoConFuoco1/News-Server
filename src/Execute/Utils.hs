@@ -8,39 +8,17 @@ import qualified Data.Text as T
 import qualified Data.ByteString as B
 import qualified Data.Text.Encoding as E
 import Execute.Types (Result(..), Response(..))
+import qualified Exceptions as Ex
+import MonadTypes
+import qualified GenericPretty as GP
+
+validateUnique :: (MonadServer m, GP.PrettyShow a) => m a -> [a] -> m a
+validateUnique x [] = x
+validateUnique _ [a] = return a
+validateUnique _ us  = Ex.invalidUnique us
 
 
-
-idInResult = "id is int \"result\" field" :: T.Text
-
-unauthorizedMsg = "Unauthorized, use /auth" :: T.Text
-invalidPasswordMsg = "Invalid password" :: T.Text
-invalidLoginMsg = "Invalid login" :: T.Text
-
-invalidEndpointMsg = "Invalid endpoint" :: T.Text
-internalErrorMsg = "Internal error" :: T.Text
-
-notAnAuthorMsg = "Not an author" :: T.Text
-
-okCreated :: T.Text -> Int -> Response
-okCreated msg id = Response NHT.ok200 val
-  where val = Ae.toJSON $ Result True (Just msg) (Just $ Ae.toJSON id)
-
-ok :: T.Text -> Ae.Value -> Response
-ok text res = Response NHT.ok200 val
-  where val = Ae.toJSON $ Result True (Just text) (Just res)
-
-errR :: T.Text -> Ae.Value
-errR t = Ae.toJSON $ Result False (Just t) Nothing
-
-bad = Response NHT.status400 . errR
-
-unauthorized = Response NHT.unauthorized401 . errR 
-
-notFound = Response NHT.status404 . errR
-
-internal = Response NHT.internalServerError500 . errR
-
-
-
-
+validateUnique2 :: (MonadServer m) => m a -> m a -> [a] -> m a
+validateUnique2 empty toomuch [] = empty
+validateUnique2 empty toomuch [a] = return a
+validateUnique2 empty toomuch us = toomuch

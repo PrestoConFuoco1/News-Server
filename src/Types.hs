@@ -189,6 +189,41 @@ instance PSR.FromRow Draft where
         return $ Draft id title creationDate author tags category content photo extraPhotos postId
 
 
+data DraftRaw = DraftRaw {
+    _dr_draftId :: DraftId,
+    _dr_title :: T.Text,
+    _dr_creationDate :: Time.Day,
+    _dr_authorId :: Int,
+    _dr_categoryId :: Int,
+    _dr_tagIds :: [Int],
+    _dr_content :: T.Text,
+    _dr_mainPhoto :: Maybe T.Text,
+    _dr_extraPhotos :: Maybe [T.Text],
+    _dr_postId :: Maybe PostId
+    } deriving (Show, Eq, Generic, GP.PrettyShow)
+
+
+instance Ae.ToJSON DraftRaw where
+    toJSON = Ae.genericToJSON Ae.defaultOptions { Ae.fieldLabelModifier = defaultModifier }
+
+
+
+instance PSR.FromRow DraftRaw where
+    fromRow = do
+        id <- PSR.field
+        title <- PSR.field
+        creationDate <- PSR.field
+        author <- PSR.field
+        categoryId <- PSR.field
+        tagIds <- PSR.field
+        content <- PSR.field
+        photo <- PSR.field
+        extraPhotos <- PSR.field
+        postId <- PSR.field
+        return $ DraftRaw id title creationDate author categoryId tagIds content photo extraPhotos postId
+
+
+
 
 
 

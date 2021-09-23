@@ -17,6 +17,19 @@ import qualified Data.Time as Time
 import Data.Void
 import Action.Comments
 
+data PublishEditPost = PublishEditPost {
+    _pep_postId :: Int,
+    _pep_title :: T.Text,
+    --_pep_creationDate :: Time.Day,
+    --_pep_authorId :: Int,
+    _pep_categoryId :: Int,
+    _pep_content :: T.Text,
+    _pep_mainPhoto :: Maybe T.Text,
+    _pep_extraPhotos :: Maybe [T.Text]
+    } deriving (Show, Eq)
+
+
+
 data ActionPosts1 = AP ActionPosts | GC GetComments
     deriving (Show, Generic, GP.PrettyShow)
 type ActionPosts = CRUD Void GetPosts Void Void
@@ -76,7 +89,8 @@ defaultSortOptions = SortOptions SEDate SODescending -- newer posts first
 actionWithPost :: Int -> [T.Text] -> Query -> Either ActionErrorPerms GetComments
 actionWithPost id path hash = case path of
   (x:[])
-    | x == "comments" -> runRouter (renv False hash) $ getCommentsToAction
+    | x == "comments" -> return $ GetComments id
+--    | x == "comments" -> runRouter (renv False hash) $ getCommentsToAction
   _ -> Left $ ActionErrorPerms False EInvalidEndpoint
 
 

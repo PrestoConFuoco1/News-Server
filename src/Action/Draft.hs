@@ -47,7 +47,10 @@ data EditDraft = EditDraft {
     _ed_extraPhotos :: Maybe [T.Text] 
     } deriving (Show, Generic, GP.PrettyShow)
 
-
+data EditDraftPublish = EditDraftPublish {
+    _edp_postId :: Int,
+    _edp_draftId :: Int
+    } deriving (Show, Generic, GP.PrettyShow)
 
 data DeleteDraft = DeleteDraft {
     _dd_draft_id :: Int

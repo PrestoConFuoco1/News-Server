@@ -6,7 +6,7 @@ module Lib
 
 
 import qualified Network.Wai.Handler.Warp as Warp (run)
-import qualified Network.Wai as W (Request, Response, Application, responseLBS)
+import qualified Network.Wai as W (Request(..), Response, Application, responseLBS)
 import qualified Data.Text as T (pack)
 --import Control.Exception
 
@@ -32,18 +32,11 @@ port = 5555
 
 someFunc :: IO ()
 someFunc = do
-{-
-    conn <- PS.connectPostgreSQL "dbname='batadase'"
-    let serverH = ServerHandlers L.simpleLog (DB.Handle conn)
-    Warp.run port $ mainFunc1 serverH
--}
     CMC.bracket 
         (PS.connectPostgreSQL "dbname='batadase'")
         (\conn -> PS.close conn) -- close connection
         (\conn -> let serverH = ServerHandlers L.simpleLog (DB.Handle conn) in
          Warp.run port $ mainFunc1 serverH)
-{-
-  -}       
 
 connectToDB :: IO PS.Connection
 connectToDB = PS.connectPostgreSQL "dbname='batadase'"
@@ -55,10 +48,11 @@ mainFunc1 handlers req respond = do
 
 mainServer :: MonadServer m => W.Request -> m W.Response
 mainServer req = fmap coerceResponse $ do
-    logDebug $ T.pack $ show req
+    logDebug $ ("Path: " <>) $ T.pack $ show $ W.pathInfo req
+    logDebug $ ("Args: " <>) $ T.pack $ show $ W.queryString req
     let eithWhoWhat = requestToAction req
-    withTimePrint $ printS $ eithWhoWhat
-    logDebug "\n type calculation time is above"
+--    withTimePrint $ printS $ eithWhoWhat
+--    logDebug "\n type calculation time is above"
     
     case eithWhoWhat of
         Left err -> handleError err
@@ -69,7 +63,7 @@ mainServer req = fmap coerceResponse $ do
             val <- withTimePrint (executeAction whowhat
                 `CMC.catches` [CMC.Handler Ex.mainErrorHandler,
                                CMC.Handler Ex.defaultMainHandler])
-            logDebug "\n execution time is above"
+            logDebug "execution time is above"
             return val
 
 

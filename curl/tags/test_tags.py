@@ -4,6 +4,12 @@ import json
 import subprocess
 import sys
 
+
+# usage: ./test_tags.py <tag name> | grep False
+# (should produce no input)
+
+
+
 basicArgs = ['curl', '-G', '-d']
 token = 'token='
 name = 'name='
@@ -30,65 +36,100 @@ def delete(token_, tag_id_):
     res = run(basicArgs + [token + token_ + '&' + tag_id + tag_id_, host+'delete'])
     return res
 
+def disp(res, sh):
+    q = res['message']
+    print('message: ', q, end=' ')
+    ok_ = res['_ok']
+    print(ok_ == sh)
+    if(ok_) :
+        print(res['result'])
 
-if len(sys.argv) < 2:
+
+
+if True:
+    tname = 'Kafka'
+    if len(sys.argv) == 2:
+        tname = sys.argv[1]
 
     print ('getting tags (admin is not required here)')
     res = get('fail')
-    print(res, '\n')
+    disp(res, True)
+    print('')
+
 
     print ("trying to create a tag with wrong token")
-    res = create('asdasdad', 'Python1')
-    print(res, '\n')
+    res = create('asdasdad', tname+'1')
+    disp(res, False)
+    print('')
+
 
     print("trying to create tag not being admin")
-#./create_author.sh push 2 "Pushkin2"
-    res = create('push', 'Python2')
-    print(res, '\n')
+    res = create('push', tname+'2')
+    disp(res, False)
+    print('')
+
 
     print("trying to create a tag but with invalid name (not admin)")
-#./create_author.sh admin 2 ""
     res = create('fail', '')
-    print(res, '\n')
+    disp(res, False)
+    print('')
+
 
 
     print("trying to create a tag with admin but with invalid name")
-#./create_author.sh admin 2 ""
     res = create('admin', '')
-    print(res, '\n')
+    disp(res, False)
+    print('')
+
 
     print("creating tag with admin")
-#./create_author.sh admin 2 "Pushkin4"
-    res = create('admin', 'Python3')
-    print(res, '\n')
+    res = create('admin', tname+'3')
+    disp(res, True)
+    print('')
 
-else:
-    arg = sys.argv[1]
+
+    #arg = sys.argv[1]
+    arg = str(res['result'])
     print("trying to edit tag with wrong token")
-    res = edit('sasdads', arg, 'Python4')
-    print(res, '\n')
+    res = edit('sasdads', arg, tname+'4')
+    disp(res, False)
+    print('')
+
 
     print("trying to edit tag with right token but not admin")
-    res = edit('push', arg, 'Python5')
-    print(res, '\n')
+    res = edit('push', arg, tname+'5')
+    disp(res, False)
+    print('')
+
 
     print("trying to edit tag with right token (not admin) with wrong parameter")
     res = edit('push', arg, '')
-    print(res, '\n')
+    disp(res, False)
+    print('')
+
 
   
     print("trying to edit tag with admin token and wrong parameter")
     res = edit('admin', arg, '')
-    print(res, '\n')
+    disp(res, False)
+    print('')
+
 
     print("editing tag with admin")
-    res = edit('admin', arg, 'Python6')
-    print(res, '\n')
+    res = edit('admin', arg, tname+'6')
+    disp(res, True)
+    print('')
+
 
     print("deleting tag with not admin")
     res = delete('push', arg)
-    print(res, '\n')
+    disp(res, False)
+    print('')
 
-    print("deleting tag with not admin")
+
+    print("deleting tag with admin")
     res = delete('admin', arg)
-    print(res, '\n')
+    disp(res, True)
+    print('')
+
+

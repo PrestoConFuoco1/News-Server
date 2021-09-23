@@ -49,7 +49,7 @@ class (MonadSQL m, MonadLog m, MonadCatch m) => MonadServer m where
     getCurrentTimeS :: m UTCTime
 
 instance CMC.MonadThrow ServerIO where
-    throwM e = (logDebug $ T.pack $ displayException e) >> (liftIO $ CE.throwIO e)
+    throwM e = liftIO $ CE.throwIO e
 
 instance CMC.MonadCatch ServerIO where
     catch (ServerIO m) c = ServerIO $ m `CMC.catch` \e -> runServerIO (c e)

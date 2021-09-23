@@ -36,6 +36,8 @@ import Action.Comments
 import Execute.Types
 import Database.SqlValue
 import Database.SqlQueryTypes
+import MonadTypes
+import qualified Data.Text as T (pack)
 
 class (Ae.ToJSON (MType s), GP.PrettyShow (MType s), PS.FromRow (MType s), Show (Get s), Show (MType s))
         => Read s where
@@ -46,6 +48,15 @@ class (Ae.ToJSON (MType s), GP.PrettyShow (MType s), PS.FromRow (MType s), Show 
 newtype PostD = PostD ()
 postDummy = PostD ()
 
+
+
+getThis' :: (Read s, MonadServer m) => s -> Get s -> m [MType s]
+getThis' x g = do
+    let (qu, pars) = selectQuery x g
+    debugStr <- formatQuery qu pars
+    logDebug $ T.pack $ show debugStr
+    --withTimePrint $
+    query qu pars
 
 
 
@@ -239,7 +250,24 @@ instance Read DraftD where
                \ FROM news.get_drafts WHERE author_id = ?"
         in  (selectClause, [SqlValue a])
 
---newtype DraftRaw = DraftRaw ()
---publishDummy = DraftRaw ()
+newtype DraftR = DraftR ()
+draftRawDummy = DraftR ()
+
+
+instance Read DraftR where
+    type MType DraftR = Ty.DraftRaw
+    type Get DraftR = WithAuthor Publish
+    selectQuery _ (WithAuthor a (Publish draft)) = 
+        let selectClause = "SELECT \
+               \ draft_id, \
+               \ title, \
+               \ creation_date, \
+               \ author_id, \
+               \ category_id, \
+               \ tagids, \
+               \ content, photo, extra_photos, \
+               \ post_id \
+               \ FROM news.draft_tag_total WHERE author_id = ? AND draft_id = ?"
+        in  (selectClause, [SqlValue a, SqlValue draft])
 
 

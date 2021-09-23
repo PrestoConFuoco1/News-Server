@@ -21,7 +21,8 @@ import qualified Database.PostgreSQL.Simple as PS (SqlError(..))
 import qualified Types as Ty
 import qualified Control.Monad.Catch as CMC (catches, Handler(..), MonadCatch, catch)
 import qualified Data.Text.Encoding as E (decodeUtf8, encodeUtf8)
-import ActWithOne (actWithOne, ActWithOne(..), AWOu(..), AWOd(..))
+--import ActWithOne (actWithOne, ActWithOne(..), AWOu(..), AWOd(..))
+import Execute.Result
 import Execute.Types
 import Execute.Utils
 import Action.Users
@@ -84,34 +85,34 @@ executeUsers (WhoWhat y (Delete x)) = withAuthAdmin y >> deleteThis dummyDUser x
 executeUsers (WhoWhat y (Read GetProfile)) = withAuth y >>= getUser
 
 executeComments (WhoWhat y (Read x)) = getThis commentDummy x
-executeComments (WhoWhat y (Create x)) = withAuth y >>= createComment x
-executeComments (WhoWhat y (Delete x)) = withAuth y >>= maybeUserToUser >>= \u -> deleteThis dummyDComment $ WithUser (Ty._u_id u) x
-
+--executeComments (WhoWhat y (Create x)) = withAuth y >>= createComment x
+executeComments (WhoWhat y (Create x)) = withAuth y >>= maybeUserToUser >>= \u -> createThis dummyCComment $ WithUser u x
+executeComments (WhoWhat y (Delete x)) = withAuth y >>= maybeUserToUser >>= \u -> deleteThis dummyDComment $ WithUser u x
+{-
 createComment :: (MonadServer m) => CreateComment -> Maybe Ty.User -> m Response
 createComment cc Nothing = Ex.unauthorized
-createComment cc (Just u) = createThis dummyCComment $ WithUser (Ty._u_id u) cc
-
+createComment cc (Just u) = createThis dummyCComment $ WithUser u cc
+-}
 executeDraft :: (MonadServer m) => WhoWhat ActionDrafts -> m Response
 executeDraft (WhoWhat y (Create x)) =
-    withAuth y >>= maybeUserToUser >>= userAuthor >>=
+    withAuthor y >>=
         \a -> createDraft $ WithAuthor (Ty._a_authorId a) x
 
 executeDraft (WhoWhat y (Read x)) =
-    withAuth y >>= maybeUserToUser >>= userAuthor >>=
+    withAuthor y >>=
         \a -> getThis draftDummy $ WithAuthor (Ty._a_authorId a) x
 executeDraft (WhoWhat y (Delete x)) =
-    withAuth y >>= maybeUserToUser >>= userAuthor >>=
+    withAuthor y >>=
         \a -> deleteThis dummyDDraft $ WithAuthor (Ty._a_authorId a) x
 executeDraft (WhoWhat y (Update x)) =
-    withAuth y >>= maybeUserToUser >>= userAuthor >>=
+    withAuthor y >>=
         \a -> editDraft $ WithAuthor (Ty._a_authorId a) x
 
 executePublish (WhoWhat y x) =
-    withAuth y >>= maybeUserToUser >>= userAuthor >>=
+    withAuthor y >>=
         \a -> publish $ WithAuthor (Ty._a_authorId a) x
 
 handleError :: MonadServer m => (WhoWhat ActionErrorPerms) -> m Response
----handleError = undefined
 handleError (WhoWhat y (ActionErrorPerms admin@(False) (ERequiredFieldMissing x))) =
     handleFieldMissing x
 handleError (WhoWhat y (ActionErrorPerms admin@(False) (EInvalidFieldValue x))) =
@@ -120,13 +121,14 @@ handleError (WhoWhat y (ActionErrorPerms admin@(False) EInvalidEndpoint)) = do
     logError $ "Invalid endpoint"
     return $ notFound "Invalid endpoint"
 handleError (WhoWhat y (ActionErrorPerms admin@(True) x)) =
-    (withAuth y >>= withAdmin >> handleError (WhoWhat y (ActionErrorPerms False x)))
+    (withAuthAdmin y >> handleError (WhoWhat y (ActionErrorPerms False x)))
         `CMC.catch` f
   where
     f :: (MonadServer m) => SomeException -> m Response
-    f e = logError forbidden >> return (notFound "Invalid endpoint")
+    f e = handleForbidden
 
-
+handleForbidden :: (MonadServer m) => m Response
+handleForbidden = logError forbidden >> return (notFound "Invalid endpoint")
 
 handleFieldMissing x = do
     let str =  "Required field missing (" <> x <> ")"
@@ -136,4 +138,4 @@ handleInvalidValue x = do
     let str = "Invalid value of the field " <> x
     return $ bad $ E.decodeUtf8 str
 
-forbidden = "Access only for administrators, sending 404 invalid endpoint."
+
