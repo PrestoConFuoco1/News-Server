@@ -40,6 +40,7 @@ import Database.SqlValue
 import Database.SqlQueryTypes
 import MonadTypes
 import qualified Data.Text as T (pack)
+import Action.Utils
 
 class (Ae.ToJSON (MType s), GP.PrettyShow (MType s), PS.FromRow (MType s), Show (Get s), Show (MType s))
         => Read s where
@@ -51,6 +52,25 @@ newtype PostD = PostD ()
 postDummy = PostD ()
 
 
+toOffset :: Int -> Int -> Int
+toOffset page size = page*size
+
+pageingClause :: Int -> Int -> (PS.Query, [SqlValue])
+pageingClause page size = (" LIMIT ? OFFSET ? ", [SqlValue size, SqlValue $ toOffset page size])
+
+
+getThisPaginated' :: (Read s, MonadServer m) => s -> Paginated (Get s) -> m [MType s]
+getThisPaginated' x (Paginated page size g) = do
+    let (qu, pars) = selectQuery x g
+        (qupag, parspag) = pageingClause page size
+        qu' = qu <> qupag
+        totalpars = pars ++ parspag
+    debugStr <- formatQuery qu' totalpars
+    logDebug $ T.pack $ show debugStr
+    --withTimePrint $
+    res <- query qu' totalpars
+    logInfo $ "Fetched " <> showText (length res) <> " entities"
+    return res
 
 getThis' :: (Read s, MonadServer m) => s -> Get s -> m [MType s]
 getThis' x g = do
@@ -61,6 +81,7 @@ getThis' x g = do
     res <- query qu pars
     logInfo $ "Fetched " <> showText (length res) <> " entities"
     return res
+
 
 
 
@@ -87,7 +108,7 @@ instance Read PostD where
                \ catids, \
                \ catnames, \
                \ content, photo, extra_photos \
-               \ FROM news.get_posts "
+               \ FROM news.get_posts ORDER BY post_creation_date DESC "
             (whereClause, args) = queryIntercalate " AND " $ catMaybes
                 [fmap postsWhereDate cre,
                  fmap postsWhereTags tags,

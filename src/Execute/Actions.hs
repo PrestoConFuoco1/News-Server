@@ -11,6 +11,7 @@ import qualified GenericPretty as GP
 
 import Action.Types (WhoWhat (..), Token)
 import Action.Common
+import Action.Utils
 import Database.Read
 import Database.Create
 import Database.Delete
@@ -83,6 +84,16 @@ getThis x g = do
     --logDebug $ T.pack $ GP.defaultPretty cat -- слишком много уже выдаётся
     let val = Ae.toJSON cat
     return $ ok "Success" val
+
+
+getThisPaginated :: (Read s, MonadServer m) => s -> Paginated (Get s) -> m Response
+getThisPaginated x g = do
+--    cat <- f x g
+    cat <- getThisPaginated' x g
+    --logDebug $ T.pack $ GP.defaultPretty cat -- слишком много уже выдаётся
+    let val = Ae.toJSON cat
+    return $ ok "Success" val
+
 
 
 deleteThis :: (MonadServer m, DeleteSQL s) => s -> Del s -> m Response

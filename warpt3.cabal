@@ -46,7 +46,6 @@ library
       Execute
       Execute.Actions
       Execute.Draft
-      Execute.Draft1
       Execute.HasTags
       Execute.Permissions
       Execute.Result
@@ -60,6 +59,7 @@ library
       MonadTypes
       Profiling
       Types
+      Utils
   other-modules:
       Paths_warpt3
   hs-source-dirs:

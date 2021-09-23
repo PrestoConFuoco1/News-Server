@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveAnyClass #-}
 module Action.Utils where
 
 import qualified Network.Wai as W (Request, pathInfo, queryString)
@@ -45,7 +46,15 @@ optional prse fieldname = do
 oneOf :: [Router (Maybe a)] -> Router (Maybe a)
 oneOf lst = foldr f (return Nothing) lst
   where f x acc = x >>= maybe acc (return . Just)
-            
+
+requireWithDefault :: (BS.ByteString -> Maybe a) -> a -> BS.ByteString -> Router a
+requireWithDefault prse deflt fieldname = do
+    hash <- askHash
+    let bs = getBs hash fieldname
+    case bs of
+        Nothing -> return deflt
+        Just x -> errorOnNothing (EInvalidFieldValue fieldname) $ prse x
+
 
 getBs :: Query -> BS.ByteString -> Maybe BS.ByteString
 getBs hash field = HS.lookup field hash
@@ -67,6 +76,23 @@ readList = (Ae.decode . BSL.fromStrict)
 
 fmap2 :: (Functor f, Functor g) => (a -> b) -> f (g a) -> f (g b)
 fmap2 f x = fmap (fmap f) x
+
+
+data Paginated a = Paginated {
+    _pag_page :: Int,
+    _pag_size :: Int,
+    _pag_data :: a
+    } deriving (Show, Generic, GP.PrettyShow) 
+
+
+
+withPagination :: Router a -> Router (Paginated a)
+withPagination m = do
+    x <- m
+    page <- requireWithDefault readInt 0 "page"
+    size <- requireWithDefault readInt 10000 "size"
+    return $ Paginated page size x
+
 
 {-
 require :: (BS.ByteString -> Maybe a) -> Query -> BS.ByteString -> Maybe a

@@ -11,7 +11,7 @@ import Data.Void
 import qualified Data.Text as T
 
 
-type ActionAuthors = CRUD CreateAuthor GetAuthors EditAuthor DeleteAuthor
+type ActionAuthors = CRUD CreateAuthor (Paginated GetAuthors) EditAuthor DeleteAuthor
 instance GP.PrettyShow GetAuthors where
     prettyShow = GP.LStr . show
 

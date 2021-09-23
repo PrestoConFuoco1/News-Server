@@ -48,7 +48,6 @@ instance GP.PrettyShow ActionErrorPerms where
     prettyShow = GP.LStr . show
 
 
-
 newtype Router a = Router { unR :: ReaderT RoutingEnv (Either ActionErrorPerms) a }
     deriving (Functor, Applicative, Monad, MonadReader RoutingEnv)
 
@@ -72,3 +71,5 @@ errorOnNothing :: ActionError -> Maybe a -> Router a
 errorOnNothing e = maybe (routerError e) return
 
 renv b hash = RoutingEnv b hash
+
+

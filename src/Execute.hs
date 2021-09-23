@@ -37,6 +37,7 @@ import Exceptions as Ex
 import Database.SqlQueryTypes
 import Execute.Permissions
 import Execute.Actions
+import Action.Utils
 
 executeAction :: MonadServer m => WhoWhat Action -> m Response
 executeAction (WhoWhat y (AAuthors x)) = executeAuthor (WhoWhat y x)
@@ -49,19 +50,19 @@ executeAction (WhoWhat y (AComments x)) = executeComments (WhoWhat y x)
 executeAction (WhoWhat y (ADrafts x)) = executeDraft (WhoWhat y x)
 executeAction (WhoWhat y (APublish x)) = executePublish (WhoWhat y x)
 
-executePosts (WhoWhat y (GC x)) = getThis commentDummy x
+executePosts (WhoWhat y (GC x)) = getThisPaginated commentDummy x
 
 executePosts (WhoWhat y (AP (Read x))) = do
-    let where1 = postsWhereClause1 x
-        (SqlQuery clause params) = whereToQuery where1
-    logDebug $ T.pack $ show $ where1
-    evaluated <- formatQuery clause params
-    logDebug $ E.decodeUtf8 evaluated
-    getThis postDummy x
+--    let where1 = postsWhereClause1 x
+--        (SqlQuery clause params) = whereToQuery where1
+--    logDebug $ T.pack $ show $ where1
+--    evaluated <- formatQuery clause params
+--    logDebug $ E.decodeUtf8 evaluated
+    getThisPaginated postDummy x
 
 
 executeAuthor (WhoWhat y (Read x)) =
-    withAuthAdmin y >> getThis authorDummy x
+    withAuthAdmin y >> getThisPaginated authorDummy x
 executeAuthor (WhoWhat y (Create x)) =
     withAuthAdmin y >> createThis dummyCAuthor x
 executeAuthor (WhoWhat y (Update x)) =
@@ -69,13 +70,13 @@ executeAuthor (WhoWhat y (Update x)) =
 executeAuthor (WhoWhat y (Delete x)) =
     withAuthAdmin y >> deleteThis dummyDAuthor x
 
-executeTags (WhoWhat y (Read x)) = getThis tagDummy x
+executeTags (WhoWhat y (Read x)) = getThisPaginated tagDummy x
 executeTags (WhoWhat y (Create x)) = withAuthAdmin y >> createThis dummyCTag x
 executeTags (WhoWhat y (Update x)) =  withAuthAdmin y >> editThis dummyUTag x
 executeTags (WhoWhat y (Delete x)) = withAuthAdmin y >> deleteThis dummyDTag x
 
 
-executeCategory (WhoWhat y (Read x)) = getThis catDummy x
+executeCategory (WhoWhat y (Read x)) = getThisPaginated catDummy x
 executeCategory (WhoWhat y (Create x)) = withAuthAdmin y >> createThis dummyCCat x
 executeCategory (WhoWhat y (Update x)) =  withAuthAdmin y >> editThis dummyUCat x
 executeCategory (WhoWhat y (Delete x)) = withAuthAdmin y >> deleteThis dummyDCat x
@@ -84,7 +85,7 @@ executeUsers (WhoWhat y (Create x)) = createThis dummyCUser x
 executeUsers (WhoWhat y (Delete x)) = withAuthAdmin y >> deleteThis dummyDUser x
 executeUsers (WhoWhat y (Read GetProfile)) = withAuth y >>= getUser
 
-executeComments (WhoWhat y (Read x)) = getThis commentDummy x
+executeComments (WhoWhat y (Read x)) = getThisPaginated commentDummy x
 --executeComments (WhoWhat y (Create x)) = withAuth y >>= createComment x
 executeComments (WhoWhat y (Create x)) = withAuth y >>= maybeUserToUser >>= \u -> createThis dummyCComment $ WithUser u x
 executeComments (WhoWhat y (Delete x)) = withAuth y >>= maybeUserToUser >>= \u -> deleteThis dummyDComment $ WithUser u x
@@ -98,9 +99,9 @@ executeDraft (WhoWhat y (Create x)) =
     withAuthor y >>=
         \a -> createDraft $ WithAuthor (Ty._a_authorId a) x
 
-executeDraft (WhoWhat y (Read x)) =
+executeDraft (WhoWhat y (Read (Paginated p s x))) =
     withAuthor y >>=
-        \a -> getThis draftDummy $ WithAuthor (Ty._a_authorId a) x
+        \a -> getThisPaginated draftDummy $ Paginated p s (WithAuthor (Ty._a_authorId a) x)
 executeDraft (WhoWhat y (Delete x)) =
     withAuthor y >>=
         \a -> deleteThis dummyDDraft $ WithAuthor (Ty._a_authorId a) x

@@ -13,7 +13,7 @@ import Action.Common
 type TagId = Int
 
 
-type ActionTags = CRUD CreateTag GetTags EditTag DeleteTag
+type ActionTags = CRUD CreateTag (Paginated GetTags) EditTag DeleteTag
 
 
 data GetTags = GetTags

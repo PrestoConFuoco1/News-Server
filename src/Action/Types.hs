@@ -23,13 +23,6 @@ data WhoWhat a = WhoWhat {
     _ww_action :: a
     } deriving (Show, Generic) 
 
-data Paginated a = Pag {
-    _pag_page :: Int,
-    _pag_size :: Int
-    _pag_data :: a
-    } deriving (Show, Generic) 
-
-
 --data GetComments = GetComments PostId
 --    deriving (Show, Generic)
 

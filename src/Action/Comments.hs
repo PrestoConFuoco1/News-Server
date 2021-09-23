@@ -9,7 +9,7 @@ import qualified Database.PostgreSQL.Simple as PS
 import Action.Common
 import Data.Void
 
-type ActionComments = CRUD CreateComment GetComments Void DeleteComment
+type ActionComments = CRUD CreateComment (Paginated GetComments) Void DeleteComment
 
 data GetComments = GetComments {
     _gc_postId :: Int

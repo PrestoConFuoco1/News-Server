@@ -30,9 +30,9 @@ data PublishEditPost = PublishEditPost {
 
 
 
-data ActionPosts1 = AP ActionPosts | GC GetComments
+data ActionPosts1 = AP ActionPosts | GC (Paginated GetComments)
     deriving (Show, Generic, GP.PrettyShow)
-type ActionPosts = CRUD Void GetPosts Void Void
+type ActionPosts = CRUD Void (Paginated GetPosts) Void Void
 
 data GetPosts = GetPosts {
     _gp_creationDate :: Maybe CreationDateOptions,
@@ -86,17 +86,17 @@ defaultSortOptions :: SortOptions
 defaultSortOptions = SortOptions SEDate SODescending -- newer posts first
 
 
-actionWithPost :: Int -> [T.Text] -> Query -> Either ActionErrorPerms GetComments
+actionWithPost :: Int -> [T.Text] -> Query -> Either ActionErrorPerms (Paginated GetComments)
 actionWithPost id path hash = case path of
   (x:[])
-    | x == "comments" -> return $ GetComments id
+    | x == "comments" -> runRouter (renv False hash) $ withPagination $ return $ GetComments id
 --    | x == "comments" -> runRouter (renv False hash) $ getCommentsToAction
   _ -> Left $ ActionErrorPerms False EInvalidEndpoint
 
 
 --[Router (Maybe a)] -> Router (Maybe a)
 
-getPostsAction :: Router ActionPosts
+getPostsAction :: Router GetPosts
 getPostsAction = do
     tagopts <- oneOf [fmap2 OneTag $ optional readInt "tag",
                       fmap2 TagsIn $ optional readList "tags__in",
@@ -111,7 +111,7 @@ getPostsAction = do
         Nothing -> return defaultSortOptions
         Just s -> errorOnNothing (EInvalidFieldValue "sort") $ sortOptions s   
     searchopts <- fmap2 SearchOptions $ optional validateNotEmpty "search"
-    return $ Read $ GetPosts creationopts tagopts searchopts sortopts
+    return $ GetPosts creationopts tagopts searchopts sortopts
 
 
 sortOptions :: T.Text -> Maybe SortOptions

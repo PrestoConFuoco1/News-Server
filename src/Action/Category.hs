@@ -11,7 +11,7 @@ import Action.Common
 import Data.Void
 
 
-type ActionCategory = CRUD CreateCategory GetCategories EditCategory DeleteCategory
+type ActionCategory = CRUD CreateCategory (Paginated GetCategories) EditCategory DeleteCategory
 
 type CatId = Int
 

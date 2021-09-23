@@ -16,7 +16,7 @@ import Data.Void
 
 
 
-type ActionDrafts = CRUD CreateDraft GetDrafts EditDraft DeleteDraft
+type ActionDrafts = CRUD CreateDraft (Paginated GetDrafts) EditDraft DeleteDraft
 
 
 data CreateDraft = CreateDraft {
