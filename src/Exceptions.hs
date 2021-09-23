@@ -28,6 +28,7 @@ data ServerException =
     | TokenShared [Int]
     deriving (Show)
 
+
 throwForbidden :: (MonadServer m) => m a
 throwForbidden = CMC.throwM Forbidden
 
@@ -119,10 +120,26 @@ defaultHandlers funcMsg = [Handler $ queryErrorHandler funcMsg,
                            Handler $ defaultSqlHandler funcMsg]
 
 
+draftActionHandler :: (MonadServer m) => T.Text -> SomeException -> m a
+draftActionHandler action e =
+    let str = "Failed to " <> action <> " draft."
+    in  logError (str <> ", all changes are discarded")
+                            >> CMC.throwM e
+
+publishHandler :: (MonadServer m) => SomeException -> m a
+publishHandler e = draftActionHandler "publish" e
+draftCreateHandler :: (MonadServer m) => SomeException -> m a
+draftCreateHandler e = draftActionHandler "create" e
+draftEditHandler :: (MonadServer m) => SomeException -> m a
+draftEditHandler e = draftActionHandler "edit" e
+
+
 
 withExceptionHandlers :: (Foldable f, CMC.MonadCatch m) => f (CMC.Handler m a) -> m a-> m a
 withExceptionHandlers = flip CMC.catches
 
+withHandler :: (CMC.MonadCatch m, Exception e) => (e -> m a) -> m a -> m a
+withHandler = flip CMC.catch
 
 defaultMainHandler :: (MonadServer m) => SomeException -> m Response
 defaultMainHandler e = do

@@ -65,7 +65,7 @@ attachTags s hasTagsId [] = do
     return []
 attachTags s hasTagsId tags = do
     let strChunks = ["INSERT INTO news.", "_tag (", "_id, tag_id) VALUES "]
-        returningChunks = ["ON CONFLICT ON CONSTRAINT ", "_tag_", "id_tag_id_key DO NOTHING RETURNING tag_id"]
+        returningChunks = ["ON CONFLICT ON CONSTRAINT ", "_tag_", "_id_tag_id_key DO NOTHING RETURNING tag_id"]
         count = length tags
         insertUnit = " ( ?, ? ) "
         insertUnits = maybe "" id $ intercalateQ $ replicate count insertUnit :: PS.Query
@@ -90,7 +90,7 @@ removeAllButGivenTags s hasTagsId tags = do
         inClause ts = " AND NOT tag_id IN ? "
         inParams [] = []
         inParams ts = [SqlValue $ PS.In ts]
-        strChunks = ["DELETE FROM news.", hName s ,"_tag WHERE ", hName s,"_id = ? ", inClause tags,"RETURNING tag_id"]
+        strChunks = ["DELETE FROM news.", "_tag WHERE ", "_id = ? " <> inClause tags <> "RETURNING tag_id"]
         params = [SqlValue $ hToInt s hasTagsId] ++ inParams tags
         str = maybe "" id $ intercalateWith (hName s) strChunks
     debugStr <- formatQuery str params
@@ -99,36 +99,6 @@ removeAllButGivenTags s hasTagsId tags = do
     tagsDel <- fmap (map PSTy.fromOnly) $ query str params
     logDebug $ "Removed tags with id in " <> (T.pack $ show tagsDel) <> " from " <> hName' s <> " with id = " <> (T.pack $ show hasTagsId)
     return tagsDel
-
-
-{-
-removeTags :: (MonadServer m, HasTags s) => s -> HIdent s -> [Int] -> m [Int]
--- remove all but given tags
-removeTags s hasTagsId [] = do
-    let strChunks = ["DELETE FROM news.draft_tag WHERE ", hName s,"_id = ? RETURNING tag_id"]
-        params = [SqlValue $ hToInt s hasTagsId]
-        str = maybe "" id $ intercalateWith (hName s) strChunks
-    debugStr <- formatQuery str params
-    logDebug $ T.pack $ show debugStr
-
-    tagsDel <- fmap (map PSTy.fromOnly) $ query str params
-    logDebug $ "Removed tags with id in " <> (T.pack $ show tagsDel) <> " from " <> hName' s <> " with id = " <> (T.pack $ show hasTagsId)
-    return tagsDel
-
-removeTags s hasTagsId tags = do
-         --"DELETE FROM news.draft_tag WHERE draft_id = ? AND NOT tag_id IN ?"
-    let strChunks = ["DELETE FROM news.", hName s ,"_tag WHERE ", hName s,"_id = ? AND NOT tag_id IN ? RETURNING tag_id"]
-        params = [SqlValue $ hToInt s hasTagsId, SqlValue $ PS.In tags]
-        str = maybe "" id $ intercalateWith (hName s) strChunks
-    debugStr <- formatQuery str params
-    logDebug $ T.pack $ show debugStr
-
-    tagsDel <- fmap (map PSTy.fromOnly) $ query str params
-    logDebug $ "Removed tags with id in " <> (T.pack $ show tagsDel) <> " from " <> hName' s <> " with id = " <> (T.pack $ show hasTagsId)
-    return tagsDel
--}
-   
-
 
 
  

@@ -11,7 +11,7 @@ import qualified Database.PostgreSQL.Simple as PS
 
 import Database.Update
 
-import MonadTypes (MonadServer (..), logError, logDebug, execute, query, formatQuery, logInfo, logWarn, logFatal)
+import MonadTypes (MonadServer (..), MonadSQL(..),logError, logDebug, execute, query, formatQuery, logInfo, logWarn, logFatal)
 import Execute.Types
 import Execute.Utils
 import Action.Draft
@@ -36,14 +36,6 @@ newtype CDraft = CDraft ()
 draftCreateDummy = CDraft ()
 
 
-{-
-class (PS.ToRow (Create s)) => CreateSQL s where
-    type Create s :: *
-    createQuery :: s -> PS.Query
-    cName :: s -> T.Text
-    cUniqueField :: s -> T.Text -- ???
-    cForeign :: s -> T.Text -- ?????
--}
 instance CreateSQL CDraft where
     type Create CDraft = WithAuthor CreateDraft
     createQuery s (WithAuthor a CreateDraft{..}) = ("INSERT INTO news.draft (title, author_id, category_id, content, photo, extra_photos) \
@@ -56,16 +48,18 @@ instance CreateSQL CDraft where
 
 
 createDraft :: (MonadServer m) => WithAuthor CreateDraft -> m Response
-createDraft x@(WithAuthor a CreateDraft{..}) = do
+createDraft x@(WithAuthor a CreateDraft{..}) = Ex.withHandler Ex.draftCreateHandler $
+                                                withTransaction $ do
     draft <- createThis' draftCreateDummy x
-    logDebug $ "Created draft with id = " <> (T.pack $ show draft)
+  --  logDebug $ "Created draft with id = " <> (T.pack $ show draft)
     tags <- attachTags dummyHDraft draft _cd_tags
     logInfo $ attached "draft" tags draft
     return $ okCreated ("Draft successfully created. " <> idInResult) draft
 
 
 editDraft :: (MonadServer m) => WithAuthor EditDraft -> m Response
-editDraft x@(WithAuthor a EditDraft{..}) = do
+editDraft x@(WithAuthor a EditDraft{..}) = Ex.withHandler Ex.draftEditHandler $
+                                                withTransaction $ do
     let s = draftEditDummy
     draft <- editThis' s x
     --actWithOne (AWOu s) num
@@ -85,7 +79,7 @@ draftEditDummy = UDraft ()
 instance UpdateSQL UDraft where
     type Upd UDraft = WithAuthor EditDraft
     updateQuery _ =
-        \p -> "UPDATE news.draft SET " <> p <> " WHERE draft_id = ? AND author_id = ?"
+        \p -> "UPDATE news.draft SET " <> p <> " WHERE draft_id = ? AND author_id = ? RETURNING draft_id"
     uName _ = "draft"
     optionalsMaybe _ (WithAuthor _ EditDraft{..}) =
         [("title", fmap SqlValue _ed_title),
@@ -105,7 +99,7 @@ draftEditPublishDummy = UPDraft ()
 instance UpdateSQL UPDraft where
     type Upd UPDraft = EditDraftPublish
     updateQuery _ =
-        \p -> "UPDATE news.draft SET " <> p <> " WHERE draft_id = ?"
+        \p -> "UPDATE news.draft SET " <> p <> " WHERE draft_id = ? RETURNING draft_id"
     uName _ = "draft"
     optionalsMaybe _ EditDraftPublish{..} =
         [("post_id", Just $ SqlValue _edp_postId)]
@@ -135,7 +129,8 @@ publish1 (WithAuthor a Publish{..}) = do
     return (ok "Post successfully created" Ae.Null)
 -}
 publish :: (MonadServer m) => WithAuthor Publish -> m Response
-publish x@(WithAuthor a Publish{..}) = do
+publish x@(WithAuthor a Publish{..}) = Ex.withHandler Ex.publishHandler $
+                                       withTransaction $ do
     drafts <- getThis' draftRawDummy x
     draft <- validateUnique (Ex.throwDraftNotFound _p_draftId) drafts
     case Ty._dr_postId draft of

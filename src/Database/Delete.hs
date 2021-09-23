@@ -115,8 +115,8 @@ instance DeleteSQL DDraft where
     type Del DDraft = WithAuthor DeleteDraft
     deleteQuery _ (WithAuthor a (DeleteDraft d)) = (
         "\
-\ DELETE FROM news.draft d \
-\ WHERE d.draft_id = ? AND d.author_id = ?"
+\ DELETE FROM news.draft \
+\ WHERE draft_id = ? AND author_id = ? RETURNING draft_id"
         , [SqlValue d, SqlValue a])
 
 

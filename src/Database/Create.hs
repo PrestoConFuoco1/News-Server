@@ -122,8 +122,8 @@ instance CreateSQL CPost where
                                  \ category_id,\
                                  \ content,\
                                  \ photo,\
-                                 \ extra_photos)\
-                           \ ) values (?, ?, ?, ?, ?, ?, ?) RETURNING post_id",
+                                 \ extra_photos\
+                           \ ) values (?, ?, ?, ?, ?, ?) RETURNING post_id",
         [SqlValue _dr_title, SqlValue _dr_authorId, SqlValue _dr_categoryId, SqlValue _dr_content, SqlValue _dr_mainPhoto,
         SqlValue $ fmap PSTy.PGArray _dr_extraPhotos])
 --insert into comment (post_id, content, user_id) values (1, 'comment to first post', 2);

@@ -44,23 +44,8 @@ maybeUserToUser (Just u) = return u
 
 getUsersByToken :: (MonadServer m) => Token -> m (Maybe Ty.User)
 getUsersByToken token = do
-    let str = "SELECT user_id, firstname, lastname, \
-              \image, login, pass_hash, creation_date, is_admin \
-              \FROM news.get_users_by_token WHERE token = ?"
-   
-      --     \FROM news.token t JOIN news.users u ON t.user_id = u.user_id WHERE t.token = ?"
-    users <- query str [token]
-    user <- validateUnique2 (return Nothing) (Ex.throwTokenShared $ map Ty._u_id users) $ map Just users
-    return user
-
-
-getUsersByToken' :: (MonadServer m) => Token -> m (Maybe Ty.User)
-getUsersByToken' token = do
-    let str = "SELECT user_id, firstname, lastname, \
-              \image, login, pass_hash, creation_date, is_admin \
-              \FROM news.get_users_by_token WHERE token = ?"
-   
-    users <- query str [token]
+    users <- getThis' userTokenDummy token
+ --   users <- query str [token]
     user <- validateUnique2 (return Nothing) (Ex.throwTokenShared $ map Ty._u_id users) $ map Just users
     return user
 

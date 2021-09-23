@@ -1,0 +1,211 @@
+--VIEWS:
+
+CREATE OR REPLACE VIEW news.draft_tag_total AS
+ SELECT a.draft_id,
+    a.title,
+    a.creation_date,
+    a.author_id,
+    a.category_id,
+    COALESCE(array_agg(t.tag_id) FILTER (WHERE t.tag_id IS NOT NULL), ARRAY[]::integer[]) AS tagids,
+    COALESCE(array_agg(t.name) FILTER (WHERE t.name IS NOT NULL), ARRAY[]::name[]::text[]) AS tagnames,
+    a.content,
+    a.photo,
+    a.extra_photos,
+    a.post_id
+   FROM draft a
+     LEFT JOIN draft_tag dt ON a.draft_id = dt.draft_id
+     LEFT JOIN tag t ON dt.tag_id = t.tag_id
+  GROUP BY a.draft_id
+
+
+CREATE OR REPLACE VIEW news.get_authors AS
+ SELECT a.author_id,
+    a.description,
+    a.user_id,
+    u.firstname,
+    u.lastname,
+    u.image,
+    u.login,
+    '***'::text AS pass,
+    u.creation_date
+   FROM author a
+     JOIN users u ON a.user_id = u.user_id
+
+
+CREATE OR REPLACE VIEW news.get_categories AS
+ WITH RECURSIVE temp2(category_id, arrcid, arrname) AS (
+         SELECT category.category_id,
+            ARRAY[]::integer[] AS "array",
+            ARRAY[]::text[] AS "array"
+           FROM category
+          WHERE category.parent_category_id IS NULL
+        UNION ALL
+         SELECT c.category_id,
+            array_prepend(c.category_id, t.arrcid) AS array_prepend,
+            array_prepend(c.name, t.arrname) AS array_prepend
+           FROM category c
+             JOIN temp2 t ON c.parent_category_id = t.category_id
+          WHERE c.parent_category_id IS NOT NULL
+        )
+ SELECT temp2.category_id,
+    temp2.arrcid AS catids,
+    temp2.arrname AS catnames
+   FROM temp2
+
+
+CREATE OR REPLACE VIEW news.get_comments AS
+ SELECT c.comment_id,
+    c.content,
+    c.post_id,
+    u.user_id,
+    u.firstname,
+    u.lastname,
+    u.image,
+    u.login,
+    '***'::text AS pass_hash,
+    u.creation_date,
+    NULL::text AS is_admin
+   FROM comment c
+     JOIN users u ON c.user_id = u.user_id
+
+
+CREATE OR REPLACE VIEW news.get_drafts AS
+ SELECT td.draft_id,
+    td.title,
+    td.creation_date AS draft_creation_date,
+    td.author_id,
+    a.description AS author_description,
+    u.user_id,
+    u.firstname AS user_firstname,
+    u.lastname AS user_lastname,
+    u.image AS user_image,
+    u.login AS user_login,
+    '***'::text AS user_pass,
+    u.creation_date AS user_creation_date,
+    NULL::text AS user_is_admin,
+    td.tagids,
+    td.tagnames,
+    c.catids,
+    c.catnames,
+    td.content,
+    td.photo,
+    td.extra_photos,
+    td.post_id
+   FROM draft_tag_total td
+     JOIN author a ON td.author_id = a.author_id
+     JOIN users u ON a.user_id = u.user_id
+     JOIN get_categories c ON td.category_id = c.category_id
+
+
+
+CREATE OR REPLACE VIEW news.get_posts AS
+ SELECT tp.post_id,
+    tp.title,
+    tp.creation_date AS post_creation_date,
+    tp.author_id,
+    a.description AS author_description,
+    u.user_id,
+    u.firstname AS user_firstname,
+    u.lastname AS user_lastname,
+    u.image AS user_image,
+    u.login AS user_login,
+    '***'::text AS user_pass,
+    u.creation_date AS user_creation_date,
+    NULL::text AS user_is_admin,
+    tp.tagids,
+    tp.tagnames,
+    c.catids,
+    c.catnames,
+    tp.content,
+    tp.photo,
+    tp.extra_photos
+   FROM post_tag_total tp
+     JOIN author a ON tp.author_id = a.author_id
+     JOIN users u ON a.user_id = u.user_id
+     JOIN get_categories c ON tp.category_id = c.category_id
+
+
+
+CREATE OR REPLACE VIEW news.get_tags AS
+ SELECT tag.tag_id,
+    tag.name
+   FROM tag
+
+
+
+CREATE OR REPLACE VIEW news.post_tag_total AS
+ SELECT p.post_id,
+    p.title,
+    p.creation_date,
+    p.author_id,
+    p.category_id,
+    COALESCE(array_agg(t.tag_id) FILTER (WHERE t.tag_id IS NOT NULL), ARRAY[]::integer[]) AS tagids,
+    COALESCE(array_agg(t.name) FILTER (WHERE t.name IS NOT NULL), ARRAY[]::name[]::text[]) AS tagnames,
+    p.content,
+    p.photo,
+    p.extra_photos
+   FROM post p
+     LEFT JOIN post_tag pt ON p.post_id = pt.post_id
+     LEFT JOIN tag t ON pt.tag_id = t.tag_id
+  GROUP BY p.post_id
+
+
+    let str = "SELECT u.user_id, u.firstname, u.lastname, \
+              \u.image, u.login, u.pass_hash, u.creation_date, u.is_admin \
+              \FROM news.token t JOIN news.users u ON t.user_id = u.user_id WHERE t.token = ?"
+ 
+CREATE OR REPLACE VIEW news.get_users_by_token AS
+SELECT u.user_id, u.firstname, u.lastname,
+       u.image, u.login, u.pass_hash, u.creation_date, u.is_admin
+FROM news.token t JOIN news.users u ON t.user_id = u.user_id
+
+
+
+
+
+
+---------- unused ----------------
+
+
+
+
+CREATE OR REPLACE VIEW news.temp1 AS
+ WITH RECURSIVE temp1(category_id, arr) AS (
+         SELECT category.category_id,
+            ARRAY[]::category_aux[] AS "array"
+           FROM category
+          WHERE category.parent_category_id IS NULL
+        UNION ALL
+         SELECT c.category_id,
+            array_prepend(ROW(c.category_id, c.name)::category_aux, t.arr) AS array_prepend
+           FROM category c
+             JOIN get_categories_old t ON c.parent_category_id = t.category_id
+          WHERE c.parent_category_id IS NOT NULL
+        )
+ SELECT temp1.category_id,
+    temp1.arr
+   FROM temp1
+
+
+CREATE OR REPLACE VIEW news.get_categories_old AS
+ WITH RECURSIVE temp(category_id, arr) AS (
+         SELECT category.category_id,
+            ARRAY[]::category_aux[] AS "array"
+           FROM category
+          WHERE category.parent_category_id IS NULL
+        UNION ALL
+         SELECT c.category_id,
+            array_append(t.arr, ROW(c.category_id, c.name)::category_aux) AS array_append
+           FROM category c
+             JOIN temp t ON c.parent_category_id = t.category_id
+          WHERE c.parent_category_id IS NOT NULL
+        )
+ SELECT temp.category_id,
+    temp.arr
+   FROM temp
+
+
+
+
+
+

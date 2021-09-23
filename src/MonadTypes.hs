@@ -37,6 +37,7 @@ class (Monad m) => MonadSQL m where
     --formatQuery :: (PSF.ToField q) => PS.Query -> [q] -> m BS.ByteString
     formatQuery :: (PS.ToRow q) => PS.Query -> q -> m BS.ByteString
     execute :: (PS.ToRow q) => PS.Query -> q -> m Int
+    withTransaction :: m a -> m a
   
 class (Monad m) => MonadLog m where
     logM :: L.LoggerEntry -> m ()
@@ -66,7 +67,13 @@ instance MonadSQL ServerIO where
         s <- ask
         res64 <- liftIO $ PS.execute (DB.conn $ sqlHandler s) qu args
         return $ fromIntegral res64
+    withTransaction m = do
+        s <- ask
+        let conn = DB.conn $ sqlHandler s
+        return (s :: ServerHandlers)
+        liftIO $ PS.withTransaction conn $ runReaderT (runServerIO m) s
 
+--        liftIO $ PS.withTransaction s m
 
 instance MonadLog ServerIO where
     logM (pri, text) = do
@@ -78,6 +85,8 @@ instance MonadServer ServerIO where
     randomString int = liftIO $ randomString' int
     printS s = liftIO $ print s
     getCurrentTimeS = liftIO $ getCurrentTime
+
+
 
 randomString' :: Int -> IO String            
 randomString' int = do

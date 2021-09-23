@@ -22,7 +22,7 @@ hostpub = 'localhost:5555/publish'
 def run(args):
     print('REQUEST -- ' + str(args))
     process = subprocess.run(args, capture_output=True, text=True)
-#    print(process.stdout)
+    print(process.stdout)
     response = json.loads(process.stdout)
     return response
 def get(token_):
@@ -45,23 +45,38 @@ def edit(token_, draft_id_, title_, tags_, category_id_, content_, main_photo_, 
                             extra_photos + extra_photos_, host+'edit'])
  
     return res
-def delete(token_, category_id_):
-    res = run(basicArgs + [token + token_ + '&' + category_id + category_id_, host+'delete'])
+def delete(token_, draft_id_):
+    res = run(basicArgs + [token + token_ + '&' + draft_id + draft_id_, host+'delete'])
     return res
 
 def publish(token_, draft_id_):
     res = run(basicArgs + [token + token_ + '&' + draft_id + draft_id_, hostpub])
-
-def geta(token_):
-    host1 = 'localhost:5555/authors/'
-    res = run(basicArgs + [token + token_, host1 + 'get'])
     return res
 
+def getPosts():
+
+    process = subprocess.run(['curl', 'localhost:5555/posts/get' ], capture_output=True, text=True)
+    print(process.stdout)
+    response = json.loads(process.stdout)
+   
+    return response
+
 def getdraftbyid(drafts_, did_):
-    i = -1
+    i = 0
     while (drafts_[i]['draftId'] != did_):
         i = i + 1
     return drafts_[i]
+
+def getpostbyid(posts_, did_):
+    i = 0
+    # здесь было -1 почему-то
+    while (posts_[i]['postId'] != did_):
+        i = i + 1
+    return posts_[i]
+
+def compareDraftPost(post_, draft_):
+    i = 0
+
 
 def printTags(tags):
     a = '['
@@ -74,81 +89,186 @@ def printTags(tags):
     a = a + ']'
     return a
 
+def assert1(name, whatshouldbe, whatis):
+    print(name, " is ", whatis, ", should be: ", whatshouldbe, end=' ')
+    print(whatis == whatshouldbe)
+
+def gettagids(whatis):
+    a = []
+    for i in range(len(whatis)):
+        a = a + [int(whatis[i]['tagId'])]
+    return a
+
+def getcatid(category_):
+    return int(category_['categoryId'])
+
+def assertdraft(draft_, title_, tags_, category_, content_, main_photo_, extra_photos_):
+    assert1("title", title_, draft_['title'])
+    assert1("tags", set(tags_), set(gettagids(draft_['tags'])))
+    assert1("category", category_, getcatid(draft_['category']))
+    assert1("content", content_, draft_['content'])
+    assert1("main photo", main_photo_, draft_['mainPhoto'])
+    assert1("extra photos", set(extra_photos_), set(draft_['extraPhotos']))
+    
+def ep(eph):
+    a = []
+    for i in range(len(eph)):
+        a = a + [eph[i].replace('\'', '"')]
+    print(a)
+    return a
+
+def disp(res, sh):
+    q = res['message']
+    print('message: ', q, end=' ')
+    ok_ = res['_ok']
+    print(ok_ == sh)
+    if(ok_) :
+        print(res['result'])
+    print('')
+
+def lstparam(lst):
+    b = ''
+    tmp = b.join(str(i)+',' for i in lst)
+    b = '[' + tmp[:-1] + ']'
+    return b
+
+def lstparam1(lst):
+    s = str(lst)
+    s1 = s.replace(' ', '+')
+    return s1.replace('\'', '"')
+
+def testedit(token_, draft_id_, title_, tags_, category_id_, content_, main_photo_, extra_photos_):
+    res = edit(token_, str(draft_id_), title_, lstparam1(tags_), str(category_id_), content_, main_photo_, lstparam1(extra_photos_))
+    disp(res, True)
+
+    print('getting drafts to assert that there is exactly what we asked to edit')
+    res = get(token_)
+    disp(res, True)
+    d = getdraftbyid(res['result'], draft_id_)
+    assertdraft(d, title_, tags_, category_id_, content_, main_photo_, extra_photos_)
+ #   print('tags: ', gettagids(d['tags']))
+ #   print('category: ', getcatid(d['category']))
+
+
+
+
+
 #if len(sys.argv) < 2:
 if True:
 
- #   res = geta('admin')
- #   print(res, '\n')
+
 # def create(token_, title_, tags_, category_id_, content_, main_photo_, extra_photos_):
     print ('trying to create draft being unauthorized')
     #res = create('asasda', 'bora-bora1', '[2,3,4,5]', '2', 'poshla zhara :D', 'tipa url1', '["tipaurl1", "tipaurl1_2"]')
-    tags1_ = '[2,3,4,5]'
+    tags1__ = [4,5]
+    tags1_ = '[4,5]'
+   # tags1_ = spacestoplus(str(tags1__))
+    cat1__ = 2
     cat1_ = '2'
-    res = create('asasda', 'bora-bora1', tags1_, cat1_, 'poshla+zhara+:D', 'tipaurl1', '["tipaurl1","tipaurl1_2"]')
-    print(res, '\n')
+    extraphotos1_ =  ['tipaurl1','tipaurl1_2']
+    res = create('asasda', 'bora-bora1', lstparam1(tags1__), cat1_, 'poshla+zhara+:D', 'tipaurl1', lstparam1(extraphotos1_))
+    disp(res, False)
 
+
+    title2_ = 'bora-bora2'
+    content2_ = 'poshlazhara'
+    photo2_ = 'tipaurl2'
+    extraphotos2_ =  ['tipaurl2','tipaurl2_2']
     print('creating draft with author token')
-    res = create('push', 'bora-bora2', tags1_, cat1_, 'poshla+zhara+:D', 'tipa+url2', '["tipaurl2","tipaurl2_2"]')
+    res = create('push', title2_, lstparam1(tags1__), cat1_, content2_,  photo2_, lstparam1(extraphotos2_))
     draftid = res['result']
-    print(res, '\n')
-    print('draft id is ' + str(draftid))
-    
-    print('getting drafts with author token')
-    res = get('push')
-    drafts = res['result']
-    print(len(drafts), ' drafts fetched\n')
+    disp(res, True)
 
-    ourdraft = getdraftbyid(drafts, draftid)
-    print('Our draft is ', ourdraft)
-    tags1 = ourdraft['tags']
-    print('tags are ', printTags(tags1), ', should be ', tags1_)
-    cats1 = ourdraft['category']
-    print('category is ', cats1, ', should be 2', '\n')
-    
+    print('getting drafts to assert that there is exactly what we asked to create')
+    res = get('push')
+    disp(res, True)
+    d = getdraftbyid(res['result'], draftid)
+    assertdraft(d, title2_, tags1__, cat1__, content2_, photo2_, extraphotos2_)
+    print('tags: ', gettagids(d['tags']))
+    print('category: ', getcatid(d['category']))
 
 
 #def edit(token_, draft_id_, title_, tags_, category_id_, content_, main_photo_, extra_photos_):
+    print('editing draft with author token')
+    title_ = 'Messi3'
+    content_ = 'PSG'
+    photo_ = 'tipaurl3'
+    tags_ = [1,7]
+    cat_ = 7
+    
+    extraphotos_ = ['tipaurl3', 'tipaurl3_2']
+    testedit('push', draftid, title_, tags_, cat_, content_, photo_, extraphotos_)
 
-    tags2_ = '[1,3]'
-    cat2_ = '3'
-    print('trying to edit this post with other user, not an author')
-    res = edit('fail', str(draftid), 'bora-bora2', tags2_, cat2_, 'supernova', 'newphoto', '[]')
-    print(res, '\n')
+    print('editing draft with author token with empty tags')
+    title_ = 'Messi4'
+    content_ = 'PSG4'
+    photo_ = 'tipaurl4'
+    tags_ = []
+    cat_ = 8
+    
+    extraphotos_ = ['tipaurl3', 'tipaurl3_2']
+    testedit('push', draftid, title_, tags_, cat_, content_, photo_, extraphotos_)
 
-    print('editing post')
-    res = edit('push', str(draftid), 'bora-bora3', tags2_, cat2_, 'supernova', 'newphoto', '[]')
-    print(res, '\n')
+    print('editing draft with author token with empty extra photos')
+    title_ = 'Messi4'
+    content_ = 'PSG4'
+    main_photo_ = 'tipaurl4'
+    tags_ = [3]
+    cat_ = 8
+    
+    extra_photos_ = []
+    testedit('push', draftid, title_, tags_, cat_, content_, main_photo_, extra_photos_)
 
-    res = get('push')
-    drafts = res['result']
-    print(len(drafts), ' drafts fetched\n')
-
-    ourdraft = getdraftbyid(drafts, draftid)
-    print('Our draft is ', ourdraft)
-    tags2 = ourdraft['tags']
-    print('tags are ', printTags(tags2), ', should be ' + tags2_)
-    cats2 = ourdraft['category']['categoryId']
-    print('category is ', cats2, ', should be ' + cat2_)
-
-
-    tags3_ = '[]'
-    cats3_ = '4'
-    print('editing post')
-    res = edit('push', str(draftid), 'bora-bora4', tags3_, cats3_, 'mozart', 'newphoto', '["photo1","photo2"]')
-    print(res, '\n')
-
-    res = get('push')
-    drafts = res['result']
-    print(len(drafts), ' drafts fetched\n')
-
-    ourdraft = getdraftbyid(drafts, draftid)
-    print('Our draft is ', ourdraft)
-    tags3 = ourdraft['tags']
-    print('tags are ', printTags(tags3), ', should be ' + tags3_)
-    cats3 = ourdraft['category']['categoryId']
-    print('category is ', cats3, ', should be ' + cats3_)
-
+    draft_id_ = draftid
+    title_ = 'xD'
+    tags_ = [1,5]
+    category_id_ = 4
+    content_ = 'content289'
+    main_photo_ = 'sdad'
+    extra_photos_ = ['haha']
+    testedit('push', draft_id_, title_, tags_, category_id_, content_, main_photo_, extra_photos_)
 
     print('publish draft')
+    res = publish('push', str(draftid))
+    disp(res, True)
+    post_id_ = res['result']
+
+
+    print('getting posts to assert that there is exactly what we asked to edit')
+    res = getPosts()
+    disp(res, True)
+    p = getpostbyid(res['result'], post_id_)
+    assertdraft(p, title_, tags_, category_id_, content_, main_photo_, extra_photos_)
+
+
+    print('editing one more time, then we wil publish again')
+    draft_id_ = draftid
+    title_ = 'xD'
+    tags_ = []
+    category_id_ = 4
+    content_ = 'content289'
+    main_photo_ = 'sdad'
+    extra_photos_ = ['haha']
+    testedit('push', draft_id_, title_, tags_, category_id_, content_, main_photo_, extra_photos_)
+    
+
+    print('publish draft')
+    res = publish('push', str(draftid))
+    disp(res, True)
+    post_id_ = res['result']
+
+
+    print('getting posts to assert that there is exactly what we asked to edit')
+    res = getPosts()
+    disp(res, True)
+    p = getpostbyid(res['result'], post_id_)
+    assertdraft(p, title_, tags_, category_id_, content_, main_photo_, extra_photos_)
+
+
+    
+#def delete(token_, category_id_):
+    print('delete draft')
+    res = delete('push', str(draft_id_))
+    disp(res, True)
 
 
