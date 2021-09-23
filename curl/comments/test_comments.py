@@ -45,8 +45,9 @@ def disp(res, sh):
     print('message: ', q, end=' ')
     ok_ = res['_ok']
     print(ok_ == sh)
-#    if(ok_) :
-#        print(res['result'])
+    if(ok_) :
+        print(res['result'])
+    print('')
 
 #def getAlt(token_, post_id_)
 #def get(token_, post_id_):
@@ -59,6 +60,14 @@ def disp(res, sh):
 #        i = i + 1
 #    return drafts_[i]
 
+def getcommentsids(comments_):
+    a = []
+    for i in range(len(comments_)):
+        a = a + [comments_[i]['commentId']]
+    print(a)
+    return a
+
+
 
 if True:
 
@@ -68,61 +77,82 @@ if True:
     print('trying to create comment with invalid post_id')
     res = create('push', '', 'comment1')
     disp(res, False)
-    print('')
+    
 
     print('trying to create comment with invalid post_id')
     res = create('push', '6666', 'comment2')
     disp(res, False)
-    print('')
 
     print('creating comment')
-    res = create('push', ourPost, 'comment3')
+    content_ = 'comment3'
+    res = create('push', ourPost, content_)
     disp(res, True)
-    print('')
-    comment1 = str(res['result'])
+    
+
+    comment1 = res['result']
 
     print('creating comment')
     res = create('push', ourPost, 'comment4')
     disp(res, True)
-    print('')
-    comment2 = str(res['result'])
+    
+    comment2 = res['result']
 
     print('get comments')
     res = get('push', ourPost)
     disp(res, True)
 
-    print(len(res['result'])==2)
-    print('')
+#    print(len(res['result'])==2)
+    
+    ourList = [comment1, comment2]
 
+    ids = getcommentsids(res['result'])
+    print(ourList)
+    print(set(ourList).issubset(set(ids)))
  
     print('get comments with alternative path')
     res = getAlt('push', ourPost)
 #    disp(res, True)
+ 
+#    print(res)
+#    print(len(res['result'])==2)
+    
+    ids = getcommentsids(res['result'])
+    print(ourList)
+    print(set(ourList).issubset(set(ids)))
+ 
 
 
-    print(res)
-    print(len(res['result'])==2)
-    print('')
 
     print('trying to delete comment with other user')
-    res = delete('fail', comment1)
+    res = delete('fail', str(comment1))
     disp(res, False)
-    print('')
+    
 
     print('deleting a comment with pushkin')
-    res = delete('push', comment1)
+    res = delete('push', str(comment1))
     disp(res, True)
-    print('')
   
     print ("deleting a comment with admin")
-    res = delete('admin', comment2)
+    res = delete('admin', str(comment2))
     disp(res, True)
-    print('')
+ 
+    print('get comments')
+    res = get('push', ourPost)
+    disp(res, True)
+
+    
+    ids = getcommentsids(res['result'])
+    print(False == set([comment1]).issubset(ids))
+    print(False == set([comment2]).issubset(ids))
+ 
+
+    
+   
 
     print('deleting non-existing comment')
-    res = delete('push', comment1)
+    res = delete('push', str(comment1))
     disp(res, False)
-    print('')
+    
 
 #def getAlt(token_, post_id_)
 #def get(token_, post_id_):

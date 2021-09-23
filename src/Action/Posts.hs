@@ -115,6 +115,23 @@ getPostsAction = do
 
 
 sortOptions :: T.Text -> Maybe SortOptions
-sortOptions = undefined
+sortOptions text = sortOptions' $ T.unpack text
+
+
+sortOptions' (x:y:_) = SortOptions <$> toSortBy x <*> ascDesc y
+sortOptions' _ = Nothing
+
+toSortBy :: Char -> Maybe SortEntity
+toSortBy 'd' = Just SEDate
+toSortBy 'a' = Just SEAuthor
+toSortBy 'c' = Just SECategory
+toSortBy 'p' = Just SEPhotoNumber
+toSortBy  _  = Nothing
+
+ascDesc :: Char -> Maybe SortOrder
+ascDesc 'a' = Just SOAscending
+ascDesc 'd' = Just SODescending
+ascDesc _   = Nothing
+
 
 

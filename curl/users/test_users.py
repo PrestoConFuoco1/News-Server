@@ -6,7 +6,8 @@ import sys
 
 
 # usage: ./test_users.py <user login> | grep False
-# (should produce no input)
+# (should produce no input except "admin" parameter)
+# test will be failed if user with such login already exists
 
 
 
@@ -56,6 +57,19 @@ def disp(res, sh):
     print(ok_ == sh)
     if(ok_) :
         print(res['result'])
+    print('')
+
+def assertuser(user_, login_, firstname_, lastname_, user_id_):
+    assert1("login", login_, user_['login'])
+    assert1("firstName", firstname_, user_['firstname'])
+    assert1("lastName", lastname_, user_['lastname'])
+    assert1("user_Id", user_id_, user_['id'])
+
+ 
+def assert1(name, whatshouldbe, whatis):
+    print(name, " is ", whatis, ", should be: ", whatshouldbe, end=' ')
+    print(whatis == whatshouldbe)
+
 
 
 if (len(sys.argv) == 3):
@@ -70,27 +84,27 @@ if True:
     print ('trying to create user with incorrect login')
     res = create('', '123', firstname1, lastname2)
     disp(res, False)
-    print('')
+    
 
+    password = '123'
     print ('creating user ' + fl)
-    res = create(login1, '123', firstname1, lastname2)
+    res = create(login1, password, firstname1, lastname2)
     disp(res, True)
-    print('')
-    arg = str(res['result'])
+    
+    user_id_ = res['result']
 
-   
 
     print('trying to authenticate with empty login')
     res = auth('', '123')
     disp(res, False)
-    print('')
+    
 
 
 
     print('trying to authenticate with empty password')
     res = auth(login1, '')
     disp(res, False)
-    print('')
+    
 
 
 
@@ -99,49 +113,51 @@ if True:
     print('trying to authenticate with incorrect login')
     res = auth('sdadasdsdasda', '123')
     disp(res, False)
-    print('')
+    
 
 
 
     print('trying to authenticate with incorrect password')
     res = auth(login1, '124')
     disp(res, False)
-    print('')
+    
 
 
 
     print('authentication with user ' + fl)
     res = auth(login1, '123')
     disp(res, True)
-    print('')
+    
 
 
     token1 = res['result']
     print('token is ' + token1)
     disp(res, True)
-    print('')
+    
 
 
     print('trying to get profile with incorrect (empty) token')
     res = get('')
     disp(res, False)
-    print('')
+    
 
 
 
     print('trying to get profile with incorrect  token')
     res = get('asdasdasdsa')
     disp(res, False)
-    print('')
+    
 
 
 
     print('getting proper profile')
     res = get(token1)
     disp(res, True)
-    print('')
+    
 
 
+    #res = create(login1, password, firstname1, lastname2)
+    assertuser(res['result'], login1, firstname1, lastname2, user_id_)
 
 # else :
 #    arg = sys.argv[1]
@@ -149,54 +165,55 @@ if True:
     print('authentication with user ' + fl)
     res = auth(login1, '123')
     disp(res, True)
-    print('')
+    
 
 
     token1 = res['result']
     print('token is ' + token1)
-    print('')
+    
 
 
 
     print('trying to delete user not being admin')
-    res = delete('fail', arg)
+    res = delete('fail', str(user_id_))
     disp(res, False)
-    print('')
+    
 
 
 
     print('trying to delete user not being admin')
-    res = delete(token1, arg)
+    res = delete(token1, str(user_id_))
     disp(res, False)
-    print('')
+    
 
 
 
     print('trying to delete non existing user with admin')
     res = delete('admin', '666666')
     disp(res, False)
-    print('')
+    
 
 
 
     print('incorrect type of user id')
     res = delete(token1, 'hello')
     disp(res, False)
-    print('')
+    
 
 
 
     print('deleting user with admin token')
-    res = delete('admin', arg)
+    res = delete('admin', str(user_id_))
     disp(res, True)
-    print('')
+    
 
 
+   # check
 
     print('trying to delete previously deleted user again with admin token')
-    res = delete('admin', arg)
+    res = delete('admin', str(user_id_))
     disp(res, False)
-    print('')
+    
 
 
 

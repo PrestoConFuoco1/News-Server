@@ -10,7 +10,7 @@ FlexibleContexts
 module Database.Read where
 
 import Prelude hiding (Read)
-import Data.Maybe (catMaybes, fromJust)
+import Data.Maybe (catMaybes)
 import qualified Data.Text.Lazy as TL (fromStrict)
 import qualified Data.Aeson as Ae (Value, encode)
 
@@ -95,6 +95,7 @@ instance Read PostD where
         in  (selectClause <> notEmptyDo (" WHERE " <>) whereClause, args)
 
 
+fromJust (Just x) = x
 w :: Time.Day
 w = fromJust $ Time.parseTimeM True Time.defaultTimeLocale "%Y-%-m-%-d" "2010-3-04"
 
