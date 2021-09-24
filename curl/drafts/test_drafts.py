@@ -3,6 +3,8 @@
 import json
 import subprocess
 import sys
+import random
+import string
 
 basicArgs = ['curl', '-G', '-d']
 token = 'token='
@@ -149,33 +151,46 @@ def testedit(token_, draft_id_, title_, tags_, category_id_, content_, main_phot
  #   print('tags: ', gettagids(d['tags']))
  #   print('category: ', getcatid(d['category']))
 
+def randomtags():
+    lengthlist = random.randint(3,5)
+    a = []
+    for i in range(lengthlist):
+        a = a + [random.randint(1,7)]
+    return list(set(a))
 
-
-
+def randomstring(length):
+   letters = string.ascii_lowercase
+   return ''.join(random.choice(letters) for i in range(length))
 
 #if len(sys.argv) < 2:
-if True:
 
-
+def mainfunc():
 # def create(token_, title_, tags_, category_id_, content_, main_photo_, extra_photos_):
     print ('trying to create draft being unauthorized')
     #res = create('asasda', 'bora-bora1', '[2,3,4,5]', '2', 'poshla zhara :D', 'tipa url1', '["tipaurl1", "tipaurl1_2"]')
-    tags1__ = [4,5]
+#    tags1__ = [4,5]
+    tags1__ = randomtags()
     tags1_ = '[4,5]'
    # tags1_ = spacestoplus(str(tags1__))
-    cat1__ = 2
+    cat1__ = random.randint(1,7)
     cat1_ = '2'
     extraphotos1_ =  ['tipaurl1','tipaurl1_2']
     res = create('asasda', 'bora-bora1', lstparam1(tags1__), cat1_, 'poshla+zhara+:D', 'tipaurl1', lstparam1(extraphotos1_))
     disp(res, False)
 
 
-    title2_ = 'bora-bora2'
-    content2_ = 'poshlazhara'
-    photo2_ = 'tipaurl2'
-    extraphotos2_ =  ['tipaurl2','tipaurl2_2']
+    tags2_ = randomtags()
+    cat2_ = random.randint(1,7)
+#    title2_ = 'bora-bora2'
+    title2_ = randomstring(10)
+    #content2_ = 'poshlazhara'
+    content2_ = randomstring(10)
+    #photo2_ = 'tipaurl2'
+    photo2_ = randomstring(10)
+ #   extraphotos2_ =  ['tipaurl2','tipaurl2_2']
+    extraphotos2_ = [randomstring(10), randomstring(10)]
     print('creating draft with author token')
-    res = create('push', title2_, lstparam1(tags1__), cat1_, content2_,  photo2_, lstparam1(extraphotos2_))
+    res = create('push', title2_, lstparam1(tags2_), str(cat2_), content2_,  photo2_, lstparam1(extraphotos2_))
     draftid = res['result']
     disp(res, True)
 
@@ -183,18 +198,22 @@ if True:
     res = get('push')
     disp(res, True)
     d = getdraftbyid(res['result'], draftid)
-    assertdraft(d, title2_, tags1__, cat1__, content2_, photo2_, extraphotos2_)
+    assertdraft(d, title2_, tags2_, cat2_, content2_, photo2_, extraphotos2_)
     print('tags: ', gettagids(d['tags']))
     print('category: ', getcatid(d['category']))
 
 
 #def edit(token_, draft_id_, title_, tags_, category_id_, content_, main_photo_, extra_photos_):
     print('editing draft with author token')
-    title_ = 'Messi3'
-    content_ = 'PSG'
-    photo_ = 'tipaurl3'
-    tags_ = [1,7]
-    cat_ = 7
+    #title_ = 'Messi3'
+    title_ = randomstring(10)
+    #content_ = 'PSG'
+    content_ = randomstring(10)
+    #photo_ = 'tipaurl3'
+    photo_ = randomstring(10)
+    #tags_ = [1,7]
+    tags_ = randomtags()
+    cat_ = random.randint(1,7)
     
     extraphotos_ = ['tipaurl3', 'tipaurl3_2']
     testedit('push', draftid, title_, tags_, cat_, content_, photo_, extraphotos_)
@@ -243,12 +262,12 @@ if True:
 
     print('editing one more time, then we wil publish again')
     draft_id_ = draftid
-    title_ = 'xD'
-    tags_ = []
-    category_id_ = 4
-    content_ = 'content289'
-    main_photo_ = 'sdad'
-    extra_photos_ = ['haha']
+    title_ = randomstring(10)
+    tags_ = randomtags()
+    category_id_ = random.randint(1,7)
+    content_ = randomstring(10)
+    main_photo_ = randomstring(10)
+    extra_photos_ = [randomstring(10)]
     testedit('push', draft_id_, title_, tags_, category_id_, content_, main_photo_, extra_photos_)
     
 
@@ -270,5 +289,10 @@ if True:
     print('delete draft')
     res = delete('push', str(draft_id_))
     disp(res, True)
+
+if True:
+#    for i in range(60):
+    if True:
+        mainfunc()
 
 

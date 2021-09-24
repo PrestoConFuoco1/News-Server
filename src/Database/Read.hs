@@ -108,12 +108,13 @@ instance Read PostD where
                \ catids, \
                \ catnames, \
                \ content, photo, extra_photos \
-               \ FROM news.get_posts ORDER BY post_creation_date DESC "
+               \ FROM news.get_posts " -- ORDER BY post_creation_date DESC "
             (whereClause, args) = queryIntercalate " AND " $ catMaybes
                 [fmap postsWhereDate cre,
                  fmap postsWhereTags tags,
                  fmap postsWhereSearch search]
-        in  (selectClause <> notEmptyDo (" WHERE " <>) whereClause, args)
+            orderClause = " ORDER BY post_creation_date DESC "
+        in  (selectClause <> notEmptyDo (" WHERE " <>) whereClause <> orderClause, args)
 
 
 fromJust (Just x) = x
@@ -160,7 +161,8 @@ postsWhereSearch :: SearchOptions -> (PS.Query, [SqlValue])
 postsWhereSearch (SearchOptions text) =
     let str = "title ILIKE ? OR content ILIKE ?\
               \ OR array_to_string(tagnames, ',') ILIKE ?\
-              \ OR array_to_string(catnames, ',') ILIKE ?"
+              \ OR catnames[1] ILIKE ?"
+             -- \ OR array_to_string(catnames, ',') ILIKE ?"
     in  (str, replicate 4 $ SqlValue $ TL.fromStrict $ enclose "%" text)
 
 postsWhereSearch1 :: SearchOptions -> Where
