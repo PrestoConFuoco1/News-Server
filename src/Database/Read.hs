@@ -113,9 +113,22 @@ instance Read PostD where
                 [fmap postsWhereDate cre,
                  fmap postsWhereTags tags,
                  fmap postsWhereSearch search]
-            orderClause = " ORDER BY post_creation_date DESC "
+ --           orderClause = " ORDER BY post_creation_date DESC "
+            orderClause = postsOrder sortOpts
         in  (selectClause <> notEmptyDo (" WHERE " <>) whereClause <> orderClause, args)
 
+
+postsOrder :: SortOptions -> PS.Query
+postsOrder (SortOptions ent order) = " ORDER BY " <> getEntity ent <> " " <> ascDescQ order <> " NULLS LAST "
+
+getEntity SEDate = " post_creation_date "
+getEntity SEAuthor = " lower(author_description) "
+getEntity SECategory = " lower(catnames[1]) "
+--getEntity SEPhotoNumber = " COALESCE(array_length(extra_photos, 1), 0) "
+getEntity SEPhotoNumber = " COALESCE(array_length(extra_photos, 1), 0) "
+
+ascDescQ SOAscending = " ASC "
+ascDescQ SODescending = " DESC "
 
 fromJust (Just x) = x
 w :: Time.Day

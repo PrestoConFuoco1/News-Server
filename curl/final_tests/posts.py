@@ -322,7 +322,7 @@ def mainfunc():
 
 
 if True:
-    for i in range(120):
+    for i in range(10):
 #    if True:
         mainfunc()
 
