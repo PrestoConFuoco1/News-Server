@@ -24,7 +24,7 @@ hostpub = 'localhost:5555/publish'
 def run(args):
     print('REQUEST -- ' + str(args))
     process = subprocess.run(args, capture_output=True, text=True)
-    print(process.stdout)
+#    print(process.stdout)
     response = json.loads(process.stdout)
     return response
 def get(token_):
@@ -58,7 +58,7 @@ def publish(token_, draft_id_):
 def getPosts():
 
     process = subprocess.run(['curl', 'localhost:5555/posts/get' ], capture_output=True, text=True)
-    print(process.stdout)
+    #print(process.stdout)
     response = json.loads(process.stdout)
    
     return response
@@ -127,6 +127,16 @@ def disp(res, sh):
     if(ok_) :
         print(res['result'])
     print('')
+
+
+def dispwithoutresults(res, sh):
+    q = res['message']
+    print('message: ', q, end=' ')
+    ok_ = res['_ok']
+    print(ok_ == sh)
+    print('')
+
+
 
 def lstparam(lst):
     b = ''
@@ -219,19 +229,25 @@ def mainfunc():
     testedit('push', draftid, title_, tags_, cat_, content_, photo_, extraphotos_)
 
     print('editing draft with author token with empty tags')
-    title_ = 'Messi4'
-    content_ = 'PSG4'
-    photo_ = 'tipaurl4'
+    #title_ = 'Messi4'
+    title_ = randomstring(10)
+    #content_ = 'PSG4'
+    content_ = randomstring(10)
+    #photo_ = 'tipaurl4'
+    photo_ = randomstring(10)
     tags_ = []
     cat_ = 8
     
-    extraphotos_ = ['tipaurl3', 'tipaurl3_2']
+    extraphotos_ = ['tipaurl5', 'tipaurl3_2', 'blllfsds']
     testedit('push', draftid, title_, tags_, cat_, content_, photo_, extraphotos_)
 
     print('editing draft with author token with empty extra photos')
-    title_ = 'Messi4'
-    content_ = 'PSG4'
-    main_photo_ = 'tipaurl4'
+    #title_ = 'Messi4'
+    title_ = randomstring(10)
+    #content_ = 'PSG4'
+    content_ = randomstring(10)
+    #main_photo_ = 'tipaurl4'
+    main_photo_ = randomstring(10)
     tags_ = [3]
     cat_ = 8
     
@@ -255,7 +271,7 @@ def mainfunc():
 
     print('getting posts to assert that there is exactly what we asked to edit')
     res = getPosts()
-    disp(res, True)
+    dispwithoutresults(res, True)
     p = getpostbyid(res['result'], post_id_)
     assertdraft(p, title_, tags_, category_id_, content_, main_photo_, extra_photos_)
 
@@ -279,7 +295,7 @@ def mainfunc():
 
     print('getting posts to assert that there is exactly what we asked to edit')
     res = getPosts()
-    disp(res, True)
+    dispwithoutresults(res, True)
     p = getpostbyid(res['result'], post_id_)
     assertdraft(p, title_, tags_, category_id_, content_, main_photo_, extra_photos_)
 
@@ -290,9 +306,12 @@ def mainfunc():
     res = delete('push', str(draft_id_))
     disp(res, True)
 
+if len(sys.argv) == 2:
+    tot = int(sys.argv[1])
+else:
+    tot = 4
 if True:
-#    for i in range(120):
-    if True:
+    for i in range(tot):
         mainfunc()
 
 
