@@ -6,7 +6,7 @@ import subprocess
 #import random
 #import string
 
-# for running this test make sure that you have a user with id = 5 and it has no author
+# for running this test make sure that you have a user with id = 9 and it has no author
 # usage: ./test_authors.py | grep False (should produce no input)
 
 
@@ -76,7 +76,7 @@ def disp(res, sh):
 
 
 if True:
-    uid = '5'
+    uid = '9'
     if(len(sys.argv)==2):
         uid = sys.argv[1]
     

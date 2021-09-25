@@ -33,7 +33,9 @@ port = 5555
 someFunc :: IO ()
 someFunc = do
     CMC.bracket 
-        (PS.connectPostgreSQL "dbname='batadase'")
+        --(PS.connectPostgreSQL "dbname='batadase'")
+        --(PS.connectPostgreSQL "dbname=batadase user=app password='789456123'")
+        (PS.connectPostgreSQL "dbname=migration user=migration_app password='789456123'")
         (\conn -> PS.close conn) -- close connection
         (\conn -> let serverH = ServerHandlers L.simpleLog (DB.Handle conn) in
          Warp.run port $ mainFunc1 serverH)

@@ -182,7 +182,7 @@ if True:
     res = delete('admin', str(category_id_))
     disp(res, True)
     
-    print ('getting categories in order to know that we indeed deleted the category')
+    print ('getting categories in order to know that we indeed deleted the author')
     res = get('admin')
     disp(res, True)
     r = getcategorybyid(res['result'], category_id_)

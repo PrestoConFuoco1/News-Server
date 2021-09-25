@@ -291,7 +291,7 @@ def mainfunc():
     disp(res, True)
 
 if True:
-#    for i in range(120):
+#    for i in range(60):
     if True:
         mainfunc()
 

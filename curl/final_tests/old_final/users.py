@@ -67,7 +67,7 @@ def assertuser(user_, login_, firstname_, lastname_, user_id_):
     assert1("login", login_, user_['login'])
     assert1("firstName", firstname_, user_['firstname'])
     assert1("lastName", lastname_, user_['lastname'])
-    assert1("user_id", user_id_, user_['id'])
+    assert1("user_Id", user_id_, user_['id'])
 
  
 def assert1(name, whatshouldbe, whatis):
@@ -201,7 +201,7 @@ if True:
 
 
     print('incorrect type of user id')
-    res = delete('admin', 'hello')
+    res = delete(token1, 'hello')
     disp(res, False)
     
 

@@ -1,0 +1,343 @@
+
+
+-- Create table for categories with its sequence
+
+CREATE SEQUENCE category_category_id_seq;
+CREATE TABLE category (
+    category_id integer PRIMARY KEY NOT NULL DEFAULT nextval('category_category_id_seq'),
+    parent_category_id integer DEFAULT 1 REFERENCES category(category_id) ON DELETE CASCADE,
+    name text UNIQUE NOT NULL CHECK (name <> ''::text)
+);
+ALTER SEQUENCE category_category_id_seq OWNED BY category.category_id;
+
+-- Create table for tags with its sequence
+
+CREATE SEQUENCE tag_tag_id_seq;
+CREATE TABLE tag (
+    tag_id integer PRIMARY KEY NOT NULL DEFAULT nextval('tag_tag_id_seq'),
+    name text UNIQUE NOT NULL CHECK (name <> ''::text)
+);
+ALTER SEQUENCE tag_tag_id_seq OWNED BY tag.tag_id;
+  
+-- Create table for users with its sequence
+
+CREATE SEQUENCE users_user_id_seq;
+CREATE TABLE users (
+    user_id integer PRIMARY KEY NOT NULL DEFAULT nextval('users_user_id_seq'),
+    firstname text NOT NULL CHECK (firstname <> ''::text),
+    lastname text  NOT NULL CHECK (lastname <>  ''::text),
+    image text CHECK (image <> ''::text),
+    login text UNIQUE NOT NULL CHECK (login <> ''::text),
+    pass_hash text NOT NULL CHECK (pass_hash <> ''::text),
+    creation_date date NOT NULL DEFAULT CURRENT_DATE,
+    is_admin boolean NOT NULL DEFAULT false
+);
+ALTER SEQUENCE users_user_id_seq OWNED BY users.user_id;
+  
+-- Create table for authors with its sequence
+
+CREATE SEQUENCE author_author_id_seq;
+CREATE TABLE author (
+    author_id integer PRIMARY KEY NOT NULL DEFAULT nextval('author_author_id_seq'),
+    user_id integer UNIQUE NOT NULL DEFAULT 1 REFERENCES users(user_id) ON DELETE CASCADE,
+    name text UNIQUE NOT NULL CHECK (name <> ''::text)
+);
+ALTER SEQUENCE author_author_id_seq OWNED BY author.author_id;
+
+CREATE TABLE token (
+    user_id integer UNIQUE NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+    token text PRIMARY KEY NOT NULL CHECK (token <> ''::text)
+);
+
+CREATE SEQUENCE post_post_id_seq;
+CREATE TABLE post (
+    post_id integer PRIMARY KEY NOT NULL DEFAULT nextval('post_post_id_seq'),
+    title text NOT NULL CHECK (title <> ''::text),
+    creation_date date NOT NULL DEFAULT CURRENT_DATE,
+    author_id integer NOT NULL DEFAULT 1 REFERENCES author(author_id) ON DELETE SET DEFAULT,
+    category_id integer NOT NULL DEFAULT 1 REFERENCES category(category_id) ON DELETE SET DEFAULT,
+    content text NOT NULL CHECK (content <> ''::text),
+    photo text CHECK (photo <> ''::text),
+    extra_photos text[]
+);
+ALTER SEQUENCE post_post_id_seq OWNED BY post.post_id;
+
+CREATE TABLE post_tag (
+    post_id integer NOT NULL REFERENCES post(post_id) ON DELETE CASCADE,
+    tag_id  integer NOT NULL REFERENCES tag(tag_id) ON DELETE CASCADE,
+    UNIQUE(post_id, tag_id)
+);
+
+CREATE SEQUENCE comment_comment_id_seq;
+CREATE TABLE comment (
+    comment_id integer PRIMARY KEY NOT NULL DEFAULT nextval('comment_comment_id_seq'),
+    post_id integer NOT NULL REFERENCES post(post_id) ON DELETE CASCADE,
+    content text NOT NULL CHECK (content <> ''::text),
+    user_id integer NOT NULL DEFAULT 1 REFERENCES users(user_id) ON DELETE SET DEFAULT
+);
+ALTER SEQUENCE comment_comment_id_seq OWNED BY comment.comment_id;
+
+
+
+
+
+
+CREATE SEQUENCE draft_draft_id_seq;
+CREATE TABLE draft (
+    draft_id integer PRIMARY KEY NOT NULL DEFAULT nextval('draft_draft_id_seq'),
+    title text NOT NULL CHECK (title <> ''::text),
+    creation_date date NOT NULL DEFAULT CURRENT_DATE,
+    author_id integer NOT NULL DEFAULT 1 REFERENCES author(author_id) ON DELETE SET DEFAULT,
+    category_id integer NOT NULL DEFAULT 1 REFERENCES category(category_id) ON DELETE SET DEFAULT,
+    content text NOT NULL CHECK (content <> ''::text),
+    photo text CHECK (photo <> ''::text),
+    extra_photos text[],
+    post_id integer UNIQUE REFERENCES post(post_id) ON DELETE SET NULL
+);
+ALTER SEQUENCE draft_draft_id_seq OWNED BY draft.draft_id;
+
+
+CREATE TABLE draft_tag (
+    draft_id integer NOT NULL REFERENCES draft(draft_id) ON DELETE CASCADE,
+    tag_id  integer NOT NULL REFERENCES tag(tag_id) ON DELETE CASCADE,
+    UNIQUE(draft_id, tag_id)
+);
+
+-------- creat views
+
+
+
+
+-- view 1
+
+CREATE OR REPLACE VIEW news.get_authors AS
+ SELECT a.author_id,
+    a.description,
+    a.user_id,
+    u.firstname,
+    u.lastname,
+    u.image,
+    u.login,
+    '***'::text AS pass,
+    u.creation_date
+   FROM author a
+     JOIN users u ON a.user_id = u.user_id;
+
+-- view 2
+
+CREATE OR REPLACE VIEW news.get_categories AS
+ WITH RECURSIVE temp2(category_id, arrcid, arrname) AS (
+         SELECT category.category_id,
+            ARRAY[]::integer[] AS "array",
+            ARRAY[]::text[] AS "array"
+           FROM category
+          WHERE category.parent_category_id IS NULL
+        UNION ALL
+         SELECT c.category_id,
+            array_prepend(c.category_id, t.arrcid) AS array_prepend,
+            array_prepend(c.name, t.arrname) AS array_prepend
+           FROM category c
+             JOIN temp2 t ON c.parent_category_id = t.category_id
+          WHERE c.parent_category_id IS NOT NULL
+        )
+ SELECT temp2.category_id,
+    temp2.arrcid AS catids,
+    temp2.arrname AS catnames
+   FROM temp2;
+
+-- view 3
+
+CREATE OR REPLACE VIEW news.get_comments AS
+ SELECT c.comment_id,
+    c.content,
+    c.post_id,
+    u.user_id,
+    u.firstname,
+    u.lastname,
+    u.image,
+    u.login,
+    '***'::text AS pass_hash,
+    u.creation_date,
+    NULL::text AS is_admin
+   FROM comment c
+     JOIN users u ON c.user_id = u.user_id;
+
+-- view 4
+
+CREATE OR REPLACE VIEW news.get_tags AS
+ SELECT tag.tag_id,
+    tag.name
+   FROM tag;
+
+-- view 5
+
+CREATE OR REPLACE VIEW news.get_users_by_token AS
+ SELECT u.user_id,
+    u.firstname,
+    u.lastname,
+    u.image,
+    u.login,
+    u.pass_hash,
+    u.creation_date,
+    u.is_admin,
+    t.token
+   FROM token t
+     JOIN users u ON t.user_id = u.user_id;
+
+-- view 6
+
+CREATE OR REPLACE VIEW news.draft_tag_total AS
+ SELECT a.draft_id,
+    a.title,
+    a.creation_date,
+    a.author_id,
+    a.category_id,
+    COALESCE(array_agg(t.tag_id) FILTER (WHERE t.tag_id IS NOT NULL), ARRAY[]::integer[]) AS tagids,
+    COALESCE(array_agg(t.name) FILTER (WHERE t.name IS NOT NULL), ARRAY[]::name[]::text[]) AS tagnames,
+    a.content,
+    a.photo,
+    a.extra_photos,
+    a.post_id
+   FROM draft a
+     LEFT JOIN draft_tag dt ON a.draft_id = dt.draft_id
+     LEFT JOIN tag t ON dt.tag_id = t.tag_id
+  GROUP BY a.draft_id;
+
+-- view 7
+
+CREATE OR REPLACE VIEW news.get_drafts AS
+ SELECT td.draft_id,
+    td.title,
+    td.creation_date AS draft_creation_date,
+    td.author_id,
+    a.description AS author_description,
+    u.user_id,
+    u.firstname AS user_firstname,
+    u.lastname AS user_lastname,
+    u.image AS user_image,
+    u.login AS user_login,
+    '***'::text AS user_pass,
+    u.creation_date AS user_creation_date,
+    NULL::text AS user_is_admin,
+    td.tagids,
+    td.tagnames,
+    c.catids,
+    c.catnames,
+    td.content,
+    td.photo,
+    td.extra_photos,
+    td.post_id
+   FROM draft_tag_total td
+     JOIN author a ON td.author_id = a.author_id
+     JOIN users u ON a.user_id = u.user_id
+     JOIN get_categories c ON td.category_id = c.category_id;
+
+-- view 8
+
+CREATE OR REPLACE VIEW news.post_tag_total AS
+ SELECT p.post_id,
+    p.title,
+    p.creation_date,
+    p.author_id,
+    p.category_id,
+    COALESCE(array_agg(t.tag_id) FILTER (WHERE t.tag_id IS NOT NULL), ARRAY[]::integer[]) AS tagids,
+    COALESCE(array_agg(t.name) FILTER (WHERE t.name IS NOT NULL), ARRAY[]::text[]) AS tagnames,
+    p.content,
+    p.photo,
+    COALESCE(p.extra_photos, ARRAY[]::text[]) AS extra_photos
+   FROM post p
+     LEFT JOIN post_tag pt ON p.post_id = pt.post_id
+     LEFT JOIN tag t ON pt.tag_id = t.tag_id
+  GROUP BY p.post_id;
+
+
+-- view 9
+
+CREATE OR REPLACE VIEW news.get_posts AS
+ SELECT tp.post_id,
+    tp.title,
+    tp.creation_date AS post_creation_date,
+    tp.author_id,
+    a.description AS author_description,
+    u.user_id,
+    u.firstname AS user_firstname,
+    u.lastname AS user_lastname,
+    u.image AS user_image,
+    u.login AS user_login,
+    '***'::text AS user_pass,
+    u.creation_date AS user_creation_date,
+    NULL::text AS user_is_admin,
+    tp.tagids,
+    tp.tagnames,
+    c.catids,
+    c.catnames,
+    tp.content,
+    tp.photo,
+    tp.extra_photos
+   FROM post_tag_total tp
+     JOIN author a ON tp.author_id = a.author_id
+     JOIN users u ON a.user_id = u.user_id
+     JOIN get_categories c ON tp.category_id = c.category_id;
+
+
+INSERT INTO users (firstname, lastname, login, pass_hash, is_admin) VALUES
+('deleted', 'deleted', 'deleted', '123', false),
+('Aleksandr', 'Pushkin', 'Pyshkin', '123', false),
+('admin', 'admin', 'admin', '123', true),
+('Franz', 'Liszt', 'Composer666', '123', false);
+('Sergei', 'Prokofiev', 'ComplicatedHarmony', '123', false);
+
+INSERT INTO author (user_id, description) VALUES
+(1, 'deleted'),
+(2, 'Pushkin nashe vsyo'),
+(3, 'admin');
+
+INSERT INTO token (user_id, token) VALUES
+(2, 'push'),
+(3, 'admin'),
+(4,'fail'),
+(5,'prok');
+
+INSERT INTO category (parent_category_id, name) VALUES
+(NULL, 'All'),
+(1, 'Programming'),
+(1, 'Music'),
+(1, 'Football'),
+(2, 'Functional'),
+(5, 'Haskell'),
+(3, 'Classical music'),
+(4, 'Champions league'),
+(4, 'Europa league');
+
+INSERT INTO tag (name) VALUES
+('sports'),
+('IT'),
+('music'),
+('cats'),
+('animals'),
+('hi-tech'),
+('others');
+
+-- at this step, please add 120 (or another number, just many) posts to news.post in any way
+-- then run the following:
+
+UPDATE post SET creation_date = '2021-09-01' WHERE post_id BETWEEN 80 AND 120;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
