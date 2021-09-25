@@ -27,15 +27,21 @@ import qualified Exceptions as Ex (mainErrorHandler, defaultMainHandler)
 import qualified Control.Monad.Catch as CMC
 import Profiling
 
+import qualified Database.PostgreSQL.Simple.Migration as PSM
+import Migrations
+
 port :: Int
 port = 5555
 
 someFunc :: IO ()
-someFunc = do
+someFunc = migrationMain >> someFunc1
+
+someFunc1 :: IO ()
+someFunc1 = do
     CMC.bracket 
         --(PS.connectPostgreSQL "dbname='batadase'")
         --(PS.connectPostgreSQL "dbname=batadase user=app password='789456123'")
-        (PS.connectPostgreSQL "dbname=migration user=migration_app password='789456123'")
+        (PS.connectPostgreSQL "dbname=migration2 user=migration2_app password='0000'")
         (\conn -> PS.close conn) -- close connection
         (\conn -> let serverH = ServerHandlers L.simpleLog (DB.Handle conn) in
          Warp.run port $ mainFunc1 serverH)

@@ -56,6 +56,7 @@ library
       Handler.Database
       Handler.Logger
       Lib
+      Migrations
       MonadTypes
       Profiling
       Types
@@ -71,9 +72,11 @@ library
     , base >=4.7 && <5
     , bytestring
     , exceptions
+    , file-embed
     , http-types
     , mtl
     , postgresql-simple
+    , postgresql-simple-migration
     , random
     , text
     , time
@@ -96,9 +99,11 @@ executable warpt3
     , base >=4.7 && <5
     , bytestring
     , exceptions
+    , file-embed
     , http-types
     , mtl
     , postgresql-simple
+    , postgresql-simple-migration
     , random
     , text
     , time
@@ -123,9 +128,11 @@ test-suite warpt3-test
     , base >=4.7 && <5
     , bytestring
     , exceptions
+    , file-embed
     , http-types
     , mtl
     , postgresql-simple
+    , postgresql-simple-migration
     , random
     , text
     , time

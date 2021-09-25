@@ -1,7 +1,7 @@
 
 
 -- Create table for categories with its sequence
-
+-- 002
 CREATE SEQUENCE category_category_id_seq;
 CREATE TABLE category (
     category_id integer PRIMARY KEY NOT NULL DEFAULT nextval('category_category_id_seq'),
@@ -11,7 +11,7 @@ CREATE TABLE category (
 ALTER SEQUENCE category_category_id_seq OWNED BY category.category_id;
 
 -- Create table for tags with its sequence
-
+-- 003
 CREATE SEQUENCE tag_tag_id_seq;
 CREATE TABLE tag (
     tag_id integer PRIMARY KEY NOT NULL DEFAULT nextval('tag_tag_id_seq'),
@@ -20,7 +20,7 @@ CREATE TABLE tag (
 ALTER SEQUENCE tag_tag_id_seq OWNED BY tag.tag_id;
   
 -- Create table for users with its sequence
-
+-- 004
 CREATE SEQUENCE users_user_id_seq;
 CREATE TABLE users (
     user_id integer PRIMARY KEY NOT NULL DEFAULT nextval('users_user_id_seq'),
@@ -35,6 +35,7 @@ CREATE TABLE users (
 ALTER SEQUENCE users_user_id_seq OWNED BY users.user_id;
   
 -- Create table for authors with its sequence
+-- 005
 
 CREATE SEQUENCE author_author_id_seq;
 CREATE TABLE author (
@@ -44,11 +45,13 @@ CREATE TABLE author (
 );
 ALTER SEQUENCE author_author_id_seq OWNED BY author.author_id;
 
+-- 006
 CREATE TABLE token (
     user_id integer UNIQUE NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
     token text PRIMARY KEY NOT NULL CHECK (token <> ''::text)
 );
 
+-- 007
 CREATE SEQUENCE post_post_id_seq;
 CREATE TABLE post (
     post_id integer PRIMARY KEY NOT NULL DEFAULT nextval('post_post_id_seq'),
@@ -62,12 +65,14 @@ CREATE TABLE post (
 );
 ALTER SEQUENCE post_post_id_seq OWNED BY post.post_id;
 
+-- 008
 CREATE TABLE post_tag (
     post_id integer NOT NULL REFERENCES post(post_id) ON DELETE CASCADE,
     tag_id  integer NOT NULL REFERENCES tag(tag_id) ON DELETE CASCADE,
     UNIQUE(post_id, tag_id)
 );
 
+-- 009
 CREATE SEQUENCE comment_comment_id_seq;
 CREATE TABLE comment (
     comment_id integer PRIMARY KEY NOT NULL DEFAULT nextval('comment_comment_id_seq'),
@@ -81,7 +86,7 @@ ALTER SEQUENCE comment_comment_id_seq OWNED BY comment.comment_id;
 
 
 
-
+-- 010
 CREATE SEQUENCE draft_draft_id_seq;
 CREATE TABLE draft (
     draft_id integer PRIMARY KEY NOT NULL DEFAULT nextval('draft_draft_id_seq'),
@@ -96,19 +101,20 @@ CREATE TABLE draft (
 );
 ALTER SEQUENCE draft_draft_id_seq OWNED BY draft.draft_id;
 
-
+-- 011
 CREATE TABLE draft_tag (
     draft_id integer NOT NULL REFERENCES draft(draft_id) ON DELETE CASCADE,
     tag_id  integer NOT NULL REFERENCES tag(tag_id) ON DELETE CASCADE,
     UNIQUE(draft_id, tag_id)
 );
 
--------- creat views
+-------- create views
 
 
 
 
 -- view 1
+-- 012
 
 CREATE OR REPLACE VIEW news.get_authors AS
  SELECT a.author_id,
@@ -146,6 +152,7 @@ CREATE OR REPLACE VIEW news.get_categories AS
    FROM temp2;
 
 -- view 3
+-- 014
 
 CREATE OR REPLACE VIEW news.get_comments AS
  SELECT c.comment_id,
@@ -163,6 +170,7 @@ CREATE OR REPLACE VIEW news.get_comments AS
      JOIN users u ON c.user_id = u.user_id;
 
 -- view 4
+-- 015
 
 CREATE OR REPLACE VIEW news.get_tags AS
  SELECT tag.tag_id,
@@ -170,6 +178,7 @@ CREATE OR REPLACE VIEW news.get_tags AS
    FROM tag;
 
 -- view 5
+-- 016
 
 CREATE OR REPLACE VIEW news.get_users_by_token AS
  SELECT u.user_id,
@@ -185,6 +194,7 @@ CREATE OR REPLACE VIEW news.get_users_by_token AS
      JOIN users u ON t.user_id = u.user_id;
 
 -- view 6
+-- 017
 
 CREATE OR REPLACE VIEW news.draft_tag_total AS
  SELECT a.draft_id,
@@ -204,6 +214,7 @@ CREATE OR REPLACE VIEW news.draft_tag_total AS
   GROUP BY a.draft_id;
 
 -- view 7
+-- 018
 
 CREATE OR REPLACE VIEW news.get_drafts AS
  SELECT td.draft_id,
@@ -233,6 +244,7 @@ CREATE OR REPLACE VIEW news.get_drafts AS
      JOIN get_categories c ON td.category_id = c.category_id;
 
 -- view 8
+-- 019
 
 CREATE OR REPLACE VIEW news.post_tag_total AS
  SELECT p.post_id,
@@ -252,6 +264,7 @@ CREATE OR REPLACE VIEW news.post_tag_total AS
 
 
 -- view 9
+-- 020
 
 CREATE OR REPLACE VIEW news.get_posts AS
  SELECT tp.post_id,
@@ -279,7 +292,7 @@ CREATE OR REPLACE VIEW news.get_posts AS
      JOIN users u ON a.user_id = u.user_id
      JOIN get_categories c ON tp.category_id = c.category_id;
 
-
+-- 021
 INSERT INTO users (firstname, lastname, login, pass_hash, is_admin) VALUES
 ('deleted', 'deleted', 'deleted', '123', false),
 ('Aleksandr', 'Pushkin', 'Pyshkin', '123', false),

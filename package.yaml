@@ -33,10 +33,13 @@ dependencies:
 - text
 - mtl
 - time
-- postgresql-simple
 - unordered-containers
 - exceptions
 - random
+- postgresql-simple
+- postgresql-simple-migration
+- file-embed
+
 
 library:
   source-dirs: src

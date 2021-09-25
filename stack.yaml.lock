@@ -473,4 +473,39 @@ packages:
       sha256: 7f1ea7a2ad2c125c153437c60d767e71bf569fe6f04bcfa3b6bad25135ba1224
   original:
     hackage: postgresql-libpq-0.9.4.3@sha256:a20a7a263343247526141d99154c9fa801e6d19e8e4da04849bc843f82db91b2,2803
+- completed:
+    hackage: postgresql-simple-migration-0.1.15.0@sha256:123d8f62b0e300aede37e2d6dacc81b9468cb68dc5c3f52fe807085992280aa8,3969
+    pantry-tree:
+      size: 766
+      sha256: 186c759339e91c18b51879a5795f6cf8db2639001eb6b0e7c017d90e5dfa6ab2
+  original:
+    hackage: postgresql-simple-migration-0.1.15.0@sha256:123d8f62b0e300aede37e2d6dacc81b9468cb68dc5c3f52fe807085992280aa8,3969
+- completed:
+    hackage: base64-bytestring-1.2.1.0@sha256:50ec0e229255d4c45cbdd568da011311b8887f304b931564886016f4984334d8,2396
+    pantry-tree:
+      size: 850
+      sha256: 1154783dd163be45502456716ca44c4244d0aa6e7cf1aa4e7763efb3485a509c
+  original:
+    hackage: base64-bytestring-1.2.1.0@sha256:50ec0e229255d4c45cbdd568da011311b8887f304b931564886016f4984334d8,2396
+- completed:
+    hackage: cryptohash-0.11.9@sha256:59d9494ba0cc9eef087ecba2e12e4d3e2d3b0327dd1542af552e3dca0e7de70d,4230
+    pantry-tree:
+      size: 2259
+      sha256: f916b60e1f935ee554beacae455b9d3bc79c083e6235d5f4b519cb6df00e4032
+  original:
+    hackage: cryptohash-0.11.9@sha256:59d9494ba0cc9eef087ecba2e12e4d3e2d3b0327dd1542af552e3dca0e7de70d,4230
+- completed:
+    hackage: byteable-0.1.1@sha256:12eeda93251d4b5d510ac95cf578f5c89d4a399b14ca73116deaf4921a516fdf,1080
+    pantry-tree:
+      size: 257
+      sha256: 2c44627f5b4cd1d6493cbbcb745070d147083d1890669f7271e5847bb7a603b2
+  original:
+    hackage: byteable-0.1.1@sha256:12eeda93251d4b5d510ac95cf578f5c89d4a399b14ca73116deaf4921a516fdf,1080
+- completed:
+    hackage: file-embed-0.0.15.0@sha256:18beed8999dff37bcffd0d1d8a59dcd406be8e517c10213afefc941091985c06,1426
+    pantry-tree:
+      size: 478
+      sha256: 19e38c295f02ea4cf3891ccb8048ed10d426b937bb14215f64aadc0cd62bda72
+  original:
+    hackage: file-embed-0.0.15.0@sha256:18beed8999dff37bcffd0d1d8a59dcd406be8e517c10213afefc941091985c06,1426
 snapshots: []
