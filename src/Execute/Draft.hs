@@ -7,30 +7,27 @@ import qualified Data.Text as T (pack, Text)
 
 import qualified Database.PostgreSQL.Simple.Types as PSTy
 import qualified Database.PostgreSQL.Simple as PS
---import qualified GenericPretty as GP
 
 import Database.Update
 
 import MonadTypes (MonadServer (..), MonadSQL(..),logError, logDebug, execute, query, formatQuery, logInfo, logWarn, logFatal)
 import Execute.Types
 import Execute.Utils
-import Action.Draft
 
 
 import Database.SqlValue
 import Execute.Actions
 import Database.Create
 import Database.Update
---import ActWithOne
-import Execute.Result
+import Result
 import Execute.HasTags
 import qualified Exceptions as Ex
 
 import qualified Data.Aeson as Ae (Value(..))
 import Database.Read
-import Action.Posts
 
-import qualified Types as Ty
+import Types
+import Execute.Database
 
 newtype CDraft = CDraft ()
 draftCreateDummy = CDraft ()
@@ -133,25 +130,25 @@ publish x@(WithAuthor a Publish{..}) = Ex.withHandler Ex.publishHandler $
                                        withTransaction $ do
     drafts <- getThis' draftRawDummy x
     draft <- validateUnique (Ex.throwDraftNotFound _p_draftId) drafts
-    case Ty._dr_postId draft of
+    case _dr_postId draft of
         Nothing -> publishCreate draft
         Just post -> publishEdit post draft
 {-
-func :: Ty.DraftRaw -> EditDraftPublish
-func Ty.DraftRaw{..} = EditDraftPublish { _edp_postId = _dr_postId, _edp_draftId = _dr_draftId }
+func :: DraftRaw -> EditDraftPublish
+func DraftRaw{..} = EditDraftPublish { _edp_postId = _dr_postId, _edp_draftId = _dr_draftId }
 -}
-publishCreate :: (MonadServer m) => Ty.DraftRaw -> m Response
+publishCreate :: (MonadServer m) => DraftRaw -> m Response
 publishCreate x = do
     post <- createThis' dummyCPost x
     logInfo $ "Created post with id = " <> showText post
-    draft <- editThis' draftEditPublishDummy (EditDraftPublish post $ Ty._dr_draftId x)
+    draft <- editThis' draftEditPublishDummy (EditDraftPublish post $ _dr_draftId x)
     logInfo $ "Added post_id to draft with id = " <> showText draft
-    tags_ <- attachTags dummyHPost post (Ty._dr_tagIds x)
+    tags_ <- attachTags dummyHPost post (_dr_tagIds x)
     logInfo $ attached "post" tags_ post
     return $ okCreated "Post successfully created" post
 
-func :: Int -> Ty.DraftRaw -> PublishEditPost
-func post Ty.DraftRaw{..} =
+func :: Int -> DraftRaw -> PublishEditPost
+func post DraftRaw{..} =
     let _pep_postId = post
         _pep_title = _dr_title
   --      _pep_creationDate = _dr_creationDate
@@ -163,14 +160,14 @@ func post Ty.DraftRaw{..} =
     in PublishEditPost{..}
  
 
-publishEdit :: (MonadServer m) => Int -> Ty.DraftRaw -> m Response
+publishEdit :: (MonadServer m) => Int -> DraftRaw -> m Response
 publishEdit post draft = do
     let s = dummyUPost
         publishPost = func post draft
     post_ <- editThis' s publishPost
-    ts <- attachTags dummyHPost post $ Ty._dr_tagIds draft
+    ts <- attachTags dummyHPost post $ _dr_tagIds draft
     logInfo $ attached "post" ts post
-    tsRem <- removeAllButGivenTags dummyHPost post $ Ty._dr_tagIds draft
+    tsRem <- removeAllButGivenTags dummyHPost post $ _dr_tagIds draft
     logInfo $ removed "post" tsRem draft
     return $ okCreated "Draft successfully published, post_id is in \"result\"" post
 

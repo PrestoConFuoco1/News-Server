@@ -2,6 +2,7 @@
 module Migrations where
 
 
+
 --import qualified Database.PostgreSQL.Simple
 import Database.PostgreSQL.Simple
 --import qualified Database.PostgreSQL.Simple.Migration

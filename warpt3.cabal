@@ -33,9 +33,9 @@ library
       Action.Posts
       Action.RequestToAction
       Action.Tags
-      Action.Types
       Action.Users
       Action.Utils
+      Database
       Database.Create
       Database.Delete
       Database.Read
@@ -45,10 +45,10 @@ library
       Exceptions
       Execute
       Execute.Actions
+      Execute.Database
       Execute.Draft
       Execute.HasTags
       Execute.Permissions
-      Execute.Result
       Execute.Types
       Execute.Utils
       General
@@ -59,6 +59,7 @@ library
       Migrations
       MonadTypes
       Profiling
+      Result
       Types
       Types.Authors
       Types.Category
@@ -136,6 +137,7 @@ test-suite warpt3-test
     , bytestring
     , exceptions
     , file-embed
+    , hspec
     , http-types
     , mtl
     , postgresql-simple

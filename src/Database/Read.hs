@@ -19,7 +19,7 @@ import GHC.Generics
 
 
 import qualified Database.PostgreSQL.Simple as PS
-import qualified Types as Ty
+import Types
 import qualified Data.Aeson as Ae
 import qualified Database.PostgreSQL.Simple.Types as PSTy
 
@@ -27,20 +27,9 @@ import qualified Data.Time as Time
 
 import Utils
 
-import Action.Tags
-import Action.Category
-import Action.Users
-import Action.Authors
-import Action.Draft
-import Action.Posts
-import Action.Comments
-import Action.Types
-import Execute.Types
 import Database.SqlValue
 import Database.SqlQueryTypes
-import MonadTypes
 import qualified Data.Text as T (pack)
-import Action.Utils
 
 class (Ae.ToJSON (MType s), GP.PrettyShow (MType s), PS.FromRow (MType s), Show (Get s), Show (MType s))
         => Read s where
@@ -59,34 +48,10 @@ pageingClause :: Int -> Int -> (PS.Query, [SqlValue])
 pageingClause page size = (" LIMIT ? OFFSET ? ", [SqlValue size, SqlValue $ toOffset page size])
 
 
-getThisPaginated' :: (Read s, MonadServer m) => s -> Paginated (Get s) -> m [MType s]
-getThisPaginated' x (Paginated page size g) = do
-    let (qu, pars) = selectQuery x g
-        (qupag, parspag) = pageingClause page size
-        qu' = qu <> qupag
-        totalpars = pars ++ parspag
-    debugStr <- formatQuery qu' totalpars
-    logDebug $ T.pack $ show debugStr
-    --withTimePrint $
-    res <- query qu' totalpars
-    logInfo $ "Fetched " <> showText (length res) <> " entities"
-    return res
-
-getThis' :: (Read s, MonadServer m) => s -> Get s -> m [MType s]
-getThis' x g = do
-    let (qu, pars) = selectQuery x g
-    debugStr <- formatQuery qu pars
-    logDebug $ T.pack $ show debugStr
-    --withTimePrint $
-    res <- query qu pars
-    logInfo $ "Fetched " <> showText (length res) <> " entities"
-    return res
-
-
 
 
 instance Read PostD where
-    type MType PostD = Ty.Post
+    type MType PostD = Post
     type Get PostD = GetPosts
     selectQuery _ (GetPosts cre tags search sortOpts) = 
         let selectClause = "SELECT \
@@ -203,7 +168,7 @@ catDummy = CatD ()
 
 
 instance Read CatD where
-    type MType CatD = Ty.Category
+    type MType CatD = Category
     type Get CatD = GetCategories
     selectQuery _ (GetCategories) =
         let selectClause = "SELECT catids, catnames FROM news.get_categories"
@@ -216,7 +181,7 @@ authorDummy = AuthorD ()
 
 
 instance Read AuthorD where
-    type MType AuthorD = Ty.Author
+    type MType AuthorD = Author
     type Get AuthorD = GetAuthors
     selectQuery _ (GetAuthors mu) =
         let selectClause = "SELECT author_id, description, user_id, firstname, lastname, \
@@ -235,7 +200,7 @@ tagDummy = TagD ()
 
 --class (Ae.ToJSON (MType s), GP.PrettyShow (MType s), PS.FromRow (MType s), Show (Get s), Show (MType s))
 instance Read TagD where
-    type MType TagD = Ty.Tag
+    type MType TagD = Tag
     type Get TagD = GetTags
     selectQuery _ (GetTags) =
         let selectClause = "SELECT tag_id, name \
@@ -248,7 +213,7 @@ newtype CommentD = CommentD ()
 commentDummy = CommentD ()
 
 instance Read CommentD where
-    type MType CommentD = Ty.Comment
+    type MType CommentD = Comment
     type Get CommentD = GetComments
     selectQuery _ (GetComments id) =
         let selectClause = "SELECT comment_id, content,  \
@@ -265,7 +230,7 @@ draftDummy = DraftD ()
 
 
 instance Read DraftD where
-    type MType DraftD = Ty.Draft
+    type MType DraftD = Draft
     type Get DraftD = WithAuthor GetDrafts
     selectQuery _ (WithAuthor a _) = 
         let selectClause = "SELECT \
@@ -296,7 +261,7 @@ draftRawDummy = DraftR ()
 
 
 instance Read DraftR where
-    type MType DraftR = Ty.DraftRaw
+    type MType DraftR = DraftRaw
     type Get DraftR = WithAuthor Publish
     selectQuery _ (WithAuthor a (Publish draft)) = 
         let selectClause = "SELECT \
@@ -312,14 +277,14 @@ instance Read DraftR where
         in  (selectClause, [SqlValue a, SqlValue draft])
 
 {-
-getUsersByToken' :: (MonadServer m) => Token -> m (Maybe Ty.User)
+getUsersByToken' :: (MonadServer m) => Token -> m (Maybe User)
 getUsersByToken' token = do
     let str = "SELECT user_id, firstname, lastname, \
               \image, login, pass_hash, creation_date, is_admin \
               \FROM news.get_users_by_token WHERE token = ?"
    
     users <- query str [token]
-    user <- validateUnique2 (return Nothing) (Ex.throwTokenShared $ map Ty._u_id users) $ map Just users
+    user <- validateUnique2 (return Nothing) (Ex.throwTokenShared $ map _u_id users) $ map Just users
     return user
 -}
 
@@ -330,7 +295,7 @@ userTokenDummy = UserTokenR ()
 
 
 instance Read UserTokenR where
-    type MType UserTokenR = Ty.User
+    type MType UserTokenR = User
     type Get UserTokenR = Token
     selectQuery _ y = 
         let str = "SELECT user_id, firstname, lastname, \

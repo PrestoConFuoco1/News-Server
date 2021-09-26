@@ -1,4 +1,5 @@
-module Execute.Result where
+{-# LAnGUAGE DeriveAnyClass #-}
+module Result where
 
 
 import qualified Network.HTTP.Types as NHT
@@ -7,8 +8,7 @@ import qualified Data.Aeson as Ae
 import qualified Data.Text as T
 import qualified Data.ByteString as B
 import qualified Data.Text.Encoding as E
-import Execute.Types (Result(..), Response(..))
-
+import GHC.Generics
 
 forbidden = "Access only for administrators, sending 404 invalid endpoint." :: T.Text
 
@@ -47,5 +47,19 @@ unauthorized = Response NHT.unauthorized401 . errR
 notFound = Response NHT.status404 . errR
 
 internal = Response NHT.internalServerError500 . errR
+
+
+data Response = Response {
+    _r_status :: NHT.Status,
+    _r_message :: Ae.Value
+    } deriving (Show, Eq)
+
+
+data Result = Result {
+    _ok :: Bool,
+    message :: Maybe T.Text,
+    result :: Maybe Ae.Value
+    } deriving (Show, Eq, Generic, Ae.ToJSON)
+
 
 

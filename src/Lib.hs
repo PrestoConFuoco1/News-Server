@@ -13,9 +13,9 @@ import qualified Data.Text as T (pack)
 import qualified GenericPretty as GP (defaultPretty)
 
 import Action.RequestToAction (requestToAction)
-import Action.Types (WhoWhat(..))
 import Execute (executeAction, handleError)
-import Execute.Types (Response(..))
+import Types
+import Result
 
 import qualified Handler.Logger as L (simpleLog)
 import MonadTypes (MonadServer, ServerIO, ServerHandlers(..), logDebug, runServer, printS, getCurrentTimeS)

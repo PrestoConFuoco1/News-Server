@@ -1,9 +1,7 @@
 {-# LANGUAGE DeriveAnyClass #-}
 module Action.RequestToAction where
 
-import Action.Types
 import qualified Network.Wai as W (Request, pathInfo, queryString)
-import qualified Network.HTTP.Types.URI as U (QueryItem)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as E (decodeUtf8, encodeUtf8)
 import qualified Data.Aeson as Ae (decode, Value)
@@ -29,6 +27,7 @@ import Action.Draft
 import Action.Utils
 import Action.Common
 
+import Types
 
 data Action = AAuthors ActionAuthors
             | ACategory ActionCategory

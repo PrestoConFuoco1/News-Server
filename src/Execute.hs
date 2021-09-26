@@ -8,7 +8,6 @@ import qualified Data.Text as T (pack)
 
 
 import Action.RequestToAction
-import Action.Types (WhoWhat (..), Token)
 import Action.Common
 import Database.Read
 import Database.Create
@@ -21,23 +20,19 @@ import qualified Database.PostgreSQL.Simple as PS (SqlError(..))
 import qualified Types as Ty
 import qualified Control.Monad.Catch as CMC (catches, Handler(..), MonadCatch, catch)
 import qualified Data.Text.Encoding as E (decodeUtf8, encodeUtf8)
---import ActWithOne (actWithOne, ActWithOne(..), AWOu(..), AWOd(..))
-import Execute.Result
+import Result
 import Execute.Types
 import Execute.Utils
-import Action.Users
-import Action.Comments
-import Action.Draft
-import Action.Authors
-import Action.Posts
 import Execute.Draft
 
+import Types
+
 import Exceptions as Ex
+import Execute.Database
 
 import Database.SqlQueryTypes
 import Execute.Permissions
 import Execute.Actions
-import Action.Utils
 
 executeAction :: MonadServer m => WhoWhat Action -> m Response
 executeAction (WhoWhat y (AAuthors x)) = executeAuthor (WhoWhat y x)
@@ -86,14 +81,9 @@ executeUsers (WhoWhat y (Delete x)) = withAuthAdmin y >> deleteThis dummyDUser x
 executeUsers (WhoWhat y (Read GetProfile)) = withAuth y >>= getUser
 
 executeComments (WhoWhat y (Read x)) = getThisPaginated commentDummy x
---executeComments (WhoWhat y (Create x)) = withAuth y >>= createComment x
 executeComments (WhoWhat y (Create x)) = withAuth y >>= maybeUserToUser >>= \u -> createThis dummyCComment $ WithUser u x
 executeComments (WhoWhat y (Delete x)) = withAuth y >>= maybeUserToUser >>= \u -> deleteThis dummyDComment $ WithUser u x
-{-
-createComment :: (MonadServer m) => CreateComment -> Maybe Ty.User -> m Response
-createComment cc Nothing = Ex.unauthorized
-createComment cc (Just u) = createThis dummyCComment $ WithUser u cc
--}
+
 executeDraft :: (MonadServer m) => WhoWhat ActionDrafts -> m Response
 executeDraft (WhoWhat y (Create x)) =
     withAuthor y >>=

@@ -6,9 +6,7 @@ import Database.PostgreSQL.Simple as PS (sqlState, SqlError(..), QueryError)
 import qualified Data.Text as T (Text, pack)
 import qualified GenericPretty as GP (PrettyShow(..), defaultPretty)
 
---import Execute.Utils as U
-import Execute.Result as U
-import Execute.Types (Response(..))
+import Result as U
 import Data.Text.Encoding as E (decodeUtf8)
 
 data ServerException =

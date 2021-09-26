@@ -17,6 +17,7 @@ import Data.Bifunctor (bimap)
 import GHC.Generics
 import qualified GenericPretty as GP
 import Action.Common
+import Types
 
 notEmpty :: T.Text -> Bool
 notEmpty = (/= "")
@@ -77,13 +78,14 @@ readList = (Ae.decode . BSL.fromStrict)
 fmap2 :: (Functor f, Functor g) => (a -> b) -> f (g a) -> f (g b)
 fmap2 f x = fmap (fmap f) x
 
-
+{-
 data Paginated a = Paginated {
     _pag_page :: Int,
     _pag_size :: Int,
     _pag_data :: a
     } deriving (Show, Generic, GP.PrettyShow) 
 
+-}
 
 
 withPagination :: Router a -> Router (Paginated a)
@@ -92,7 +94,6 @@ withPagination m = do
     page <- requireWithDefault readInt 0 "page"
     size <- requireWithDefault readInt 10000 "size"
     return $ Paginated page size x
-
 
 {-
 require :: (BS.ByteString -> Maybe a) -> Query -> BS.ByteString -> Maybe a

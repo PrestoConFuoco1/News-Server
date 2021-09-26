@@ -8,24 +8,15 @@ RecordWildCards
 
 module Database.Create where
 
---import Action.RequestToAction
 
-import Action.Tags
-import Action.Category
-import Action.Users
-import Action.Authors
-import Action.Comments
 import qualified Database.PostgreSQL.Simple as PS
 import qualified Data.ByteString as B
-import Execute.Types
 import Data.Text as T (Text, pack)
-import MonadTypes
 import qualified Database.PostgreSQL.Simple.Types as PSTy
-import qualified Exceptions as Ex
-import Execute.Utils
 import Database.SqlValue
 import qualified Types as Ty
 import Utils
+import Types
 
 class CreateSQL s where
     type Create s :: *
@@ -33,18 +24,6 @@ class CreateSQL s where
     cName :: s -> T.Text
     cUniqueField :: s -> T.Text -- ???
     cForeign :: s -> T.Text -- ?????
-
-
-createThis' :: (MonadServer m, CreateSQL s) => s -> Create s -> m Int
-createThis' w cres = do
-    let (str, params) = createQuery w cres
-    debugStr <- formatQuery str params
-    logDebug $ T.pack $ show debugStr
-
-    ints <- fmap (map PSTy.fromOnly) $ query str params
-    int <- validateUnique (Ex.throwBadInsert (cName w)) ints
-    logInfo $ "Created " <> cName w <> " with id = " <> showText int
-    return int
 
 
 
@@ -103,7 +82,7 @@ instance CreateSQL CComment where
     type Create CComment = WithUser CreateComment
     createQuery _ (WithUser u CreateComment{..}) =
         ("INSERT INTO news.comment (user_id, post_id, content) values (?, ?, ?) RETURNING comment_id",
-        [SqlValue $ Ty._u_id u, SqlValue _ccom_postId, SqlValue _ccom_content])
+        [SqlValue $ _u_id u, SqlValue _ccom_postId, SqlValue _ccom_content])
 --insert into comment (post_id, content, user_id) values (1, 'comment to first post', 2);
     cName _ = "comment"
     cUniqueField _ = "unique error"
@@ -115,8 +94,8 @@ newtype CPost = CPost ()
 dummyCPost = CPost ()
 
 instance CreateSQL CPost where
-    type Create CPost = Ty.DraftRaw
-    createQuery _ Ty.DraftRaw{..} =
+    type Create CPost = DraftRaw
+    createQuery _ DraftRaw{..} =
         ("INSERT INTO news.post ( title, \
                                  \ author_id,\
                                  \ category_id,\

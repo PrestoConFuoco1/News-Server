@@ -13,18 +13,12 @@ import qualified Data.Aeson as Ae (Value, encode)
 
 import qualified Database.PostgreSQL.Simple as PS
 
-import Action.Tags
-import Action.Authors
-import Action.Category
 import Database.SqlValue
 import Data.Maybe (catMaybes)
 
-import MonadTypes
 import qualified Database.PostgreSQL.Simple.Types as PSTy
-import qualified Exceptions as Ex
-import Action.Posts
-import Execute.Utils
 import Utils
+import Types
 
 updateParams :: (UpdateSQL s) => s -> Upd s -> Maybe (PS.Query, [SqlValue])
 updateParams s ce = case intercalateQ $ map setUnit qs of
@@ -57,21 +51,6 @@ optionalsMaybe EditCategory{..} =
             [("name", fmap SqlValue _ec_catName),
              ("parent_category_id", fmap SqlValue _ec_parentId)]
  -}
-
-
-editThis' :: (MonadServer m, UpdateSQL s) => s -> Upd s -> m Int
-editThis' s u = case updateParams s u of
-  Nothing -> Ex.invalidUpdDel "No data to edit found, required at least one parameter"
-  Just (q, vals) -> do
-    let str = updateQuery s q
-        params = vals ++ identifParams s u
-    debugStr <- formatQuery str params
-    logDebug $ T.pack $ show debugStr
-
-    ids <- fmap (map PSTy.fromOnly) $ query str params
-    id <- validateUnique (Ex.throwUpdNotFound $ uName s) ids
-    logInfo $ "Updated " <> uName s <> " with id = " <> showText id
-    return id
 
 
 

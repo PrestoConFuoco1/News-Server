@@ -23,7 +23,8 @@ CreateAuthor(..),
 DeleteAuthor(..),
 EditAuthor(..),
 PostId,
-ActionPosts1, ActionPosts,
+ActionPosts1(..),
+ActionPosts,
 PublishEditPost(..),
 GetPosts(..),
 CreationDateOptions(..),
@@ -50,7 +51,17 @@ CommentId,
 ActionComments,
 GetComments(..),
 CreateComment(..),
-DeleteComment(..)
+DeleteComment(..),
+User(..),
+Draft(..),
+Comment(..),
+DraftRaw(..),
+Author(..),
+Tag(..),
+Category(..),
+Post(..),
+WithAuthor(..),
+WithUser(..)
 
 ) where
 
@@ -76,6 +87,17 @@ import Types.Users
 
 {-
 -}
+
+
+data WithUser a = WithUser {
+    _wu_userId :: User,
+    _wu_action :: a
+    } deriving (Show, Generic)
+
+data WithAuthor a = WithAuthor {
+    _wa_authorId :: Int,
+    _wa_action :: a
+    } deriving (Show, Generic)
 
 type Token = T.Text
 

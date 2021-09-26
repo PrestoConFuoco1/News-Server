@@ -7,7 +7,6 @@ import qualified Data.Aeson as Ae
 import qualified Data.Text as T
 import qualified Data.ByteString as B
 import qualified Data.Text.Encoding as E
-import Execute.Types (Result(..), Response(..))
 import qualified Exceptions as Ex
 import MonadTypes
 import qualified GenericPretty as GP

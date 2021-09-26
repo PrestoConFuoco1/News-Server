@@ -10,35 +10,10 @@ import qualified Data.ByteString as B
 import qualified Data.Text as T
 import qualified Database.PostgreSQL.Simple as PS
 
-import Action.Tags
-import Action.Authors
-import Action.Category
-import Action.Users
-import Action.Comments
-import Action.Draft
-import Execute.Types
 import Database.SqlValue
-import MonadTypes
 import qualified Database.PostgreSQL.Simple.Types as PSTy
-import qualified Exceptions as Ex
-import qualified Types as Ty
+import Types
 import Utils
-
---import Execute.Permissions
-
-deleteThis' :: (MonadServer m, DeleteSQL s) => s -> Del s -> m [Int]
-deleteThis' s del = do
-    let (str, params) = deleteQuery s del
-    debugStr <- formatQuery str params
-    logDebug $ T.pack $ show debugStr
-
-    --withExceptionHandlers (Ex.defaultHandlers "deleteThis") $ do
-    ids <- fmap (map PSTy.fromOnly) $ query str params
-    case ids of
-        [] -> logInfo $ "No " <> dName s <> " deleted"
-        _  -> logInfo $ "Deleted " <> dName s <> " with id = " <> showText ids
-    return ids
-
 
 
 class DeleteSQL s where
@@ -85,9 +60,9 @@ newtype DComment = DComment ()
 dummyDComment = DComment ()
 
 
-isAdmin :: Ty.User -> Bool
---isAdmin u = Ty._u_admin u /= Just True
-isAdmin u = maybe False id $ Ty._u_admin u
+isAdmin :: User -> Bool
+--isAdmin u = _u_admin u /= Just True
+isAdmin u = maybe False id $ _u_admin u
 
 
 
@@ -97,7 +72,7 @@ instance DeleteSQL DComment where
         str = " DELETE FROM news.comment WHERE comment_id = ? "
         userWhere = " AND user_id = ? "
         returning = " RETURNING comment_id"
-        userParam = SqlValue $ Ty._u_id u
+        userParam = SqlValue $ _u_id u
         commentParam = SqlValue $ _dc_commentId dc
         in  if   isAdmin u
             then (str <> returning, [commentParam])
