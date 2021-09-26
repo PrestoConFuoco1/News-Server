@@ -1,9 +1,8 @@
 {-# LANGUAGE DeriveAnyClass #-}
-module Action.Posts where
+module Types.Posts where
 
 
-import Action.Common
-import Action.Utils
+import Types.Common
 import qualified Data.ByteString as BS
 import Prelude hiding (readList)
 
@@ -12,17 +11,42 @@ import GHC.Generics
 import qualified GenericPretty as GP
 import qualified Database.PostgreSQL.Simple as PS
 import qualified Data.Text as T
-import Action.Tags
+import Types.Tags
 import qualified Data.Time as Time
 import Data.Void
-import Action.Comments
+
+import Types.Authors
+import Types.Category
+
+type PostId = Int
+
+type CommentId = Int
+type ActionComments = CRUD CreateComment (Paginated GetComments) Void DeleteComment
+
+data GetComments = GetComments {
+    _gc_postId :: PostId
+    } deriving (Show, Generic, GP.PrettyShow)
+
+data CreateComment = CreateComment {
+    _ccom_postId :: PostId,
+    _ccom_content :: T.Text
+    -- user id will be known from auth token
+    } deriving (Show, Generic, GP.PrettyShow, PS.ToRow)
+
+data DeleteComment = DeleteComment {
+    _dc_commentId :: CommentId
+    -- user id will be known from auth token
+    } deriving (Show, Generic, GP.PrettyShow, PS.ToRow)
+
+
+
 
 data PublishEditPost = PublishEditPost {
-    _pep_postId :: Int,
+    _pep_postId :: PostId,
     _pep_title :: T.Text,
     --_pep_creationDate :: Time.Day,
-    --_pep_authorId :: Int,
-    _pep_categoryId :: Int,
+    --_pep_authorId :: AuthorId,
+    _pep_categoryId :: CategoryId,
     _pep_content :: T.Text,
     _pep_mainPhoto :: Maybe T.Text,
     _pep_extraPhotos :: Maybe [T.Text]

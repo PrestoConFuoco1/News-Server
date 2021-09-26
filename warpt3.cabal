@@ -60,6 +60,13 @@ library
       MonadTypes
       Profiling
       Types
+      Types.Authors
+      Types.Category
+      Types.Common
+      Types.Draft
+      Types.Posts
+      Types.Tags
+      Types.Users
       Utils
   other-modules:
       Paths_warpt3

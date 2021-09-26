@@ -1,16 +1,16 @@
 {-# LANGUAGE DeriveAnyClass #-}
-module Action.Users where
+module Types.Users where
 
 
-import Action.Utils
 
 import GHC.Generics
 import qualified GenericPretty as GP
 import qualified Database.PostgreSQL.Simple as PS
 import qualified Data.Text as T
 import Data.Void
-import Action.Common
+import Types.Common
 
+type UserId = Int
 type ActionUsers = CRUD CreateUser GetProfile Void DeleteUser
   
 data CreateUser = CreateUser {
@@ -27,7 +27,7 @@ instance GP.PrettyShow GetProfile where
     prettyShow = GP.LStr . show
 
 data DeleteUser = DeleteUser {
-    _du_userId :: Int
+    _du_userId :: UserId
     } deriving (Show, Generic, GP.PrettyShow, PS.ToRow)
 
 data Authenticate = Authenticate {

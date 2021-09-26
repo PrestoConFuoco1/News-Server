@@ -1,5 +1,58 @@
 {-# LANGUAGE DeriveAnyClass #-}
-module Types where
+module Types (
+Token,
+WhoWhat(..),
+CRUD(..),
+Paginated(..),
+CategoryId,
+ActionCategory, 
+GetCategories(..),
+CreateCategory(..),
+EditCategory(..),
+DeleteCategory(..),
+TagId,
+ActionTags,
+GetTags(..),
+CreateTag(..),
+DeleteTag(..),
+EditTag(..),
+AuthorId,
+ActionAuthors,
+GetAuthors(..),
+CreateAuthor(..),
+DeleteAuthor(..),
+EditAuthor(..),
+PostId,
+ActionPosts1, ActionPosts,
+PublishEditPost(..),
+GetPosts(..),
+CreationDateOptions(..),
+TagsOptions(..),
+SearchOptions(..),
+SortEntity(..),
+SortOrder(..),
+SortOptions(..),
+DraftId,
+ActionDrafts,
+CreateDraft(..),
+GetDrafts(..),
+EditDraft(..),
+EditDraftPublish(..),
+DeleteDraft(..),
+Publish(..),
+UserId,
+ActionUsers,
+CreateUser(..),
+GetProfile(..),
+DeleteUser(..),
+Authenticate(..),
+CommentId,
+ActionComments,
+GetComments(..),
+CreateComment(..),
+DeleteComment(..)
+
+) where
 
 import GHC.Generics
 import qualified Database.PostgreSQL.Simple as PS
@@ -11,17 +64,25 @@ import qualified Data.Time as Time
 import qualified GenericPretty as GP
 import qualified Data.Aeson as Ae
 import General
+import Types.Authors
+import Types.Category
+--import Types.Comments
+import Types.Common
+import Types.Draft
+import Types.Posts
+import Types.Tags
+import Types.Users
 
 
+{-
+-}
 
+type Token = T.Text
 
-type UserId = Int
-type AuthorId = Int
-type PostId = Int
-type DraftId = Int
-type CategoryId = Int
-type TagId = Int
-type CommentId = Int
+data WhoWhat a = WhoWhat {
+    _ww_token  :: Maybe Token,
+    _ww_action :: a
+    } deriving (Show, Generic) 
 
 
 
