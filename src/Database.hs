@@ -4,7 +4,24 @@ UpdateSQL(..),
 Read(..),
 DeleteSQL(..),
 pageingClause,
-updateParams
+updateParams,
+authorDummy,
+dummyCAuthor,
+dummyUAuthor,
+dummyDAuthor,
+tagDummy,
+dummyCTag,
+dummyUTag,
+dummyDTag,
+catDummy,
+dummyCCat,
+dummyUCat,
+dummyDCat,
+dummyCUser,
+dummyDUser,
+commentDummy,
+dummyCComment,
+dummyDComment
 
 ) where
 

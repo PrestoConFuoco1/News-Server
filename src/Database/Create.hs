@@ -111,3 +111,18 @@ instance CreateSQL CPost where
     cForeign _ = "foreign error"
 
 
+newtype CDraft = CDraft ()
+draftCreateDummy = CDraft ()
+
+
+instance CreateSQL CDraft where
+    type Create CDraft = WithAuthor CreateDraft
+    createQuery s (WithAuthor a CreateDraft{..}) = ("INSERT INTO news.draft (title, author_id, category_id, content, photo, extra_photos) \
+         \VALUES (?, ?, ?, ?, ?, ?) RETURNING draft_id",
+        [SqlValue _cd_title, SqlValue a, SqlValue _cd_categoryId, SqlValue _cd_content,
+         SqlValue _cd_mainPhoto, SqlValue $ fmap PSTy.PGArray _cd_extraPhotos])
+    cName _ = "draft"
+    cUniqueField _ = "for what the fuck i created this function? it's wothless"
+    cForeign _ = "author_id or category_id"
+
+

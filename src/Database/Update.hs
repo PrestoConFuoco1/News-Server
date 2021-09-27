@@ -122,6 +122,41 @@ instance UpdateSQL UPost where
 
 
 
+newtype UDraft = UDraft ()
+draftEditDummy = UDraft ()
+
+instance UpdateSQL UDraft where
+    type Upd UDraft = WithAuthor EditDraft
+    updateQuery _ =
+        \p -> "UPDATE news.draft SET " <> p <> " WHERE draft_id = ? AND author_id = ? RETURNING draft_id"
+    uName _ = "draft"
+    optionalsMaybe _ (WithAuthor _ EditDraft{..}) =
+        [("title", fmap SqlValue _ed_title),
+    --     ("tags", fmap (SqlValue . PSTy.PGArray) _ed_tags),
+         ("category_id", fmap SqlValue _ed_categoryId),
+         ("content", fmap SqlValue _ed_content),
+         ("photo", fmap SqlValue _ed_mainPhoto),
+         ("extra_photos", fmap (SqlValue . PSTy.PGArray) _ed_extraPhotos)]
+
+    identifParams _ (WithAuthor a EditDraft{..}) =
+        [SqlValue _ed_draftId, SqlValue a]
+
+
+newtype UPDraft = UPDraft ()
+draftEditPublishDummy = UPDraft ()
+
+instance UpdateSQL UPDraft where
+    type Upd UPDraft = EditDraftPublish
+    updateQuery _ =
+        \p -> "UPDATE news.draft SET " <> p <> " WHERE draft_id = ? RETURNING draft_id"
+    uName _ = "draft"
+    optionalsMaybe _ EditDraftPublish{..} =
+        [("post_id", Just $ SqlValue _edp_postId)]
+
+    identifParams _ EditDraftPublish{..} =
+        [SqlValue _edp_draftId]
+
+
 
 
 

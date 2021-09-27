@@ -30,7 +30,7 @@ import Database.SqlValue
 import Profiling (withTimePrint)
 import Types
 
-getUser :: (MonadServer m) => Maybe User -> m Response
+getUser :: (Monad m) => Maybe User -> m Response
 getUser Nothing = Ex.unauthorized
 getUser (Just u) = let val = Ae.toJSON u
                    in  return $ ok "Success" val

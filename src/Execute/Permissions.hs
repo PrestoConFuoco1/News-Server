@@ -4,12 +4,13 @@ module Execute.Permissions where
 
 import Control.Monad (when)
 import Database.Read
-import MonadTypes (MonadServer (..), logError, logDebug, execute, query, formatQuery, logInfo, logWarn, logFatal)
+import MonadTypes (MonadServer (..), logError, logDebug, execute, query, formatQuery, logInfo, logWarn, logFatal, MonadLog)
 import Types
 import Exceptions as Ex
 import Execute.Utils
 import qualified Data.Aeson as Ae
 import Execute.Database
+import qualified Control.Monad.Catch as CMC
 
 withAuthAdmin y = withAuth y >>= checkAdmin
 withAuthor y = 

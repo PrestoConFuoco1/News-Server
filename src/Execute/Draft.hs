@@ -8,7 +8,6 @@ import qualified Data.Text as T (pack, Text)
 import qualified Database.PostgreSQL.Simple.Types as PSTy
 import qualified Database.PostgreSQL.Simple as PS
 
-import Database.Update
 
 import MonadTypes (MonadServer (..), MonadSQL(..),logError, logDebug, execute, query, formatQuery, logInfo, logWarn, logFatal)
 import Execute.Types
@@ -29,21 +28,6 @@ import Database.Read
 import Types
 import Execute.Database
 
-newtype CDraft = CDraft ()
-draftCreateDummy = CDraft ()
-
-
-instance CreateSQL CDraft where
-    type Create CDraft = WithAuthor CreateDraft
-    createQuery s (WithAuthor a CreateDraft{..}) = ("INSERT INTO news.draft (title, author_id, category_id, content, photo, extra_photos) \
-         \VALUES (?, ?, ?, ?, ?, ?) RETURNING draft_id",
-        [SqlValue _cd_title, SqlValue a, SqlValue _cd_categoryId, SqlValue _cd_content,
-         SqlValue _cd_mainPhoto, SqlValue $ fmap PSTy.PGArray _cd_extraPhotos])
-    cName _ = "draft"
-    cUniqueField _ = "for what the fuck i created this function? it's wothless"
-    cForeign _ = "author_id or category_id"
-
-
 createDraft :: (MonadServer m) => WithAuthor CreateDraft -> m Response
 createDraft x@(WithAuthor a CreateDraft{..}) = Ex.withHandler Ex.draftCreateHandler $
                                                 withTransaction $ do
@@ -59,7 +43,6 @@ editDraft x@(WithAuthor a EditDraft{..}) = Ex.withHandler Ex.draftEditHandler $
                                                 withTransaction $ do
     let s = draftEditDummy
     draft <- editThis' s x
-    --actWithOne (AWOu s) num
     case _ed_tags of
         Nothing -> return ()
         Just tags -> do
@@ -70,61 +53,8 @@ editDraft x@(WithAuthor a EditDraft{..}) = Ex.withHandler Ex.draftEditHandler $
  
     return (ok "Draft successfully edited" Ae.Null)
 
-newtype UDraft = UDraft ()
-draftEditDummy = UDraft ()
-
-instance UpdateSQL UDraft where
-    type Upd UDraft = WithAuthor EditDraft
-    updateQuery _ =
-        \p -> "UPDATE news.draft SET " <> p <> " WHERE draft_id = ? AND author_id = ? RETURNING draft_id"
-    uName _ = "draft"
-    optionalsMaybe _ (WithAuthor _ EditDraft{..}) =
-        [("title", fmap SqlValue _ed_title),
-    --     ("tags", fmap (SqlValue . PSTy.PGArray) _ed_tags),
-         ("category_id", fmap SqlValue _ed_categoryId),
-         ("content", fmap SqlValue _ed_content),
-         ("photo", fmap SqlValue _ed_mainPhoto),
-         ("extra_photos", fmap (SqlValue . PSTy.PGArray) _ed_extraPhotos)]
-
-    identifParams _ (WithAuthor a EditDraft{..}) =
-        [SqlValue _ed_draftId, SqlValue a]
 
 
-newtype UPDraft = UPDraft ()
-draftEditPublishDummy = UPDraft ()
-
-instance UpdateSQL UPDraft where
-    type Upd UPDraft = EditDraftPublish
-    updateQuery _ =
-        \p -> "UPDATE news.draft SET " <> p <> " WHERE draft_id = ? RETURNING draft_id"
-    uName _ = "draft"
-    optionalsMaybe _ EditDraftPublish{..} =
-        [("post_id", Just $ SqlValue _edp_postId)]
-
-    identifParams _ EditDraftPublish{..} =
-        [SqlValue _edp_draftId]
-
-
-
-
-
-{-
-publish1 :: (MonadServer m) => WithAuthor Publish -> m Response
-publish1 (WithAuthor a Publish{..}) = do
-    let str = " INSERT INTO news.post (title, author_id, category_id, content, photo, extra_photos) \
-              \ SELECT d.title, d.author_id, d.category_id, d.content, d.photo, d.extra_photos FROM news.draft d \
-              \ WHERE d.author_id = ? AND d.draft_id = ? \
-              \ RETURNING post_id "
-        params = [SqlValue a, SqlValue _p_draftId]
-    debugStr <- formatQuery str params
-    logDebug $ T.pack $ show debugStr
-
-    ids <- fmap (map PSTy.fromOnly) $ query str params
-    id <- validateUnique (logError "Failed to create post" >> Ex.throwDefault) ids
-    logDebug $ "Created post with id = " <> (T.pack $ show id)
-    tags <- attachTags _p_draftId id
-    return (ok "Post successfully created" Ae.Null)
--}
 publish :: (MonadServer m) => WithAuthor Publish -> m Response
 publish x@(WithAuthor a Publish{..}) = Ex.withHandler Ex.publishHandler $
                                        withTransaction $ do
@@ -133,10 +63,8 @@ publish x@(WithAuthor a Publish{..}) = Ex.withHandler Ex.publishHandler $
     case _dr_postId draft of
         Nothing -> publishCreate draft
         Just post -> publishEdit post draft
-{-
-func :: DraftRaw -> EditDraftPublish
-func DraftRaw{..} = EditDraftPublish { _edp_postId = _dr_postId, _edp_draftId = _dr_draftId }
--}
+
+
 publishCreate :: (MonadServer m) => DraftRaw -> m Response
 publishCreate x = do
     post <- createThis' dummyCPost x
@@ -151,8 +79,6 @@ func :: Int -> DraftRaw -> PublishEditPost
 func post DraftRaw{..} =
     let _pep_postId = post
         _pep_title = _dr_title
-  --      _pep_creationDate = _dr_creationDate
- --       _pep_authorId = _dr_authorId
         _pep_categoryId = _dr_categoryId
         _pep_content = _dr_content
         _pep_mainPhoto = _dr_mainPhoto

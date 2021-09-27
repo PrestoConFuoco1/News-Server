@@ -57,7 +57,9 @@ library
       Handler.Logger
       Lib
       Migrations
+      MonadNews
       MonadTypes
+      MonadTypesOld
       Profiling
       Result
       Types
