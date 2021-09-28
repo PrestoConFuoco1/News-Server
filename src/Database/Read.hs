@@ -276,19 +276,6 @@ instance Read DraftR where
                \ FROM news.draft_tag_total WHERE author_id = ? AND draft_id = ?"
         in  (selectClause, [SqlValue a, SqlValue draft])
 
-{-
-getUsersByToken' :: (MonadServer m) => Token -> m (Maybe User)
-getUsersByToken' token = do
-    let str = "SELECT user_id, firstname, lastname, \
-              \image, login, pass_hash, creation_date, is_admin \
-              \FROM news.get_users_by_token WHERE token = ?"
-   
-    users <- query str [token]
-    user <- validateUnique2 (return Nothing) (Ex.throwTokenShared $ map _u_id users) $ map Just users
-    return user
--}
-
-
 
 newtype UserTokenR = UserTokenR ()
 userTokenDummy = UserTokenR ()

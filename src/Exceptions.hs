@@ -1,13 +1,15 @@
 module Exceptions where
 
 import Control.Monad.Catch as CMC (Handler(..), catches, SomeException, throwM, Exception(..), MonadCatch(..), MonadThrow(..))
-import MonadTypes (MonadServer, logError, MonadLog)
+import MonadTypes
+import MonadLog
 import Database.PostgreSQL.Simple as PS (sqlState, SqlError(..), QueryError)
 import qualified Data.Text as T (Text, pack)
 import qualified GenericPretty as GP (PrettyShow(..), defaultPretty)
 
 import Result as U
 import Data.Text.Encoding as E (decodeUtf8)
+import Types
 
 data ServerException =
       Default
@@ -17,7 +19,6 @@ data ServerException =
     | InvalidLogin
     | InvalidPassword
     | FailedInsertionWithoutException T.Text
-    | CreatedMoreThanOneEntity T.Text [Int]
     | DraftNotFound Int
     | NotAnAuthor
     | DeleteNotFound T.Text
@@ -38,7 +39,6 @@ mainErrorHandler Forbidden = return $ U.bad U.invalidEndpointMsg
 mainErrorHandler InvalidLogin = return $ U.bad $ U.invalidLoginMsg
 mainErrorHandler InvalidPassword = return $ U.bad U.invalidPasswordMsg
 mainErrorHandler (FailedInsertionWithoutException text) = return $ U.bad "failed to insert"
-mainErrorHandler (CreatedMoreThanOneEntity ent ids) = return $ U.bad U.badInsert
 mainErrorHandler (DraftNotFound id) = return $ U.bad $ "draft with id = " <> T.pack (show id) <> " not found"
 mainErrorHandler NotAnAuthor = return $ U.bad U.notAnAuthorMsg
 mainErrorHandler (DeleteNotFound text) = return $ U.bad "Not found"
@@ -67,8 +67,6 @@ throwDraftNotFound draft = CMC.throwM $ DraftNotFound draft
 throwBadInsert :: (MonadThrow m) => T.Text -> m a
 throwBadInsert ent = CMC.throwM $ FailedInsertionWithoutException ent
 
-throwBad2Insert :: (MonadThrow m) => T.Text -> [Int] -> m a
-throwBad2Insert ent ids = CMC.throwM $ CreatedMoreThanOneEntity ent ids
 
 throwDefault :: (MonadThrow m) => m a
 throwDefault = CMC.throwM Default
@@ -187,5 +185,23 @@ creUpdExceptionHandler1 name e
     | otherwise = CMC.throwM e
   where unique = "unique field"
         foreign1 = "foreign key"
+
+
+-- *** Exception: SqlError {sqlState = "23505", sqlExecStatus = FatalError, sqlErrorMsg =
+--"duplicate key value violates unique constraint \"token_user_id_key\"",
+--sqlErrorDetail = "Key (user_id)=(2) already exists.", sqlErrorHint = ""}
+
+modifyHandler :: (CMC.MonadCatch m) => PS.SqlError -> m ModifyError
+modifyHandler e = maybe (CMC.throwM e) return (toModifyError e)
+
+toModifyError :: PS.SqlError -> Maybe ModifyError
+toModifyError e
+    | uniqueConstraintViolated e = undefined
+    | foreignKeyViolated e = undefined
+    | otherwise = Nothing
+
+
+
+
 
 

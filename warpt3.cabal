@@ -55,15 +55,17 @@ library
       Handler.Logger
       Lib
       Migrations
+      MonadLog
       MonadNews
+      MonadNewsInstances
       MonadTypes
-      Profiling
       Result
       Types
       Types.Authors
       Types.Category
       Types.Common
       Types.Draft
+      Types.Errors
       Types.Posts
       Types.Tags
       Types.Users

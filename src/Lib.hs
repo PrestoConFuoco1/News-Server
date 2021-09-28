@@ -18,14 +18,14 @@ import Types
 import Result
 
 import qualified Handler.Logger as L (simpleLog)
-import MonadTypes (MonadServer, ServerIO, ServerHandlers(..), logDebug, runServer, printS, getCurrentTimeS)
+import MonadTypes (ServerIO, ServerHandlers(..), runServer)
+import MonadLog
 import qualified Database.PostgreSQL.Simple as PS (connectPostgreSQL, Connection, close)
 import qualified Handler.Database as DB (Handle(..))
 import qualified Data.Aeson as Ae (encode)
 
 import qualified Exceptions as Ex (mainErrorHandler, defaultMainHandler)
 import qualified Control.Monad.Catch as CMC
-import Profiling
 
 import qualified Database.PostgreSQL.Simple.Migration as PSM
 import Migrations
@@ -61,8 +61,6 @@ mainServer req = fmap coerceResponse $ do
     logDebug $ ("Path: " <>) $ T.pack $ show $ W.pathInfo req
     logDebug $ ("Args: " <>) $ T.pack $ show $ W.queryString req
     let eithWhoWhat = requestToAction req
---    withTimePrint $ printS $ eithWhoWhat
---    logDebug "\n type calculation time is above"
     
     case eithWhoWhat of
         Left err -> handleError err
@@ -70,9 +68,9 @@ mainServer req = fmap coerceResponse $ do
             logDebug "Action type is"
             logDebug $ T.pack $ GP.defaultPretty $ _ww_action whowhat
 
-            val <- {-withTimePrint-} (executeAction whowhat
+            val <- executeAction whowhat
                 `CMC.catches` [CMC.Handler Ex.mainErrorHandler,
-                               CMC.Handler Ex.defaultMainHandler])
+                               CMC.Handler Ex.defaultMainHandler]
             logDebug "execution time is above"
             return val
 

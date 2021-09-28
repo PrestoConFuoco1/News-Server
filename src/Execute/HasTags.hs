@@ -2,34 +2,18 @@
              FlexibleContexts #-}
 module Execute.HasTags where
 
-
 import qualified Data.Text as T (pack, Text)
-
 import qualified Database.PostgreSQL.Simple.Types as PSTy
 import qualified Database.PostgreSQL.Simple as PS
---import qualified GenericPretty as GP
-
 import Database.Update
-
-import MonadTypes (MonadServer (..), logError, logDebug, execute, query, formatQuery, logInfo, logWarn, logFatal)
+import MonadTypes (execute, query, formatQuery, ServerIO)
+import MonadLog
 import Execute.Types
-import Execute.Utils
-
-
+--import Execute.Utils
 import Database.SqlValue
---import Execute.Actions
-
 import Database.Update
---import ActWithOne
-
 import qualified Exceptions as Ex
-
 import qualified Data.Aeson as Ae (Value(..))
-
-
-
-
-
 
 
 class (Show (HIdent s)) => HasTags s where
@@ -58,7 +42,7 @@ instance HasTags HPost where
 
 
 
-attachTags :: (MonadServer m, HasTags s) => s -> HIdent s -> [Int] -> m [Int]
+attachTags :: (HasTags s) => s -> HIdent s -> [Int] -> ServerIO [Int]
 attachTags s hasTagsId [] = do
     logInfo $ "No tags attached to " <> hName' s <> " with id = " <> (T.pack $ show hasTagsId)
     return []
@@ -82,7 +66,7 @@ attachTags s hasTagsId tags = do
     return ids
 
 
-removeAllButGivenTags :: (MonadServer m, HasTags s) => s -> HIdent s -> [Int] -> m [Int]
+removeAllButGivenTags :: (HasTags s) => s -> HIdent s -> [Int] -> ServerIO [Int]
 -- remove all but given tags
 removeAllButGivenTags s hasTagsId tags = do
     let inClause [] = ""

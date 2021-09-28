@@ -5,7 +5,7 @@ module Execute where
 
 
 import qualified Data.Text as T (pack)
-
+import Execute.Utils
 
 import Action.RequestToAction
 import Action.Common
@@ -15,14 +15,14 @@ import Database.Delete
 import Database.Update
 import Control.Exception (SomeException)
 
-import MonadTypes (MonadServer (..), logError, logDebug, execute, query, formatQuery, logInfo, logWarn, logFatal, MonadLog)
+import MonadTypes (execute, query, formatQuery)
+import MonadLog
 import qualified Database.PostgreSQL.Simple as PS (SqlError(..))
 import qualified Types as Ty
 import qualified Control.Monad.Catch as CMC (catches, Handler(..), MonadCatch, catch, MonadThrow)
 import qualified Data.Text.Encoding as E (decodeUtf8, encodeUtf8)
 import Result
 import Execute.Types
-import Execute.Utils
 import Execute.Draft
 
 import Types
@@ -34,8 +34,9 @@ import Database.SqlQueryTypes
 --import Execute.Permissions
 --import Execute.Actions
 import MonadNews
+import MonadNewsInstances
 
---executeAction :: MonadServer m => WhoWhat Action -> m Response
+executeAction :: MonadNews m => WhoWhat Action -> m Response
 executeAction :: MonadNews m => WhoWhat Action -> m Response
 executeAction (WhoWhat y (AAuthors x)) = executeAuthor (WhoWhat y x)
 executeAction (WhoWhat y (ACategory x)) = executeCategory (WhoWhat y x)
@@ -46,7 +47,6 @@ executeAction (WhoWhat y (AAuth x)) = authenticate x
 executeAction (WhoWhat y (AComments x)) = executeComments (WhoWhat y x)
 executeAction (WhoWhat y (ADrafts x)) = executeDraft (WhoWhat y x)
 executeAction (WhoWhat y (APublish x)) = executePublish (WhoWhat y x)
---executeAction _ = undefined
 
 executePosts (WhoWhat y (GC x)) = getThis1 getComments x
 
@@ -60,6 +60,7 @@ executePosts (WhoWhat y (AP (Read x))) = do
     getThis1 getPosts x
 
 
+executeAuthor :: MonadNews m => WhoWhat ActionAuthors -> m Response
 executeAuthor (WhoWhat y (Read x)) =
     withAuthAdmin y >> getThis1 getAuthors x
 executeAuthor (WhoWhat y (Create x)) =
@@ -129,7 +130,6 @@ executePublish (WhoWhat y x) =
         \a -> publish $ WithAuthor (Ty._a_authorId a) x
 {-
 -}
---handleError :: (MonadLog m, CMC.MonadThrow m) => (WhoWhat ActionErrorPerms) -> m Response
 handleError :: (MonadNews m) => (WhoWhat ActionErrorPerms) -> m Response
 handleError (WhoWhat y (ActionErrorPerms admin@(False) (ERequiredFieldMissing x))) =
     handleFieldMissing x

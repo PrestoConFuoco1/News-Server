@@ -7,7 +7,8 @@ module Handler.Logger (
     logError,
     logFatal,
     LoggerEntry,
-    simpleLog
+    simpleLog,
+
 ) where
 
 import Prelude hiding (log)
@@ -33,3 +34,5 @@ logError = (`log` Error)
 logFatal = (`log` Fatal)
 
 simpleLog = Handle $ \p s -> putStrLn $ '[' : show p ++ "]: " ++ T.unpack s
+
+
