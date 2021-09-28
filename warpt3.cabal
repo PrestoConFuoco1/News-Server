@@ -44,11 +44,9 @@ library
       Database.Update
       Exceptions
       Execute
-      Execute.Actions
       Execute.Database
       Execute.Draft
       Execute.HasTags
-      Execute.Permissions
       Execute.Types
       Execute.Utils
       General
@@ -59,7 +57,6 @@ library
       Migrations
       MonadNews
       MonadTypes
-      MonadTypesOld
       Profiling
       Result
       Types

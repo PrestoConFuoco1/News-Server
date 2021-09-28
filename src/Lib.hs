@@ -30,6 +30,8 @@ import Profiling
 import qualified Database.PostgreSQL.Simple.Migration as PSM
 import Migrations
 
+import MonadNews
+
 port :: Int
 port = 5555
 
@@ -54,7 +56,7 @@ mainFunc1 handlers req respond = do
     response <- runServer handlers $ (mainServer req :: ServerIO W.Response)
     respond response
 
-mainServer :: MonadServer m => W.Request -> m W.Response
+mainServer :: MonadNews m => W.Request -> m W.Response
 mainServer req = fmap coerceResponse $ do
     logDebug $ ("Path: " <>) $ T.pack $ show $ W.pathInfo req
     logDebug $ ("Args: " <>) $ T.pack $ show $ W.queryString req
@@ -68,7 +70,7 @@ mainServer req = fmap coerceResponse $ do
             logDebug "Action type is"
             logDebug $ T.pack $ GP.defaultPretty $ _ww_action whowhat
 
-            val <- withTimePrint (executeAction whowhat
+            val <- {-withTimePrint-} (executeAction whowhat
                 `CMC.catches` [CMC.Handler Ex.mainErrorHandler,
                                CMC.Handler Ex.defaultMainHandler])
             logDebug "execution time is above"

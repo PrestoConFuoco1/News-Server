@@ -31,10 +31,12 @@ import Exceptions as Ex
 import Execute.Database
 
 import Database.SqlQueryTypes
-import Execute.Permissions
-import Execute.Actions
+--import Execute.Permissions
+--import Execute.Actions
+import MonadNews
 
-executeAction :: MonadServer m => WhoWhat Action -> m Response
+--executeAction :: MonadServer m => WhoWhat Action -> m Response
+executeAction :: MonadNews m => WhoWhat Action -> m Response
 executeAction (WhoWhat y (AAuthors x)) = executeAuthor (WhoWhat y x)
 executeAction (WhoWhat y (ACategory x)) = executeCategory (WhoWhat y x)
 executeAction (WhoWhat y (APosts x)) = executePosts (WhoWhat y x)
@@ -44,8 +46,9 @@ executeAction (WhoWhat y (AAuth x)) = authenticate x
 executeAction (WhoWhat y (AComments x)) = executeComments (WhoWhat y x)
 executeAction (WhoWhat y (ADrafts x)) = executeDraft (WhoWhat y x)
 executeAction (WhoWhat y (APublish x)) = executePublish (WhoWhat y x)
+--executeAction _ = undefined
 
-executePosts (WhoWhat y (GC x)) = getThis1 (getThisPaginated' commentDummy) x
+executePosts (WhoWhat y (GC x)) = getThis1 getComments x
 
 executePosts (WhoWhat y (AP (Read x))) = do
 --    let where1 = postsWhereClause1 x
@@ -53,83 +56,81 @@ executePosts (WhoWhat y (AP (Read x))) = do
 --    logDebug $ T.pack $ show $ where1
 --    evaluated <- formatQuery clause params
 --    logDebug $ E.decodeUtf8 evaluated
-    getThis1 (getThisPaginated' postDummy) x
+--    getThis1 (getThisPaginated' postDummy) x
+    getThis1 getPosts x
 
 
 executeAuthor (WhoWhat y (Read x)) =
-    --withAuthAdmin y >> getThisPaginated authorDummy x
-    withAuthAdmin y >> getThis1 (getThisPaginated' authorDummy) x
+    withAuthAdmin y >> getThis1 getAuthors x
 executeAuthor (WhoWhat y (Create x)) =
-    --withAuthAdmin y >> createThis dummyCAuthor x
-    withAuthAdmin y >> createThis1 "author" (createThis' dummyCAuthor) x
+    withAuthAdmin y >> createThis1 "author" createAuthor x
 executeAuthor (WhoWhat y (Update x)) =
-    --withAuthAdmin y >> editThis dummyUAuthor x
-    withAuthAdmin y >> editThis1 "author" (editThis' dummyUAuthor) x
+    withAuthAdmin y >> editThis1 "author" editAuthor x
 executeAuthor (WhoWhat y (Delete x)) =
-    --withAuthAdmin y >> deleteThis dummyDAuthor x
-    withAuthAdmin y >> deleteThis1 "author" (deleteThis' dummyDAuthor) x
+    withAuthAdmin y >> deleteThis1 "author" deleteAuthor x
+{-
+-}
+--executeAuthor _ = undefined
 
-executeTags (WhoWhat y (Read x)) = getThis1 (getThisPaginated' tagDummy) x
+executeTags (WhoWhat y (Read x)) = getThis1 getTags x
 executeTags (WhoWhat y (Create x)) =
-    --withAuthAdmin y >> createThis dummyCTag x
-    withAuthAdmin y >> createThis1 "tag" (createThis' dummyCTag) x
+    withAuthAdmin y >> createThis1 "tag" createTag x
 executeTags (WhoWhat y (Update x)) = 
-    --withAuthAdmin y >> editThis dummyUTag x
-    withAuthAdmin y >> editThis1 "tag" (editThis' dummyUTag) x
+    withAuthAdmin y >> editThis1 "tag" editTag x
 executeTags (WhoWhat y (Delete x)) =
-    withAuthAdmin y >> deleteThis1 "tag" (deleteThis' dummyDTag) x
+    withAuthAdmin y >> deleteThis1 "tag" deleteTag x
 
 
-executeCategory (WhoWhat y (Read x)) = getThis1 (getThisPaginated' catDummy) x
+executeCategory (WhoWhat y (Read x)) = getThis1 getCategories x
 executeCategory (WhoWhat y (Create x)) =
-    --withAuthAdmin y >> createThis dummyCCat x
-    withAuthAdmin y >> createThis1 "category" (createThis' dummyCCat) x
+    withAuthAdmin y >> createThis1 "category" createCategory x
 executeCategory (WhoWhat y (Update x)) =
-    --withAuthAdmin y >> editThis dummyUCat x
-    withAuthAdmin y >> editThis1 "category" (editThis' dummyUCat) x
+    withAuthAdmin y >> editThis1 "category" editCategory x
 executeCategory (WhoWhat y (Delete x)) =
-    --withAuthAdmin y >> deleteThis dummyDCat x
-    withAuthAdmin y >> deleteThis1 "category" (deleteThis' dummyDCat) x
+    withAuthAdmin y >> deleteThis1 "category" deleteCategory x
 
 executeUsers (WhoWhat y (Create x)) =
-    --createThis dummyCUser x
-    createThis1 "user" (createThis' dummyCUser) x
+    createThis1 "user" createUser x
 executeUsers (WhoWhat y (Delete x)) =
-    --withAuthAdmin y >> deleteThis dummyDUser x
-    withAuthAdmin y >> deleteThis1 "user" (deleteThis' dummyDUser) x
+    withAuthAdmin y >> deleteThis1 "user" deleteUser x
 executeUsers (WhoWhat y (Read GetProfile)) =
     withAuth y >>= getUser
 
 executeComments (WhoWhat y (Read x)) =
-    getThis1 (getThisPaginated' commentDummy) x
+    getThis1 getComments x
 executeComments (WhoWhat y (Create x)) =
-    --withAuth y >>= maybeUserToUser >>= \u -> createThis dummyCComment $ WithUser u x
-    withAuth y >>= maybeUserToUser >>= \u -> createThis1 "comment" (createThis' dummyCComment) $ WithUser u x
+    withAuth y >>= maybeUserToUser >>= \u -> createThis1 "comment" createComment $ WithUser u x
 executeComments (WhoWhat y (Delete x)) =
-    --withAuth y >>= maybeUserToUser >>= \u -> deleteThis dummyDComment $ WithUser u x
-    withAuth y >>= maybeUserToUser >>= \u -> deleteThis1 "comment" (deleteThis' dummyDComment) $ WithUser u x
+    withAuth y >>= maybeUserToUser >>= \u -> deleteThis1 "comment" deleteComment $ WithUser u x
 
-executeDraft :: (MonadServer m) => WhoWhat ActionDrafts -> m Response
+executeDraft :: (MonadNews m) => WhoWhat ActionDrafts -> m Response
+{-
+-}
 executeDraft (WhoWhat y (Create x)) =
     withAuthor y >>=
         \a -> createDraft $ WithAuthor (Ty._a_authorId a) x
 
 executeDraft (WhoWhat y (Read (Paginated p s x))) =
     withAuthor y >>=
-        \a -> getThis1 (getThisPaginated' draftDummy) $ Paginated p s (WithAuthor (Ty._a_authorId a) x)
+       -- \a -> getThis1 (getThisPaginated' draftDummy) $ Paginated p s (WithAuthor (Ty._a_authorId a) x)
+        \a -> getThis1 getDrafts $ Paginated p s (WithAuthor (Ty._a_authorId a) x)
 executeDraft (WhoWhat y (Delete x)) =
     withAuthor y >>=
-        \a -> deleteThis dummyDDraft $ WithAuthor (Ty._a_authorId a) x
+       -- \a -> deleteThis dummyDDraft $ WithAuthor (Ty._a_authorId a) x
+        \a -> deleteThis1 "draft" deleteDraft $ WithAuthor (Ty._a_authorId a) x
 executeDraft (WhoWhat y (Update x)) =
     withAuthor y >>=
         \a -> editDraft $ WithAuthor (Ty._a_authorId a) x
+{-
+-}
 
 executePublish (WhoWhat y x) =
     withAuthor y >>=
         \a -> publish $ WithAuthor (Ty._a_authorId a) x
-
+{-
+-}
 --handleError :: (MonadLog m, CMC.MonadThrow m) => (WhoWhat ActionErrorPerms) -> m Response
-handleError :: (MonadServer m) => (WhoWhat ActionErrorPerms) -> m Response
+handleError :: (MonadNews m) => (WhoWhat ActionErrorPerms) -> m Response
 handleError (WhoWhat y (ActionErrorPerms admin@(False) (ERequiredFieldMissing x))) =
     handleFieldMissing x
 handleError (WhoWhat y (ActionErrorPerms admin@(False) (EInvalidFieldValue x))) =
@@ -141,10 +142,10 @@ handleError (WhoWhat y (ActionErrorPerms admin@(True) x)) =
     (withAuthAdmin y >> handleError (WhoWhat y (ActionErrorPerms False x)))
         `CMC.catch` f
   where
-    f :: (MonadServer m) => SomeException -> m Response
+    f :: (MonadLog m) => SomeException -> m Response
     f e = handleForbidden
 
-handleForbidden :: (MonadServer m) => m Response
+handleForbidden :: (MonadLog m) => m Response
 handleForbidden = logError forbidden >> return (notFound "Invalid endpoint")
 
 handleFieldMissing x = do

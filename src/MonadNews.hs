@@ -1,12 +1,43 @@
+{-# LANGUAGE RecordWildCards #-}
 module MonadNews where
 
 import MonadTypes
 import Execute.Database
 import Types
 import Database
+import Execute.HasTags
+import Control.Monad.Catch as CMC
+import Exceptions as Ex
+import Control.Monad (when)
+import qualified Data.Aeson as Ae
+import qualified Data.Text as T
+
+import Control.Monad.IO.Class (MonadIO, liftIO)
+
+import Result
 
 
-class (Monad m, MonadLog m) => MonadNews m where
+getUser :: (MonadThrow m) => Maybe User -> m Response
+getUser Nothing = Ex.unauthorized
+getUser (Just u) = let val = Ae.toJSON u
+                   in  return $ ok "Success" val
+
+
+authenticate :: (MonadNews m) => Authenticate -> m Response
+authenticate auth = do
+    user <- getUserByLogin $ _au_login auth
+    when (_u_passHash user /= _au_passHash auth) $
+        CMC.throwM Ex.InvalidPassword
+    token <- fmap (T.pack) $ randomString1 10
+    token' <- addToken (_u_id user) token
+    return $ ok "Success" $ Ae.toJSON token'
+
+
+
+class (Monad m, MonadLog m, CMC.MonadCatch m) => MonadNews m where
+
+    withTransaction' :: m a -> m a
+
     getAuthors :: Paginated GetAuthors -> m [Author]
     createAuthor :: CreateAuthor -> m Int
     editAuthor :: EditAuthor -> m Int
@@ -29,10 +60,99 @@ class (Monad m, MonadLog m) => MonadNews m where
     createComment :: WithUser CreateComment -> m Int
     deleteComment :: WithUser DeleteComment -> m [Int]
 
+    getUserByToken :: Token -> m (Maybe User)
+    userAuthor :: User -> m Author
+
+    getUserByLogin :: T.Text -> m User
+    addToken :: UserId -> T.Text -> m T.Text
+    randomString1 :: Int -> m String
+
+    getPosts :: Paginated GetPosts -> m [Post]
+
+    getDrafts :: Paginated (WithAuthor GetDrafts) -> m [Draft]
+    deleteDraft :: WithAuthor DeleteDraft -> m [Int]
+    
+    createDraftN :: WithAuthor CreateDraft -> m Int
+    attachTagsToDraftN :: Int -> [Int] -> m [Int]
+    editDraftN :: WithAuthor EditDraft -> m Int
+    removeAllButGivenTagsDraftN :: Int -> [Int] -> m [Int]
+
+    getDraftsRaw :: WithAuthor Publish -> m [DraftRaw]
+
+    createPost :: DraftRaw -> m Int
+    editDraftPublish :: EditDraftPublish -> m Int
+    attachTagsToPost :: Int -> [Int] -> m [Int]
+
+    editPostPublish :: PublishEditPost -> m Int
+    removeAllButGivenTagsPost :: Int -> [Int] -> m [Int]
+
+
+    
+
+{-
+createDraft :: (MonadNews m) => WithAuthor CreateDraft -> m Response
+createDraft x@(WithAuthor a CreateDraft{..}) = Ex.withHandler Ex.draftCreateHandler $
+                                                withTransaction' $ do
+    draft <- createDraftN x
+  --  logDebug $ "Created draft with id = " <> (T.pack $ show draft)
+    tags <- attachTagsToDraftN draft _cd_tags
+--    tags <- attachTags dummyHDraft draft _cd_tags
+    logInfo $ attached "draft" tags draft
+    return $ okCreated ("Draft successfully created. " <> idInResult) draft
+-}
+
+
 instance MonadNews ServerIO where
+
+    attachTagsToDraftN = attachTags dummyHDraft
+    attachTagsToPost = attachTags dummyHPost
+    editDraftN = editThis' draftEditDummy
+    removeAllButGivenTagsDraftN = removeAllButGivenTags dummyHDraft
+    removeAllButGivenTagsPost = removeAllButGivenTags dummyHPost
+    getDraftsRaw = getThis' draftRawDummy
+
+    withTransaction' = withTransaction
+    createDraftN = createThis' draftCreateDummy
+    editDraftPublish = editThis' draftEditPublishDummy
+    editPostPublish = editThis' dummyUPost
+
+    createPost = createThis' dummyCPost
+
     getComments = getThisPaginated' commentDummy
     createComment = createThis' dummyCComment
     deleteComment = deleteThis' dummyDComment
+
+    getUserByToken token = do
+        users <- getThis' userTokenDummy token
+        user <- validateUnique2 (return Nothing) (Ex.throwTokenShared $ map _u_id users) $ map Just users
+        return user
+
+    getUserByLogin login = do
+        let str = "SELECT user_id, firstname, lastname, \
+                  \image, login, pass_hash, creation_date, is_admin \
+                  \FROM news.users WHERE login = ?"
+        users <- query str [login]
+        validateUnique Ex.invalidLogin users
+
+    addToken id token = do
+        let str = "INSERT INTO news.token (user_id, token) VALUES (?, ?) ON CONFLICT (user_id) DO UPDATE SET token = ?"
+            token' = (T.pack $ show id) <> token
+        execute str (id, token', token')
+        return token'
+    randomString1 len = liftIO $ randomString' len
+
+    getDrafts = getThisPaginated' draftDummy
+    deleteDraft = deleteThis' dummyDDraft
+    
+
+    userAuthor u = do
+        as <- getThis' authorDummy (GetAuthors $ Just $ _u_id u)
+        a  <- validateUnique Ex.notAnAuthor as
+        return a
+
+
+
+    getPosts = getThisPaginated' postDummy
 
     getAuthors = getThisPaginated' authorDummy
     createAuthor = createThis' dummyCAuthor
@@ -52,72 +172,47 @@ instance MonadNews ServerIO where
     createUser = createThis' dummyCUser
     deleteUser = deleteThis' dummyDUser
 
-{-
-
-getThis' :: (Read s, MonadServer m) => s -> Get s -> m [MType s]
-getThis' x g = do
-    let (qu, pars) = selectQuery x g
-    debugStr <- formatQuery qu pars
-    logDebug $ T.pack $ show debugStr
-    --withTimePrint $
-    res <- query qu pars
-    logInfo $ "Fetched " <> showText (length res) <> " entities"
-    return res
 
 
-
-getThisPaginated' :: (Read s, MonadServer m) => s -> Paginated (Get s) -> m [MType s]
-getThisPaginated' x (Paginated page size g) = do
-    let (qu, pars) = selectQuery x g
-        (qupag, parspag) = pageingClause page size
-        qu' = qu <> qupag
-        totalpars = pars ++ parspag
-    debugStr <- formatQuery qu' totalpars
-    logDebug $ T.pack $ show debugStr
-    --withTimePrint $
-    res <- query qu' totalpars
-    logInfo $ "Fetched " <> showText (length res) <> " entities"
-    return res
-
-editThis' :: (MonadServer m, UpdateSQL s) => s -> Upd s -> m Int
-editThis' s u = case updateParams s u of
-  Nothing -> Ex.invalidUpdDel "No data to edit found, required at least one parameter"
-  Just (q, vals) -> do
-    let str = updateQuery s q
-        params = vals ++ identifParams s u
-    debugStr <- formatQuery str params
-    logDebug $ T.pack $ show debugStr
-
-    ids <- fmap (map PSTy.fromOnly) $ query str params
-    id <- validateUnique (Ex.throwUpdNotFound $ uName s) ids
-    logInfo $ "Updated " <> uName s <> " with id = " <> showText id
-    return id
+withAuthAdmin y = withAuth y >>= checkAdmin
+withAuthor y = 
+    withAuth y >>= maybeUserToUser >>= userAuthor
 
 
-deleteThis' :: (MonadServer m, DeleteSQL s) => s -> Del s -> m [Int]
-deleteThis' s del = do
-    let (str, params) = deleteQuery s del
-    debugStr <- formatQuery str params
-    logDebug $ T.pack $ show debugStr
+getUsersByToken :: (MonadServer m) => Token -> m (Maybe User)
+getUsersByToken token = do
+    users <- getThis' userTokenDummy token
+ --   users <- query str [token]
+    user <- validateUnique2 (return Nothing) (Ex.throwTokenShared $ map _u_id users) $ map Just users
+    return user
 
-    --withExceptionHandlers (Ex.defaultHandlers "deleteThis") $ do
-    ids <- fmap (map PSTy.fromOnly) $ query str params
-    case ids of
-        [] -> logInfo $ "No " <> dName s <> " deleted"
-        _  -> logInfo $ "Deleted " <> dName s <> " with id = " <> showText ids
-    return ids
+
+withAuth :: (MonadNews m) => Maybe Token -> m (Maybe User)
+withAuth mtoken = case mtoken of
+    Nothing -> return Nothing
+    Just token -> do
+        muser <- getUserByToken token
+        return muser
+
+checkAdmin :: (CMC.MonadThrow m) => Maybe User -> m ()
+checkAdmin muser =
+   when ((muser >>= _u_admin) /= Just True) $ Ex.throwForbidden
 
 
 
-createThis' :: (MonadServer m, CreateSQL s) => s -> Create s -> m Int
-createThis' w cres = do
-    let (str, params) = createQuery w cres
-    debugStr <- formatQuery str params
-    logDebug $ T.pack $ show debugStr
+maybeUserToUser :: (CMC.MonadThrow m) => Maybe User -> m User
+maybeUserToUser Nothing = Ex.unauthorized
+maybeUserToUser (Just u) = return u
 
-    ints <- fmap (map PSTy.fromOnly) $ query str params
-    int <- validateUnique (Ex.throwBadInsert (cName w)) ints
-    logInfo $ "Created " <> cName w <> " with id = " <> showText int
-    return int
--}
+
+validateUnique :: (MonadThrow m) => m a -> [a] -> m a
+validateUnique x [] = x
+validateUnique _ [a] = return a
+validateUnique _ us  = Ex.invalidUnique us
+
+
+validateUnique2 :: (Monad m) => m a -> m a -> [a] -> m a
+validateUnique2 empty toomuch [] = empty
+validateUnique2 empty toomuch [a] = return a
+validateUnique2 empty toomuch us = toomuch
 

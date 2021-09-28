@@ -28,6 +28,7 @@ authhost = 'localhost:5555/auth'
 def run(args):
     print(args)
     process = subprocess.run(args, capture_output=True, text=True)
+    print(process.stdout)
     response = json.loads(process.stdout)
     return response
 def get(token_):

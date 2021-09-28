@@ -21,8 +21,17 @@ dummyCUser,
 dummyDUser,
 commentDummy,
 dummyCComment,
-dummyDComment
-
+dummyDComment,
+userTokenDummy,
+postDummy,
+draftDummy,
+dummyDDraft,
+draftCreateDummy,
+draftEditDummy,
+draftRawDummy,
+draftEditPublishDummy,
+dummyUPost,
+dummyCPost
 ) where
 
 

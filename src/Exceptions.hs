@@ -78,9 +78,9 @@ invalidUpdDel text = CMC.throwM $ InvalidUpdateOrDelete text
 unauthorized :: (MonadThrow m) => m a
 unauthorized = CMC.throwM $ Unauthorized
 
-invalidUnique :: (MonadThrow m, MonadLog m, GP.PrettyShow a) => [a] -> m b
+invalidUnique :: (MonadThrow m) => [a] -> m b
 invalidUnique xs = do
-    logError $ T.pack $ GP.defaultPretty xs
+--    logError $ T.pack $ GP.defaultPretty xs
     CMC.throwM $ InvalidUniqueEntities
 
 
