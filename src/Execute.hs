@@ -15,7 +15,6 @@ import Database.Delete
 import Database.Update
 import Control.Exception (SomeException)
 
-import MonadTypes (execute, query, formatQuery)
 import MonadLog
 import qualified Database.PostgreSQL.Simple as PS (SqlError(..))
 import qualified Types as Ty
@@ -36,8 +35,7 @@ import Database.SqlQueryTypes
 import MonadNews
 import MonadNewsInstances
 
-executeAction :: MonadNews m => WhoWhat Action -> m Response
-executeAction :: MonadNews m => WhoWhat Action -> m Response
+executeAction :: MonadNews m => WhoWhat Action -> m APIResult
 executeAction (WhoWhat y (AAuthors x)) = executeAuthor (WhoWhat y x)
 executeAction (WhoWhat y (ACategory x)) = executeCategory (WhoWhat y x)
 executeAction (WhoWhat y (APosts x)) = executePosts (WhoWhat y x)
@@ -60,51 +58,50 @@ executePosts (WhoWhat y (AP (Read x))) = do
     getThis1 getPosts x
 
 
-executeAuthor :: MonadNews m => WhoWhat ActionAuthors -> m Response
+executeAuthor :: MonadNews m => WhoWhat ActionAuthors -> m APIResult
 executeAuthor (WhoWhat y (Read x)) =
     withAuthAdmin y >> getThis1 getAuthors x
 executeAuthor (WhoWhat y (Create x)) =
-    withAuthAdmin y >> createThis1 "author" createAuthor x
+    withAuthAdmin y >> createThis1 EAuthor createAuthor x
 executeAuthor (WhoWhat y (Update x)) =
-    withAuthAdmin y >> editThis1 "author" editAuthor x
+    withAuthAdmin y >> editThis1 EAuthor editAuthor x
 executeAuthor (WhoWhat y (Delete x)) =
-    withAuthAdmin y >> deleteThis1 "author" deleteAuthor x
+    withAuthAdmin y >> deleteThis1 EAuthor deleteAuthor x
 {-
 -}
---executeAuthor _ = undefined
 
 executeTags (WhoWhat y (Read x)) = getThis1 getTags x
 executeTags (WhoWhat y (Create x)) =
-    withAuthAdmin y >> createThis1 "tag" createTag x
+    withAuthAdmin y >> createThis1 ETag createTag x
 executeTags (WhoWhat y (Update x)) = 
-    withAuthAdmin y >> editThis1 "tag" editTag x
+    withAuthAdmin y >> editThis1 ETag editTag x
 executeTags (WhoWhat y (Delete x)) =
-    withAuthAdmin y >> deleteThis1 "tag" deleteTag x
+    withAuthAdmin y >> deleteThis1 ETag deleteTag x
 
 
 executeCategory (WhoWhat y (Read x)) = getThis1 getCategories x
 executeCategory (WhoWhat y (Create x)) =
-    withAuthAdmin y >> createThis1 "category" createCategory x
+    withAuthAdmin y >> createThis1 ECategory createCategory x
 executeCategory (WhoWhat y (Update x)) =
-    withAuthAdmin y >> editThis1 "category" editCategory x
+    withAuthAdmin y >> editThis1 ECategory editCategory x
 executeCategory (WhoWhat y (Delete x)) =
-    withAuthAdmin y >> deleteThis1 "category" deleteCategory x
+    withAuthAdmin y >> deleteThis1 ECategory deleteCategory x
 
 executeUsers (WhoWhat y (Create x)) =
-    createThis1 "user" createUser x
+    createThis1 EUser createUser x
 executeUsers (WhoWhat y (Delete x)) =
-    withAuthAdmin y >> deleteThis1 "user" deleteUser x
+    withAuthAdmin y >> deleteThis1 EUser deleteUser x
 executeUsers (WhoWhat y (Read GetProfile)) =
     withAuth y >>= getUser
 
 executeComments (WhoWhat y (Read x)) =
     getThis1 getComments x
 executeComments (WhoWhat y (Create x)) =
-    withAuth y >>= maybeUserToUser >>= \u -> createThis1 "comment" createComment $ WithUser u x
+    withAuth y >>= maybeUserToUser >>= \u -> createThis1 EComment createComment $ WithUser u x
 executeComments (WhoWhat y (Delete x)) =
-    withAuth y >>= maybeUserToUser >>= \u -> deleteThis1 "comment" deleteComment $ WithUser u x
+    withAuth y >>= maybeUserToUser >>= \u -> deleteThis1 EComment deleteComment $ WithUser u x
 
-executeDraft :: (MonadNews m) => WhoWhat ActionDrafts -> m Response
+executeDraft :: (MonadNews m) => WhoWhat ActionDrafts -> m APIResult
 {-
 -}
 executeDraft (WhoWhat y (Create x)) =
@@ -118,7 +115,7 @@ executeDraft (WhoWhat y (Read (Paginated p s x))) =
 executeDraft (WhoWhat y (Delete x)) =
     withAuthor y >>=
        -- \a -> deleteThis dummyDDraft $ WithAuthor (Ty._a_authorId a) x
-        \a -> deleteThis1 "draft" deleteDraft $ WithAuthor (Ty._a_authorId a) x
+        \a -> deleteThis1 EDraft deleteDraft $ WithAuthor (Ty._a_authorId a) x
 executeDraft (WhoWhat y (Update x)) =
     withAuthor y >>=
         \a -> editDraft $ WithAuthor (Ty._a_authorId a) x
@@ -130,30 +127,27 @@ executePublish (WhoWhat y x) =
         \a -> publish $ WithAuthor (Ty._a_authorId a) x
 {-
 -}
-handleError :: (MonadNews m) => (WhoWhat ActionErrorPerms) -> m Response
+handleError :: (MonadNews m) => (WhoWhat ActionErrorPerms) -> m APIResult
 handleError (WhoWhat y (ActionErrorPerms admin@(False) (ERequiredFieldMissing x))) =
     handleFieldMissing x
 handleError (WhoWhat y (ActionErrorPerms admin@(False) (EInvalidFieldValue x))) =
     handleInvalidValue x
 handleError (WhoWhat y (ActionErrorPerms admin@(False) EInvalidEndpoint)) = do
-    logError $ "Invalid endpoint"
-    return $ notFound "Invalid endpoint"
+    return RInvalidEndpoint
 handleError (WhoWhat y (ActionErrorPerms admin@(True) x)) =
     (withAuthAdmin y >> handleError (WhoWhat y (ActionErrorPerms False x)))
         `CMC.catch` f
   where
-    f :: (MonadLog m) => SomeException -> m Response
+    f :: (MonadLog m) => SomeException -> m APIResult
     f e = handleForbidden
 
-handleForbidden :: (MonadLog m) => m Response
-handleForbidden = logError forbidden >> return (notFound "Invalid endpoint")
+handleForbidden :: (MonadLog m) => m APIResult
+handleForbidden = logError forbidden >> return RInvalidEndpoint --return (notFound "Invalid endpoint")
 
 handleFieldMissing x = do
-    let str =  "Required field missing (" <> x <> ")"
-    logError $ E.decodeUtf8 str
-    return $ bad $ E.decodeUtf8 str
+    return $ RRequiredFieldMissing $ E.decodeUtf8 x
+    
 handleInvalidValue x = do
-    let str = "Invalid value of the field " <> x
-    return $ bad $ E.decodeUtf8 str
+    return $ RInvalidValue $ E.decodeUtf8 x
 
 

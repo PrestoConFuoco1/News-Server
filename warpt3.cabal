@@ -53,19 +53,21 @@ library
       GenericPretty
       Handler.Database
       Handler.Logger
+      IO.ServerIO
       Lib
       Migrations
       MonadLog
       MonadNews
       MonadNewsInstances
-      MonadTypes
       Result
       Types
+      Types.APIErrors
+      Types.APIResult
       Types.Authors
       Types.Category
       Types.Common
       Types.Draft
-      Types.Errors
+      Types.Entity
       Types.Posts
       Types.Tags
       Types.Users
@@ -87,6 +89,7 @@ library
     , postgresql-simple
     , postgresql-simple-migration
     , random
+    , regex-pcre
     , text
     , time
     , unordered-containers
@@ -114,6 +117,7 @@ executable warpt3
     , postgresql-simple
     , postgresql-simple-migration
     , random
+    , regex-pcre
     , text
     , time
     , unordered-containers
@@ -144,6 +148,7 @@ test-suite warpt3-test
     , postgresql-simple
     , postgresql-simple-migration
     , random
+    , regex-pcre
     , text
     , time
     , unordered-containers

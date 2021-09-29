@@ -1,6 +1,35 @@
+{-# LANGUAGE DeriveAnyClass #-}
 module Types.Entity where
 
+
+import GHC.Generics
+import qualified Database.PostgreSQL.Simple as PS
+import qualified Database.PostgreSQL.Simple.FromField as PSF
+import qualified Database.PostgreSQL.Simple.FromRow as PSR
+import qualified Database.PostgreSQL.Simple.Types as PST
+import qualified Data.Text as T
+import qualified Data.Time as Time
+import qualified GenericPretty as GP
 import qualified Data.Aeson as Ae
+import General
+import Types.Authors
+import Types.Category
+--import Types.Comments
+import Types.Common
+import Types.Draft
+import Types.Posts
+import Types.Tags
+import Types.Users
+import Utils
+{-
+-}
+
+data Entity =
+    EUser | EAuthor | ECategory | ETag | EComment | EDraft | EPost
+    deriving (Show, Eq)
+
+showE :: Entity -> String
+showE x = drop 1 $ unCap $ show x
 
 class (Ae.ToJSON a) => Gettable a
 

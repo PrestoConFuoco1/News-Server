@@ -2,7 +2,6 @@
 module MonadNewsInstances where
 
 import Prelude hiding (Read)
-import MonadTypes
 import MonadNews
 import Execute.Database
 import Types
@@ -10,7 +9,7 @@ import Database
 import Execute.HasTags
 import Control.Monad.Catch as CMC
 import Exceptions as Ex
-import Control.Monad (when)
+import Control.Monad (when, (>=>))
 import qualified Data.Aeson as Ae
 import qualified Data.Text as T
 import Execute.Utils
@@ -18,6 +17,7 @@ import MonadLog
 import Utils
 import qualified Database.PostgreSQL.Simple.Types as PSTy
 import Control.Monad.IO.Class (MonadIO, liftIO)
+import IO.ServerIO
 
 import Result
 
@@ -63,47 +63,59 @@ instance MonadEntities ServerIO where
     
 
 instance MonadNews ServerIO where
-
+    withTransaction' = withTransaction
     attachTagsToDraft = attachTags dummyHDraft
     attachTagsToPost = attachTags dummyHPost
     editDraftN = editThis' draftEditDummy
     removeAllButGivenTagsDraft = removeAllButGivenTags dummyHDraft
     removeAllButGivenTagsPost = removeAllButGivenTags dummyHPost
-    getDraftsRaw = getThis' draftRawDummy
+    getDraftRaw = getThis' draftRawDummy >=>
+        (\xs -> case xs of
+            [] -> return Nothing
+            [x] -> return $ Just x
+            xs' -> Ex.throwInvalidUnique EDraft (map _dr_draftId xs'))
 
-    withTransaction' = withTransaction
     createDraftN = createThis' draftCreateDummy
     editDraftPublish = editThis' draftEditPublishDummy
     editPostPublish = editThis' dummyUPost
+{-
+  -}  
 
     createPost = createThis' dummyCPost
 
 
     getDrafts = getThisPaginated' draftDummy
     deleteDraft = deleteThis' dummyDDraft
-    
 
 
 
-userAuthor1 :: User -> ServerIO Author
+userAuthor1 :: User -> ServerIO (Maybe Author)
 userAuthor1 u = do
     as <- getThis' authorDummy (GetAuthors $ Just $ _u_id u)
-    a  <- validateUnique Ex.notAnAuthor as
-    return a
+    case as of
+        [] -> return Nothing
+        [a] -> return $ Just a
+        _ -> Ex.throwInvalidUnique EAuthor (map _a_authorId as)
 
 getUserByToken1 :: Token -> ServerIO (Maybe User)
 getUserByToken1 token = do
     users <- getThis' userTokenDummy token
-    user <- validateUnique2 (return Nothing) (Ex.throwTokenShared $ map _u_id users) $ map Just users
-    return user
+    case users of
+        [] -> return Nothing
+        [u] -> return $ Just u
+       -- _ -> Ex.throwInvalidUnique users
+        _ -> Ex.throwTokenShared $ map _u_id users
 
-getUserByLogin1 :: T.Text -> ServerIO User
+getUserByLogin1 :: T.Text -> ServerIO (Maybe User)
 getUserByLogin1 login = do
-        let str = "SELECT user_id, firstname, lastname, \
-                  \image, login, pass_hash, creation_date, is_admin \
-                  \FROM news.users WHERE login = ?"
-        users <- query str [login]
-        validateUnique Ex.invalidLogin users
+    let str = "SELECT user_id, firstname, lastname, \
+              \image, login, pass_hash, creation_date, is_admin \
+              \FROM news.users WHERE login = ?"
+    users <- query str [login]
+    case users of
+        [] -> return Nothing
+        [x] -> return $ Just x
+        _ -> Ex.throwInvalidUnique EUser (map _u_id users)
 
 
 addToken1 :: UserId -> T.Text -> ServerIO T.Text
@@ -140,37 +152,37 @@ getThis' x g = do
 
 editThis' :: (UpdateSQL s) => s -> Upd s -> ServerIO (Either ModifyError Int)
 editThis' s u = case updateParams s u of
-  Nothing -> Ex.invalidUpdDel "No data to edit found, required at least one parameter"
+  Nothing -> Ex.throwInvalidUpdate
   Just (q, vals) -> do
     let str = updateQuery s q
         params = vals ++ identifParams s u
     debugStr <- formatQuery str params
     logDebug $ T.pack $ show debugStr
 
-    ids <- fmap (map PSTy.fromOnly) $ query str params
-    Ex.withHandler Ex.modifyHandler $ case ids of
-        [] -> return (Left NotFound)
-        [x] -> return (Right x)
-        _   -> Ex.invalidUnique
-{-
-    id <- validateUnique (Ex.throwUpdNotFound $ uName s) ids
-    logInfo $ "Updated " <> uName s <> " with id = " <> showText id
-    return id
--}
-createThis' :: (CreateSQL s) => s -> Create s -> ServerIO Int
+    Ex.withHandler (fmap Left . Ex.modifyErrorHandler) $ do
+        ids <- fmap (map PSTy.fromOnly) $ query str params
+        case ids of
+            [] -> return (Left MNoAction)
+            [x] -> return (Right x)
+            _   -> Ex.throwInvalidUnique undefined ids
+
+
+createThis' :: (CreateSQL s) => s -> Create s -> ServerIO (Either ModifyError Int)
 createThis' w cres = do
     let (str, params) = createQuery w cres
     debugStr <- formatQuery str params
     logDebug $ T.pack $ show debugStr
 
-    ints <- fmap (map PSTy.fromOnly) $ query str params
-    int <- validateUnique (Ex.throwBadInsert (cName w)) ints
-    logInfo $ "Created " <> cName w <> " with id = " <> showText int
-    return int
+    Ex.withHandler (fmap Left . Ex.modifyErrorHandler) $ do
+        ints <- fmap (map PSTy.fromOnly) $ query str params
+        case ints of
+            [] -> return $ Left MNoAction
+            [x] -> return $ Right x
+            _ -> Ex.throwInvalidUnique undefined ints
 
 
 
-deleteThis' :: (DeleteSQL s) => s -> Del s -> ServerIO [Int]
+deleteThis' :: (DeleteSQL s) => s -> Del s -> ServerIO (Either DeleteError Int)
 deleteThis' s del = do
     let (str, params) = deleteQuery s del
     debugStr <- formatQuery str params
@@ -179,9 +191,7 @@ deleteThis' s del = do
     --withExceptionHandlers (Ex.defaultHandlers "deleteThis") $ do
     ids <- fmap (map PSTy.fromOnly) $ query str params
     case ids of
-        [] -> logInfo $ "No " <> dName s <> " deleted"
-        _  -> logInfo $ "Deleted " <> dName s <> " with id = " <> showText ids
-    return ids
-
-
+        [] -> return $ Left DNoAction
+        [id] -> return $ Right id
+        _ -> Ex.throwInvalidUnique undefined ids
 

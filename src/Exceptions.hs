@@ -1,29 +1,26 @@
 module Exceptions where
 
 import Control.Monad.Catch as CMC (Handler(..), catches, SomeException, throwM, Exception(..), MonadCatch(..), MonadThrow(..))
-import MonadTypes
 import MonadLog
 import Database.PostgreSQL.Simple as PS (sqlState, SqlError(..), QueryError)
 import qualified Data.Text as T (Text, pack)
 import qualified GenericPretty as GP (PrettyShow(..), defaultPretty)
 
-import Result as U
+import qualified Result as U
 import Data.Text.Encoding as E (decodeUtf8)
 import Types
+import Utils (getPair)
+
 
 data ServerException =
       Default
     | Unauthorized
-    | InvalidUniqueEntities
+    | InvalidUniqueEntities Entity [Int]
     | Forbidden
     | InvalidLogin
     | InvalidPassword
-    | FailedInsertionWithoutException T.Text
-    | DraftNotFound Int
     | NotAnAuthor
-    | DeleteNotFound T.Text
-    | UpdateNotFound T.Text
-    | InvalidUpdateOrDelete T.Text
+    | InvalidUpdate
     | TokenShared [Int]
     deriving (Show)
 
@@ -31,59 +28,39 @@ data ServerException =
 throwForbidden :: (CMC.MonadThrow m) => m a
 throwForbidden = CMC.throwM Forbidden
 
-mainErrorHandler :: (MonadThrow m, MonadLog m) => ServerException -> m Response
+{-
+-}
+mainErrorHandler :: (MonadThrow m, MonadLog m) => ServerException -> m U.Response
 mainErrorHandler Default = return $ U.internal U.internalErrorMsg
 mainErrorHandler Unauthorized = return $ U.unauthorized U.unauthorizedMsg
-mainErrorHandler InvalidUniqueEntities = return $ U.internal U.internalErrorMsg
+mainErrorHandler (InvalidUniqueEntities ent xs) = return $ U.internal U.internalErrorMsg
 mainErrorHandler Forbidden = return $ U.bad U.invalidEndpointMsg
 mainErrorHandler InvalidLogin = return $ U.bad $ U.invalidLoginMsg
 mainErrorHandler InvalidPassword = return $ U.bad U.invalidPasswordMsg
-mainErrorHandler (FailedInsertionWithoutException text) = return $ U.bad "failed to insert"
-mainErrorHandler (DraftNotFound id) = return $ U.bad $ "draft with id = " <> T.pack (show id) <> " not found"
 mainErrorHandler NotAnAuthor = return $ U.bad U.notAnAuthorMsg
-mainErrorHandler (DeleteNotFound text) = return $ U.bad "Not found"
-mainErrorHandler (UpdateNotFound text) = return $ U.bad "Not found"
-mainErrorHandler (InvalidUpdateOrDelete text) = return $ U.bad text
 mainErrorHandler (TokenShared xs) = logError ("Token shared between users with id in " <> T.pack (show xs))
         >> return (U.internal U.internalErrorMsg)
 
-
 instance CMC.Exception ServerException
+
 
 throwTokenShared :: (MonadThrow m) => [Int] -> m a
 throwTokenShared lst = CMC.throwM $ TokenShared lst
 
-throwDelNotFound  :: (MonadThrow m) => T.Text -> m a
-throwDelNotFound ent = CMC.throwM $ DeleteNotFound ent
-
-
-throwUpdNotFound  :: (MonadThrow m) => T.Text -> m a
-throwUpdNotFound ent = CMC.throwM $ UpdateNotFound ent
-
-
-throwDraftNotFound :: (MonadThrow m) => Int -> m a
-throwDraftNotFound draft = CMC.throwM $ DraftNotFound draft
-
-throwBadInsert :: (MonadThrow m) => T.Text -> m a
-throwBadInsert ent = CMC.throwM $ FailedInsertionWithoutException ent
-
-
-throwDefault :: (MonadThrow m) => m a
-throwDefault = CMC.throwM Default
-
-invalidUpdDel text = CMC.throwM $ InvalidUpdateOrDelete text
-
-unauthorized :: (MonadThrow m) => m a
-unauthorized = CMC.throwM $ Unauthorized
-
-invalidUnique :: (MonadThrow m) => [a] -> m b
-invalidUnique xs = do
+throwInvalidUpdate :: (MonadThrow m) => m a
+throwInvalidUpdate = CMC.throwM InvalidUpdate
+throwUnauthorized :: (MonadThrow m) => m a
+throwUnauthorized = CMC.throwM $ Unauthorized
+{-
+-}
+throwInvalidUnique :: (MonadThrow m) => Entity -> [Int] -> m b
+throwInvalidUnique ent xs = do
 --    logError $ T.pack $ GP.defaultPretty xs
-    CMC.throwM $ InvalidUniqueEntities
+    CMC.throwM $ InvalidUniqueEntities ent xs
 
 
-invalidLogin :: (MonadThrow m, MonadLog m) => m a
-invalidLogin = CMC.throwM $ InvalidLogin
+throwInvalidLogin :: (MonadThrow m, MonadLog m) => m a
+throwInvalidLogin = CMC.throwM $ InvalidLogin
 
 notAnAuthor :: (MonadThrow m, MonadLog m) => m a
 notAnAuthor = CMC.throwM $ NotAnAuthor
@@ -116,19 +93,6 @@ defaultHandlers funcMsg = [Handler $ queryErrorHandler funcMsg,
                            Handler $ defaultSqlHandler funcMsg]
 
 
-draftActionHandler :: (MonadThrow m, MonadLog m) => T.Text -> SomeException -> m a
-draftActionHandler action e =
-    let str = "Failed to " <> action <> " draft."
-    in  logError (str <> ", all changes are discarded")
-                            >> CMC.throwM e
-
-publishHandler :: (MonadThrow m, MonadLog m) => SomeException -> m a
-publishHandler e = draftActionHandler "publish" e
-draftCreateHandler :: (MonadThrow m, MonadLog m) => SomeException -> m a
-draftCreateHandler e = draftActionHandler "create" e
-draftEditHandler :: (MonadThrow m, MonadLog m) => SomeException -> m a
-draftEditHandler e = draftActionHandler "edit" e
-
 
 
 withExceptionHandlers :: (Foldable f, CMC.MonadCatch m) => f (CMC.Handler m a) -> m a-> m a
@@ -137,10 +101,11 @@ withExceptionHandlers = flip CMC.catches
 withHandler :: (CMC.MonadCatch m, Exception e) => (e -> m a) -> m a -> m a
 withHandler = flip CMC.catch
 
-defaultMainHandler :: (MonadLog m, MonadThrow m) => SomeException -> m Response
+defaultMainHandler :: (MonadLog m, MonadThrow m) => SomeException -> m U.Response
 defaultMainHandler e = do
     logError $ T.pack $ displayException e
     return $ U.internal U.internalErrorMsg
+
 
 
 uniqueConstraintViolated e = PS.sqlState e == "23505"
@@ -154,54 +119,45 @@ constraintViolated e = PS.sqlState e == "23514"
 -- \"author_description_check\"", sqlErrorDetail =
 -- "Failing row contains (26, 2, ).", sqlErrorHint = ""}
 
-creUpdExceptionHandler :: (MonadLog m, CMC.MonadCatch m) => T.Text -> T.Text -> T.Text -> PS.SqlError -> m Response
-creUpdExceptionHandler name unique foreign1 e
-    | uniqueConstraintViolated e = do
-        logError $
-            "Failed to create new " <> name <> ", " <>
-            unique <> " is already in use\n" <>
-            "SqlError: " <> (E.decodeUtf8 $ PS.sqlErrorMsg e)
-        return $ bad $ name <> " with such " <> unique <> " already exists."
-    | foreignKeyViolated e = do
-        let errmsg = 
-             "Failed to create new " <> name <> ", " <> foreign1 <> " is invalid"
-        logError $ errmsg
-        return $ bad $ errmsg
-    | otherwise = CMC.throwM e
-
-creUpdExceptionHandler1 :: (MonadLog m, CMC.MonadCatch m) => T.Text -> PS.SqlError -> m Response
-creUpdExceptionHandler1 name e
-    | uniqueConstraintViolated e = do
-        logError $
-            "Failed to create new " <> name <> ", " <>
-            unique <> " is already in use\n" <>
-            "SqlError: " <> (E.decodeUtf8 $ PS.sqlErrorMsg e)
-        return $ bad $ name <> " with such " <> unique <> " already exists."
-    | foreignKeyViolated e = do
-        let errmsg = 
-             "Failed to create new " <> name <> ", " <> foreign1 <> " is invalid"
-        logError $ errmsg
-        return $ bad $ errmsg
-    | otherwise = CMC.throwM e
-  where unique = "unique field"
-        foreign1 = "foreign key"
-
-
 -- *** Exception: SqlError {sqlState = "23505", sqlExecStatus = FatalError, sqlErrorMsg =
 --"duplicate key value violates unique constraint \"token_user_id_key\"",
 --sqlErrorDetail = "Key (user_id)=(2) already exists.", sqlErrorHint = ""}
 
-modifyHandler :: (CMC.MonadCatch m) => PS.SqlError -> m ModifyError
-modifyHandler e = maybe (CMC.throwM e) return (toModifyError e)
+-- *** Exception: SqlError {sqlState = "23503", sqlExecStatus = FatalError, sqlErrorMsg =
+--"insert or update on table \"token\" violates foreign key constraint \"token_user_id_fkey\"",
+--sqlErrorDetail = "Key (user_id)=(6666) is not present in table \"users\".", sqlErrorHint = ""}
+
+
+-- *** Exception: SqlError {sqlState = "23503", sqlExecStatus = FatalError, sqlErrorMsg =
+-- "insert or update on table \"draft_tag\" violates foreign key constraint \"draft_tag_tag_id_fkey\"",
+-- sqlErrorDetail = "Key (tag_id)=(167) is not present in table \"tag\".", sqlErrorHint = ""}
+
+
+modifyErrorHandler :: (CMC.MonadCatch m) => PS.SqlError -> m ModifyError
+modifyErrorHandler e = maybe (CMC.throwM e) return (toModifyError e)
 
 toModifyError :: PS.SqlError -> Maybe ModifyError
 toModifyError e
-    | uniqueConstraintViolated e = undefined
-    | foreignKeyViolated e = undefined
+    | uniqueConstraintViolated e = fmap MAlreadyInUse $ getUniqueViolationData e
+    | foreignKeyViolated e = fmap MInvalidForeign $ getForeignViolationData e
     | otherwise = Nothing
 
 
+getUniqueViolationData :: PS.SqlError -> Maybe UniqueViolation
+getUniqueViolationData = maybe Nothing (Just . f) . getPair . sqlErrorDetail
+  where f (field, value) = UniqueViolation field value
+
+getForeignViolationData :: PS.SqlError -> Maybe ForeignViolation
+getForeignViolationData = maybe Nothing (Just . f) . getPair . sqlErrorDetail
+  where f (field, value) = ForeignViolation field value
 
 
+
+
+tagsErrorHandler :: (CMC.MonadCatch m) => PS.SqlError -> m TagsError
+tagsErrorHandler e = maybe (CMC.throwM e) return (toAttachTagsError e)
+  where toAttachTagsError e
+            | foreignKeyViolated e = fmap TagsAttachError $ getForeignViolationData e
+            | otherwise = Nothing
 
 

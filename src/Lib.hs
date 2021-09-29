@@ -18,7 +18,6 @@ import Types
 import Result
 
 import qualified Handler.Logger as L (simpleLog)
-import MonadTypes (ServerIO, ServerHandlers(..), runServer)
 import MonadLog
 import qualified Database.PostgreSQL.Simple as PS (connectPostgreSQL, Connection, close)
 import qualified Handler.Database as DB (Handle(..))
@@ -31,6 +30,7 @@ import qualified Database.PostgreSQL.Simple.Migration as PSM
 import Migrations
 
 import MonadNews
+import IO.ServerIO
 
 port :: Int
 port = 5555
@@ -68,15 +68,18 @@ mainServer req = fmap coerceResponse $ do
             logDebug "Action type is"
             logDebug $ T.pack $ GP.defaultPretty $ _ww_action whowhat
 
-            val <- executeAction whowhat
+            fmap toResponse (executeAction whowhat)
                 `CMC.catches` [CMC.Handler Ex.mainErrorHandler,
                                CMC.Handler Ex.defaultMainHandler]
-            logDebug "execution time is above"
-            return val
+            
 
 
 coerceResponse :: Response -> W.Response
 coerceResponse (Response status msg) =
     W.responseLBS status [] $ Ae.encode msg
+
+
+toResponse :: APIResult -> Response
+toResponse = undefined
 
 

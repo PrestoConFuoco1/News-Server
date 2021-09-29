@@ -1,9 +1,8 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+module IO.ServerIO (module IO.ServerIO, ask) where
 
 
-module  (module MonadTypes, ask) where
-
-import Data.Time.Clock (UTCTime, getCurrentTime)
+--import Data.Time.Clock (UTCTime, getCurrentTime)
 import qualified Handler.Logger as L
 import Control.Monad.Reader (MonadReader, ReaderT, asks, ask, runReaderT)
 import Control.Monad.IO.Class (MonadIO, liftIO)
@@ -17,6 +16,7 @@ import Control.Exception as CE
 
 import System.Random
 import GHC.Arr
+
 
 data ServerHandlers = ServerHandlers {
     logger :: L.Handle,

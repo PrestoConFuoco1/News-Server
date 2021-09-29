@@ -21,8 +21,9 @@ import Types.Draft as TypesInternal
 import Types.Posts as TypesInternal
 import Types.Tags as TypesInternal
 import Types.Users as TypesInternal
-import Types.Errors as TypesInternal
+import Types.APIErrors as TypesInternal
 import Types.Entity as TypesInternal
+import Types.APIResult as TypesInternal
 {-
 -}
 

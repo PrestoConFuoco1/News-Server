@@ -1,18 +1,17 @@
 module MonadLog where
 
 import Prelude hiding (log)
-import MonadTypes
 import Types
 import Database
 import Control.Monad.Catch as CMC
 import Control.Monad (when)
 import qualified Data.Aeson as Ae
 import qualified Data.Text as T
-
+import IO.ServerIO
 
 import Control.Monad.IO.Class (MonadIO, liftIO)
 
-import Result
+--import Result
 import Handler.Logger
 
 class (Monad m) => MonadLog m where

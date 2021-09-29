@@ -11,7 +11,6 @@ import qualified GenericPretty as GP
 
 import Database
 
-import MonadTypes (execute, query, formatQuery, ServerIO)
 import qualified Database.PostgreSQL.Simple as PS (SqlError(..))
 import qualified Data.Aeson as Ae
 import qualified Control.Monad.Catch as CMC (catches, Handler(..), MonadCatch, throwM)
@@ -26,31 +25,53 @@ import Database.SqlValue
 import Types
 
 
-getThis1 :: (CMC.MonadCatch m, Ae.ToJSON b)=> (a -> m [b]) -> a -> m Response
+modifyErrorToApiResult :: Entity -> ModifyError -> APIResult
+modifyErrorToApiResult ent (MAlreadyInUse (UniqueViolation field value)) = RAlreadyInUse ent field value
+modifyErrorToApiResult ent (MInvalidForeign (ForeignViolation field value)) = RInvalidForeign ent field value
+modifyErrorToApiResult ent (MNoAction) = RNotFound ent
+
+--getThis1 :: (CMC.MonadCatch m, Ae.ToJSON b)=> (a -> m [b]) -> a -> m APIResult
+getThis1 :: (CMC.MonadCatch m, Gettable b) => (a -> m [b]) -> a -> m APIResult
 getThis1 f x = do
-    cat <- f x
-    let val = Ae.toJSON cat
-    return $ ok "Success" val
+    xs <- f x
+ --   let val = Ae.toJSON cat
+    --return $ ok "Success" val
+    --return $ RGet $ RGettable cat
+    return $ RGet $ RGettable xs
 
-createThis1 :: (CMC.MonadCatch m, MonadLog m) => T.Text -> (a -> m Int) -> a -> m Response
-createThis1 name create x = withExceptionHandlers
-      (CMC.Handler (Ex.creUpdExceptionHandler1 name)
-      : Ex.defaultHandlers "createThis1") $ do
-    int <- create x
-    return $ okCreated (name <> " successfully created. " <> idInResult) int
+createThis1 :: (CMC.MonadCatch m, MonadLog m) => Entity -> (a -> m (Either ModifyError Int)) -> a -> m APIResult
+createThis1 name create x = do
+--      (CMC.Handler (Ex.creUpdExceptionHandler1 name)
+--       : Ex.defaultHandlers "createThis1") $ do
+    --int <- create x
+    eithInt <- create x
+    --return $ okCreated (name <> " successfully created. " <> idInResult) int
+ --   return $ RCreated name int
+    case eithInt of
+        Right int -> return $ RCreated name int
+        Left err -> return $ modifyErrorToApiResult name err
 
-deleteThis1 :: (CMC.MonadCatch m, MonadLog m) => T.Text -> (a -> m [Int]) -> a -> m Response
-deleteThis1 name delete x = withExceptionHandlers (Ex.defaultHandlers "deleteThis1") $ do
-    dels <- delete x
-    deleted <- validateUnique (Ex.throwDelNotFound name) dels
-    let succ = name <> " successfully deleted"
-    return $ okDeleted succ deleted
+deleteErrorToApiResult :: Entity -> DeleteError -> APIResult
+deleteErrorToApiResult ent DNoAction = RNotFound ent
 
-editThis1 :: (CMC.MonadCatch m, MonadLog m) => T.Text -> (a -> m Int) -> a -> m Response
-editThis1 name update x = withExceptionHandlers
-      (CMC.Handler (Ex.creUpdExceptionHandler1 name)
-      : Ex.defaultHandlers "editThis1") $ do
-    id <- update x
-    let succ = name <> " successfully edited"
-    return (ok succ $ Ae.toJSON id)
+deleteThis1 :: (CMC.MonadCatch m, MonadLog m) => Entity -> (a -> m (Either DeleteError Int)) -> a -> m APIResult
+deleteThis1 name delete x = do --withExceptionHandlers (Ex.defaultHandlers "deleteThis1") $ do
+    eithDeleted <- delete x
+    --deleted <- validateUnique (hrowDelNotFound name) dels
+    --let succ = name <> " successfully deleted"
+    --return $ okDeleted succ deleted
+    case eithDeleted of 
+        Right int -> return $ RDeleted name int
+        Left err -> return $ deleteErrorToApiResult name err
+
+editThis1 :: (CMC.MonadCatch m, MonadLog m) => Entity -> (a -> m (Either ModifyError Int)) -> a -> m APIResult
+editThis1 name update x = do
+--      (CMC.Handler (Ex.creUpdExceptionHandler1 name)
+--      : Ex.defaultHandlers "editThis1") $ do
+    eithInt <- update x
+    --let succ = name <> " successfully edited"
+    --return (ok succ $ Ae.toJSON id)
+    case eithInt of
+        Right int -> return $ REdited name int
+        Left err  -> return $ modifyErrorToApiResult name err
 

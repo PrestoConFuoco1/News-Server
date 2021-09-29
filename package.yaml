@@ -39,6 +39,7 @@ dependencies:
 - postgresql-simple
 - postgresql-simple-migration
 - file-embed
+- regex-pcre
 
 
 library:

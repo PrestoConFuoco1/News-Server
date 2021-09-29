@@ -6,7 +6,6 @@ import qualified Data.Text as T (pack, Text)
 import qualified Database.PostgreSQL.Simple.Types as PSTy
 import qualified Database.PostgreSQL.Simple as PS
 import Database.Update
-import MonadTypes (execute, query, formatQuery, ServerIO)
 import MonadLog
 import Execute.Types
 --import Execute.Utils
@@ -14,7 +13,8 @@ import Database.SqlValue
 import Database.Update
 import qualified Exceptions as Ex
 import qualified Data.Aeson as Ae (Value(..))
-
+import IO.ServerIO
+import Types
 
 class (Show (HIdent s)) => HasTags s where
     type HIdent s :: *
@@ -42,10 +42,10 @@ instance HasTags HPost where
 
 
 
-attachTags :: (HasTags s) => s -> HIdent s -> [Int] -> ServerIO [Int]
+attachTags :: (HasTags s) => s -> HIdent s -> [Int] -> ServerIO (Either TagsError [Int])
 attachTags s hasTagsId [] = do
     logInfo $ "No tags attached to " <> hName' s <> " with id = " <> (T.pack $ show hasTagsId)
-    return []
+    return (Right [])
 attachTags s hasTagsId tags = do
     let strChunks = ["INSERT INTO news.", "_tag (", "_id, tag_id) VALUES "]
         returningChunks = ["ON CONFLICT ON CONSTRAINT ", "_tag_", "_id_tag_id_key DO NOTHING RETURNING tag_id"]
@@ -62,8 +62,9 @@ attachTags s hasTagsId tags = do
     debugStr <- formatQuery qu insertParams
     logDebug $ T.pack $ show debugStr
 
-    ids <- fmap (map PSTy.fromOnly) $ query qu insertParams
-    return ids
+    Ex.withHandler (fmap Left . Ex.tagsErrorHandler) $ do
+        ids <- fmap (map PSTy.fromOnly) $ query qu insertParams
+        return $ Right ids
 
 
 removeAllButGivenTags :: (HasTags s) => s -> HIdent s -> [Int] -> ServerIO [Int]

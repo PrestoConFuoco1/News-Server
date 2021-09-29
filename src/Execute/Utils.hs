@@ -9,10 +9,11 @@ import qualified Data.Text as T
 import qualified Data.Aeson as Ae
 import Result
 
+
 withAuthAdmin y = withAuth y >>= checkAdmin
 
 withAuthor y = 
-    withAuth y >>= maybeUserToUser >>= userAuthor
+    withAuth y >>= maybeUserToUser >>= userAuthor >>= maybe Ex.notAnAuthor return
 
 
 withAuth :: (MonadNews m) => Maybe Token -> m (Maybe User)
@@ -30,9 +31,9 @@ checkAdmin muser =
 {-
 -}
 maybeUserToUser :: (CMC.MonadThrow m) => Maybe User -> m User
-maybeUserToUser Nothing = Ex.unauthorized
+maybeUserToUser Nothing = Ex.throwUnauthorized
 maybeUserToUser (Just u) = return u
-
+{-
 validateUnique :: (CMC.MonadThrow m) => m a -> [a] -> m a
 validateUnique x [] = x
 validateUnique _ [a] = return a
@@ -43,22 +44,25 @@ validateUnique2 :: (Monad m) => m a -> m a -> [a] -> m a
 validateUnique2 empty toomuch [] = empty
 validateUnique2 empty toomuch [a] = return a
 validateUnique2 empty toomuch us = toomuch
+-}
+
+getUser :: (CMC.MonadThrow m) => Maybe User -> m APIResult
+getUser Nothing = Ex.throwUnauthorized
+getUser (Just u) = return $ RGetUser u
+                   --let val = Ae.toJSON u
+                   --in  return $ ok "Success" val
 
 
-getUser :: (CMC.MonadThrow m) => Maybe User -> m Response
-getUser Nothing = Ex.unauthorized
-getUser (Just u) = let val = Ae.toJSON u
-                   in  return $ ok "Success" val
-
-
-authenticate :: (MonadNews m) => Authenticate -> m Response
+authenticate :: (MonadNews m) => Authenticate -> m APIResult
 authenticate auth = do
-    user <- getUserByLogin $ _au_login auth
+    muser <- getUserByLogin $ _au_login auth
+    user <- maybe Ex.throwInvalidLogin return muser
     when (_u_passHash user /= _au_passHash auth) $
         CMC.throwM Ex.InvalidPassword
     token <- fmap (T.pack) $ randomString1 10
     token' <- addToken (_u_id user) token
-    return $ ok "Success" $ Ae.toJSON token'
+    --return $ ok "Success" $ Ae.toJSON token'
+    return $ RGetToken token'
 
 
 
