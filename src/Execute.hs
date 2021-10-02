@@ -127,27 +127,31 @@ executePublish (WhoWhat y x) =
         \a -> publish $ WithAuthor (Ty._a_authorId a) x
 {-
 -}
-handleError :: (MonadNews m) => (WhoWhat ActionErrorPerms) -> m APIResult
+
+handleError :: MonadNews m => (WhoWhat ActionErrorPerms) -> m Response
 handleError (WhoWhat y (ActionErrorPerms admin@(False) (ERequiredFieldMissing x))) =
     handleFieldMissing x
 handleError (WhoWhat y (ActionErrorPerms admin@(False) (EInvalidFieldValue x))) =
     handleInvalidValue x
 handleError (WhoWhat y (ActionErrorPerms admin@(False) EInvalidEndpoint)) = do
-    return RInvalidEndpoint
+    logError $ "Invalid endpoint"
+    return $ notFound "Invalid endpoint"
 handleError (WhoWhat y (ActionErrorPerms admin@(True) x)) =
     (withAuthAdmin y >> handleError (WhoWhat y (ActionErrorPerms False x)))
         `CMC.catch` f
   where
-    f :: (MonadLog m) => SomeException -> m APIResult
+    f :: (MonadNews m) => SomeException -> m Response
     f e = handleForbidden
 
-handleForbidden :: (MonadLog m) => m APIResult
-handleForbidden = logError forbidden >> return RInvalidEndpoint --return (notFound "Invalid endpoint")
+handleForbidden :: (MonadNews m) => m Response
+handleForbidden = logError forbidden >> return (notFound "Invalid endpoint")
 
 handleFieldMissing x = do
-    return $ RRequiredFieldMissing $ E.decodeUtf8 x
-    
+    let str =  "Required field missing (" <> x <> ")"
+    logError $ E.decodeUtf8 str
+    return $ bad $ E.decodeUtf8 str
 handleInvalidValue x = do
-    return $ RInvalidValue $ E.decodeUtf8 x
+    let str = "Invalid value of the field " <> x
+    return $ bad $ E.decodeUtf8 str
 
 

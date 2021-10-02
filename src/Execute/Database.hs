@@ -24,12 +24,6 @@ import Exceptions as Ex
 import Database.SqlValue
 import Types
 
-
-modifyErrorToApiResult :: Entity -> ModifyError -> APIResult
-modifyErrorToApiResult ent (MAlreadyInUse (UniqueViolation field value)) = RAlreadyInUse ent field value
-modifyErrorToApiResult ent (MInvalidForeign (ForeignViolation field value)) = RInvalidForeign ent field value
-modifyErrorToApiResult ent (MNoAction) = RNotFound ent
-
 --getThis1 :: (CMC.MonadCatch m, Ae.ToJSON b)=> (a -> m [b]) -> a -> m APIResult
 getThis1 :: (CMC.MonadCatch m, Gettable b) => (a -> m [b]) -> a -> m APIResult
 getThis1 f x = do

@@ -20,6 +20,7 @@ data APIResult =
     | RInvalidForeign Entity Text Text
     | RRequiredFieldMissing Text
     | RInvalidValue Text
+    | RInvalidTag Text
  --   | RError Ex.ServerException
        
 

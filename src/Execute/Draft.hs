@@ -47,10 +47,11 @@ draftEditHandler e = draftActionHandler "edit" e
 
 
 draftModifyErrorToApiResult :: DraftModifyError -> APIResult
-draftModifyErrorToApiResult = undefined
+draftModifyErrorToApiResult (DModifyError x) = modifyErrorToApiResult EDraft x
+draftModifyErrorToApiResult (DTagsError (TagsAttachError (ForeignViolation field value))) = RInvalidTag value
 
 draftModifyHandler :: (MonadNews m) => DraftModifyError -> m APIResult
-draftModifyHandler = undefined
+draftModifyHandler = return . draftModifyErrorToApiResult
 
 createDraft :: (MonadNews m) => WithAuthor CreateDraft -> m APIResult
 createDraft x@(WithAuthor a CreateDraft{..}) = --Ex.withHandler draftCreateHandler $
@@ -89,8 +90,8 @@ editDraft x@(WithAuthor a EditDraft{..}) = Ex.withHandler draftModifyHandler $
             --return (ok "Draft successfully edited" Ae.Null)
 
 
-publishHandler :: CMC.SomeException -> m APIResult
-publishHandler = undefined
+publishHandler :: MonadNews m => DraftModifyError -> m APIResult
+publishHandler = draftModifyHandler
 
 publish :: (MonadNews m) => WithAuthor Publish -> m APIResult
 publish x@(WithAuthor a Publish{..}) = Ex.withHandler publishHandler $

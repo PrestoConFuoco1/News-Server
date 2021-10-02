@@ -66,3 +66,9 @@ authenticate auth = do
 
 
 
+modifyErrorToApiResult :: Entity -> ModifyError -> APIResult
+modifyErrorToApiResult ent (MAlreadyInUse (UniqueViolation field value)) = RAlreadyInUse ent field value
+modifyErrorToApiResult ent (MInvalidForeign (ForeignViolation field value)) = RInvalidForeign ent field value
+modifyErrorToApiResult ent (MNoAction) = RNotFound ent
+
+
