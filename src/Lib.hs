@@ -21,7 +21,7 @@ import qualified Handler.Logger as L (simpleLog)
 import MonadLog
 import qualified Database.PostgreSQL.Simple as PS (connectPostgreSQL, Connection, close)
 import qualified Handler.Database as DB (Handle(..))
-import qualified Data.Aeson as Ae (encode)
+import qualified Data.Aeson as Ae (encode, ToJSON(..))
 
 import qualified Exceptions as Ex (mainErrorHandler, defaultMainHandler)
 import qualified Control.Monad.Catch as CMC
@@ -80,6 +80,15 @@ coerceResponse (Response status msg) =
 
 
 toResponse :: APIResult -> Response
-toResponse = undefined
+toResponse (RGet (RGettable xs)) = ok successGet (Ae.toJSON xs)
+toResponse (RGetUser user) = ok successGetProfile (Ae.toJSON user)
+toResponse (RGetToken tok) = ok successNewToken (Ae.toJSON tok)
+toResponse (RCreated ent int) = ok (createdMsg ent) (Ae.toJSON int)
+toResponse (REdited ent int) = ok (editedMsg ent) (Ae.toJSON int)
+toResponse (RDeleted ent int) = ok (deletedMsg ent) (Ae.toJSON int)
+toResponse (RNotFound ent) = bad (entityNotFoundMsg ent)
+toResponse (RAlreadyInUse ent field value) = bad (alreadyInUseMsg ent field value)
+toResponse (RInvalidForeign ent field value) = bad (invalidForeignMsg field value)
+toResponse (RInvalidTag value) = bad (tagNotFoundMsg value)
 
 

@@ -135,7 +135,7 @@ handleError (WhoWhat y (ActionErrorPerms admin@(False) (EInvalidFieldValue x))) 
     handleInvalidValue x
 handleError (WhoWhat y (ActionErrorPerms admin@(False) EInvalidEndpoint)) = do
     logError $ "Invalid endpoint"
-    return $ notFound "Invalid endpoint"
+    return $ bad "Invalid endpoint"
 handleError (WhoWhat y (ActionErrorPerms admin@(True) x)) =
     (withAuthAdmin y >> handleError (WhoWhat y (ActionErrorPerms False x)))
         `CMC.catch` f
@@ -144,7 +144,7 @@ handleError (WhoWhat y (ActionErrorPerms admin@(True) x)) =
     f e = handleForbidden
 
 handleForbidden :: (MonadNews m) => m Response
-handleForbidden = logError forbidden >> return (notFound "Invalid endpoint")
+handleForbidden = logError forbidden >> return (bad "Invalid endpoint")
 
 handleFieldMissing x = do
     let str =  "Required field missing (" <> x <> ")"

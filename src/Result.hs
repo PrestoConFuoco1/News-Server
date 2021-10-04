@@ -9,6 +9,12 @@ import qualified Data.Text as T
 import qualified Data.ByteString as B
 import qualified Data.Text.Encoding as E
 import GHC.Generics
+import Types
+import Utils
+
+successGet = "Success" :: T.Text
+successGetProfile = "Got profile successfully" :: T.Text
+successNewToken = "Got token successfully" :: T.Text
 
 forbidden = "Access only for administrators, sending 404 invalid endpoint." :: T.Text
 
@@ -24,6 +30,33 @@ invalidEndpointMsg = "Invalid endpoint" :: T.Text
 internalErrorMsg = "Internal error" :: T.Text
 
 notAnAuthorMsg = "Not an author" :: T.Text
+
+createdMsg :: Entity -> T.Text
+createdMsg ent = let enttext = showEText ent
+    in "Successfully created " <> enttext <> ", " <> enttext <> "_id is in \"result\" field"
+
+
+editedMsg :: Entity -> T.Text
+editedMsg ent = let enttext = showEText ent
+    in "Successfully edited " <> enttext <> ", " <> enttext <> "_id is in \"result\" field"
+
+deletedMsg :: Entity -> T.Text
+deletedMsg ent = let enttext = showEText ent
+    in "Successfully deleted " <> enttext <> ", " <> enttext <> "_id is in \"result\" field"
+
+entityNotFoundMsg :: Entity -> T.Text
+entityNotFoundMsg ent = let enttext = showText ent
+                     in  enttext <> " not found"
+
+alreadyInUseMsg :: Entity -> T.Text -> T.Text -> T.Text
+alreadyInUseMsg ent field value =
+    "Failed: " <> showEText ent <> " with " <> field <> "=" <> value <> " already exists"
+
+invalidForeignMsg :: T.Text -> T.Text -> T.Text
+invalidForeignMsg field value = "Failed: " <> field <> " has an invalid value of " <> value
+
+tagNotFoundMsg :: T.Text -> T.Text
+tagNotFoundMsg tag = "Failed: no tag found with id = " <> tag
 
 okCreated :: T.Text -> Int -> Response
 okCreated msg id = Response NHT.ok200 val
@@ -42,9 +75,11 @@ errR t = Ae.toJSON $ Result False (Just t) Nothing
 
 bad = Response NHT.status400 . errR
 
+
+
 unauthorized = Response NHT.unauthorized401 . errR 
 
-notFound = Response NHT.status404 . errR
+--notFound = Response NHT.status404 . errR
 
 internal = Response NHT.internalServerError500 . errR
 

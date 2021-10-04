@@ -19,7 +19,7 @@ import Utils
 class DeleteSQL s where
     type Del s :: *
     deleteQuery :: s -> Del s -> (PS.Query, [SqlValue])
-    dName :: s -> T.Text
+    dName :: s -> Entity
 
 newtype DTag = DTag ()
 dummyDTag = DTag ()
@@ -27,7 +27,7 @@ dummyDTag = DTag ()
 instance DeleteSQL DTag where
     type Del DTag = DeleteTag
     deleteQuery _ dt = ("DELETE FROM news.tag WHERE tag_id = ? RETURNING tag_id", [SqlValue $ _dt_tagId dt])
-    dName _ = "tag"
+    dName _ = ETag
 
 
 newtype DCat = DCat ()
@@ -36,7 +36,7 @@ dummyDCat = DCat ()
 instance DeleteSQL DCat where
     type Del DCat = DeleteCategory
     deleteQuery _ dc = ("DELETE FROM news.category WHERE category_id = ? RETURNING category_id", [SqlValue $ _dc_catId dc])
-    dName _ = "category"
+    dName _ = ECategory
 
 
 newtype DAuthor = DAuthor ()
@@ -45,7 +45,7 @@ dummyDAuthor = DAuthor ()
 instance DeleteSQL DAuthor where
     type Del DAuthor = DeleteAuthor
     deleteQuery _ da = ("DELETE FROM news.author WHERE author_id = ? RETURNING author_id", [SqlValue $ _da_authorId da])
-    dName _ = "author"
+    dName _ = EAuthor
 
 newtype DUser = DUser ()
 dummyDUser = DUser ()
@@ -53,7 +53,7 @@ dummyDUser = DUser ()
 instance DeleteSQL DUser where
     type Del DUser = DeleteUser
     deleteQuery _ du = ("DELETE FROM news.users WHERE user_id = ? RETURNING user_id", [SqlValue $ _du_userId du])
-    dName _ = "user"
+    dName _ = EUser
 
 
 newtype DComment = DComment ()
@@ -79,7 +79,7 @@ instance DeleteSQL DComment where
             else (str <> userWhere <> returning, [commentParam, userParam])
 
 
-    dName _ = "comment"
+    dName _ = EComment
 
 
 
@@ -95,4 +95,4 @@ instance DeleteSQL DDraft where
         , [SqlValue d, SqlValue a])
 
 
-    dName _ = "draft"
+    dName _ = EDraft

@@ -217,8 +217,7 @@ instance (Selector s, GPrettyShow f) => GPrettyShowAux (S1 s f) where
     gprettyShowAux opts s@(M1 x) = Layout [LayoutUnit (labelModifier opts $ selName s) (gprettyShow opts x)]
 
 --------------------------------------------------------------------
-
-
+{-
 correctMaybes :: (Generic a, CorrectMaybes (Rep a)) => a -> Bool
 correctMaybes x = case gCorrectMaybes . from $ x
     of Nothing -> True
@@ -265,7 +264,7 @@ instance CorrectMaybes' (Maybe a) where
 
 class CorrectMaybes1 f where
     gCorrectMaybes1 :: f a -> Maybe Bool
--- {-
+-- {
 
 instance (CorrectMaybes1 f, Datatype d) => CorrectMaybes1 (D1 d f) where
     gCorrectMaybes1 z@(M1 x) =
@@ -295,4 +294,4 @@ instance (Constructor d) => CorrectMaybes2 (C1 d f) where
 instance (CorrectMaybes2 f, CorrectMaybes2 g) => CorrectMaybes2 ((:+:) f g) where
     gCorrectMaybes2 (L1 x) = gCorrectMaybes2 x
     gCorrectMaybes2 (R1 x) = gCorrectMaybes2 x
-
+-}

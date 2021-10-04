@@ -21,6 +21,7 @@ import Types.Posts
 import Types.Tags
 import Types.Users
 import Utils
+import qualified Data.Text.Encoding as E
 {-
 -}
 
@@ -30,6 +31,9 @@ data Entity =
 
 showE :: Entity -> String
 showE x = drop 1 $ unCap $ show x
+
+showEText :: Entity -> T.Text
+showEText = T.pack . showE
 
 class (Ae.ToJSON a) => Gettable a
 

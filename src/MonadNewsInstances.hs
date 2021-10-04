@@ -164,7 +164,7 @@ editThis' s u = case updateParams s u of
         case ids of
             [] -> return (Left MNoAction)
             [x] -> return (Right x)
-            _   -> Ex.throwInvalidUnique undefined ids
+            _   -> Ex.throwInvalidUnique (uName s) ids
 
 
 createThis' :: (CreateSQL s) => s -> Create s -> ServerIO (Either ModifyError Int)
@@ -178,7 +178,7 @@ createThis' w cres = do
         case ints of
             [] -> return $ Left MNoAction
             [x] -> return $ Right x
-            _ -> Ex.throwInvalidUnique undefined ints
+            _ -> Ex.throwInvalidUnique (cName w) ints
 
 
 
@@ -193,5 +193,5 @@ deleteThis' s del = do
     case ids of
         [] -> return $ Left DNoAction
         [id] -> return $ Right id
-        _ -> Ex.throwInvalidUnique undefined ids
+        _ -> Ex.throwInvalidUnique (dName s) ids
 
