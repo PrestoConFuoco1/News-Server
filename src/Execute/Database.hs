@@ -9,13 +9,11 @@ import Control.Monad (when)
 
 import qualified GenericPretty as GP
 
-import Database
 
 import qualified Database.PostgreSQL.Simple as PS (SqlError(..))
 import qualified Data.Aeson as Ae
 import qualified Control.Monad.Catch as CMC (catches, Handler(..), MonadCatch, throwM)
 import qualified Data.Text.Encoding as E (decodeUtf8, encodeUtf8)
-import Execute.Types
 import Result
 import Exceptions as Ex
 

@@ -71,6 +71,10 @@ maybeUserToUser h (Just u) = do
 
 
 getUser :: (CMC.MonadThrow m) => D.Handle m -> Maybe User -> m APIResult
+getUser h muser = do
+    user <- maybeUserToUser h muser
+    return $ RGetUser user
+{-
 getUser h Nothing = do
     D.logDebug h $ getUserFname <> "no user found, throwing unauthorized"
     Ex.throwUnauthorized
@@ -78,7 +82,7 @@ getUser h (Just u) = do
     D.logDebug h $ getUserFname <> "found user"
     D.logDebug h $ GP.textPretty u
     return $ RGetUser u
-
+-}
 getUserFname = "getUser: "
 
 authenticate :: (CMC.MonadThrow m) => D.Handle m -> Authenticate -> m APIResult

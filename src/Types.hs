@@ -12,10 +12,8 @@ import qualified Data.Text as T
 import qualified Data.Time as Time
 import qualified GenericPretty as GP
 import qualified Data.Aeson as Ae
-import General
 import Types.Authors as TypesInternal
 import Types.Category as TypesInternal
---import Types.Comments
 import Types.Common as TypesInternal
 import Types.Draft as TypesInternal
 import Types.Posts as TypesInternal

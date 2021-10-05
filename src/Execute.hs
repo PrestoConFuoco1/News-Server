@@ -20,7 +20,6 @@ import qualified Types as Ty
 import qualified Control.Monad.Catch as CMC (catches, Handler(..), MonadCatch, catch, MonadCatch)
 import qualified Data.Text.Encoding as E (decodeUtf8, encodeUtf8)
 import Result
-import Execute.Types
 import Execute.Draft
 
 import Types

@@ -1,3 +1,4 @@
+{-
 module Database(
 CreateSQL(..),
 UpdateSQL(..),
@@ -33,12 +34,14 @@ draftEditPublishDummy,
 dummyUPost,
 dummyCPost
 ) where
+-}
+module Database (module D) where
 
-
-import Database.Read
-import Database.Create
-import Database.Delete
-import Database.Update
+import Database.Read as D
+import Database.Create as D
+import Database.Delete as D
+import Database.Update as D
+import Database.HasTags as D
 import Prelude hiding (Read)
 
 

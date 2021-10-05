@@ -33,3 +33,6 @@ simpleLog = Handle $ fileLogger S.stderr
 
 fileLogger :: S.Handle -> Priority -> T.Text -> IO ()
 fileLogger h p s = S.hPutStrLn S.stderr $ '[' : show p ++ "]: " ++ T.unpack s
+
+emptyLogger :: Handle IO
+emptyLogger = Handle $ \p s -> return ()

@@ -8,7 +8,6 @@ module Lib
 import qualified Network.Wai.Handler.Warp as Warp (run)
 import qualified Network.Wai as W (Request(..), Response, Application, responseLBS)
 import qualified Data.Text as T (pack)
---import Control.Exception
 
 import qualified GenericPretty as GP (defaultPretty)
 
@@ -19,7 +18,6 @@ import Result
 
 import qualified App.Logger as L (simpleLog, logDebug)
 import qualified Database.PostgreSQL.Simple as PS (connectPostgreSQL, Connection, close)
-import qualified Handler.Database as DB (Handle(..))
 import qualified Data.Aeson as Ae (encode, ToJSON(..))
 
 import qualified Exceptions as Ex (mainErrorHandler, defaultMainHandler)

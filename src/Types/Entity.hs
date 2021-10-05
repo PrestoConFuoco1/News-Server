@@ -11,10 +11,8 @@ import qualified Data.Text as T
 import qualified Data.Time as Time
 import qualified GenericPretty as GP
 import qualified Data.Aeson as Ae
-import General
 import Types.Authors
 import Types.Category
---import Types.Comments
 import Types.Common
 import Types.Draft
 import Types.Posts
@@ -22,8 +20,6 @@ import Types.Tags
 import Types.Users
 import Utils
 import qualified Data.Text.Encoding as E
-{-
--}
 
 data Entity =
     EUser | EAuthor | ECategory | ETag | EComment | EDraft | EPost

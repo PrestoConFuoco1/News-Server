@@ -50,20 +50,13 @@ library
       Execute
       Execute.Database
       Execute.Draft
-      Execute.HasTags
-      Execute.Types
       Execute.Utils
-      General
       GenericPretty
       Handler.Database
       Handler.Logger
       IO.Postgres
-      IO.ServerIO
       Lib
       Migrations
-      MonadLog
-      MonadNews
-      MonadNewsInstances
       Result
       Types
       Types.APIErrors
@@ -135,6 +128,7 @@ test-suite warpt3-test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
+      Handlers
       Paths_warpt3
   hs-source-dirs:
       test

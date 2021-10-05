@@ -21,7 +21,7 @@ data ServerException =
     | NotAnAuthor
     | InvalidUpdate
     | TokenShared [Int]
-    deriving (Show)
+    deriving (Show, Eq)
 
 
 throwForbidden :: (CMC.MonadThrow m) => m a
