@@ -35,6 +35,9 @@ library
       Action.Tags
       Action.Users
       Action.Utils
+      App.Database
+      App.Database.Postgres
+      App.Logger
       Database
       Database.Create
       Database.Delete
@@ -53,6 +56,7 @@ library
       GenericPretty
       Handler.Database
       Handler.Logger
+      IO.Postgres
       IO.ServerIO
       Lib
       Migrations

@@ -14,9 +14,6 @@ import qualified Data.ByteString as BS
 import Control.Monad.Catch as CMC
 import Control.Exception as CE
 
-import System.Random
-import GHC.Arr
-
 
 data ServerHandlers = ServerHandlers {
     logger :: L.Handle,
@@ -58,13 +55,6 @@ withTransaction m = do
     liftIO $ PS.withTransaction conn $ runReaderT (runServerIO m) s
 
 
-randomString' :: Int -> IO String            
-randomString' int = do
-        let str = "qwertyuiopasdfghjklzxcvbnm"
-            len = length str
-            arr = array (1, len) $ zip [1..len] str
-        xs <- sequence $ replicate int $ randomRIO (1, len)
-        return $ map (arr !) xs
 ------------------------------------------------
 
 

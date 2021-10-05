@@ -3,18 +3,7 @@
 module Execute.HasTags where
 
 import qualified Data.Text as T (pack, Text)
-import qualified Database.PostgreSQL.Simple.Types as PSTy
 import qualified Database.PostgreSQL.Simple as PS
-import Database.Update
-import MonadLog
-import Execute.Types
---import Execute.Utils
-import Database.SqlValue
-import Database.Update
-import qualified Exceptions as Ex
-import qualified Data.Aeson as Ae (Value(..))
-import IO.ServerIO
-import Types
 
 class (Show (HIdent s)) => HasTags s where
     type HIdent s :: *
@@ -41,7 +30,7 @@ instance HasTags HPost where
     hName' _ = "post"
 
 
-
+{-
 attachTags :: (HasTags s) => s -> HIdent s -> [Int] -> ServerIO (Either TagsError [Int])
 attachTags s hasTagsId [] = do
     logInfo $ "No tags attached to " <> hName' s <> " with id = " <> (T.pack $ show hasTagsId)
@@ -83,7 +72,7 @@ removeAllButGivenTags s hasTagsId tags = do
     tagsDel <- fmap (map PSTy.fromOnly) $ query str params
     logDebug $ "Removed tags with id in " <> (T.pack $ show tagsDel) <> " from " <> hName' s <> " with id = " <> (T.pack $ show hasTagsId)
     return tagsDel
+-}
 
 
- 
- 
+

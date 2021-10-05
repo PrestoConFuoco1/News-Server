@@ -5,6 +5,11 @@ import qualified Data.ByteString as B
 import Text.Regex.PCRE
 import qualified Data.Text.Encoding as E
 import Data.Char
+import System.Random
+import GHC.Arr
+
+
+
 
 showText :: (Show a) => a -> T.Text
 showText = T.pack . show
@@ -22,3 +27,13 @@ getPair str = let patt = "\\((\\w+)\\)=\\((\\w+)\\)" :: B.ByteString
 
 unCap (x:xs) = toLower x : xs
 unCap ys = ys
+
+
+randomString' :: Int -> IO String            
+randomString' int = do
+        let str = "qwertyuiopasdfghjklzxcvbnm"
+            len = length str
+            arr = array (1, len) $ zip [1..len] str
+        xs <- sequence $ replicate int $ randomRIO (1, len)
+        return $ map (arr !) xs
+
