@@ -41,6 +41,7 @@ library
       Database
       Database.Create
       Database.Delete
+      Database.HasTags
       Database.Read
       Database.SqlQueryTypes
       Database.SqlValue

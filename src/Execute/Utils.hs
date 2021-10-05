@@ -2,66 +2,93 @@ module Execute.Utils where
 
 import qualified Control.Monad.Catch as CMC
 import qualified Exceptions as Ex
-import MonadNews
 import Types
 import Control.Monad (when)
 import qualified Data.Text as T
 import qualified Data.Aeson as Ae
 import Result
+import qualified App.Database as D
+import qualified GenericPretty as GP
+
+withAuthAdmin :: (CMC.MonadThrow m) => D.Handle m -> Maybe Token -> m ()
+withAuthAdmin h y = do
+    muser <- withAuth h y
+    checkAdmin h muser
+
+withAuthor :: (CMC.MonadThrow m) => D.Handle m -> Maybe Token -> m Author
+withAuthor h y = do
+    muser <- withAuth h y
+    user <- maybeUserToUser h muser
+    mauthor <- D.userAuthor h user
+    maybe Ex.notAnAuthor return mauthor
 
 
-withAuthAdmin y = withAuth y >>= checkAdmin
+withAuth :: (Monad m) => D.Handle m -> Maybe Token -> m (Maybe User)
+withAuth h mtoken = do
+    let fname = "withAuth: "
+    D.logDebug h $ fname <> "trying to get user by token"
+    muser <- case mtoken of
+        Nothing -> do
+            D.logDebug h $ fname <> "no token supplied"
+            return Nothing
+        Just token -> do
+            D.logDebug h $ fname <> "searching for user with token = " <> token
+            D.getUserByToken h token
+    return muser
 
-withAuthor y = 
-    withAuth y >>= maybeUserToUser >>= userAuthor >>= maybe Ex.notAnAuthor return
-
-
-withAuth :: (MonadNews m) => Maybe Token -> m (Maybe User)
-withAuth mtoken = case mtoken of
-    Nothing -> return Nothing
-    Just token -> do
-        muser <- getUserByToken token
-        return muser
-
-checkAdmin :: (CMC.MonadThrow m) => Maybe User -> m ()
-checkAdmin muser =
-   when ((muser >>= _u_admin) /= Just True) $ Ex.throwForbidden
+checkAdmin :: (CMC.MonadThrow m) => D.Handle m -> Maybe User -> m ()
+checkAdmin h muser = do
+  let fname = "checkAdmin: "
+  case muser of
+    Nothing -> do
+        D.logDebug h $ fname <> "no user found, throwing forbidden"
+        Ex.throwForbidden
+    Just user -> do
+        D.logDebug h $ fname <> "found user"
+        D.logDebug h $ GP.textPretty user
+        if ((_u_admin user) /= Just True)
+          then do
+            D.logDebug h $ fname <> "user is not admin, throwing forbidden"
+            Ex.throwForbidden
+          else do
+            D.logDebug h $ fname <> "ok, user is admin"
+            return ()
+        
 
 
 {-
 -}
-maybeUserToUser :: (CMC.MonadThrow m) => Maybe User -> m User
-maybeUserToUser Nothing = Ex.throwUnauthorized
-maybeUserToUser (Just u) = return u
-{-
-validateUnique :: (CMC.MonadThrow m) => m a -> [a] -> m a
-validateUnique x [] = x
-validateUnique _ [a] = return a
-validateUnique _ us  = Ex.invalidUnique us
+maybeUserToUser :: (CMC.MonadThrow m) => D.Handle m -> Maybe User -> m User
+maybeUserToUser h Nothing = do
+    let fname = "maybeUserToUser: "
+    D.logDebug h $ fname <> "no user found, throwing unauthorized"
+    Ex.throwUnauthorized
+maybeUserToUser h (Just u) = do
+    let fname = "maybeUserToUser: "
+    D.logDebug h $ fname <> "found user"
+    D.logDebug h $ GP.textPretty u
+    return u
 
 
-validateUnique2 :: (Monad m) => m a -> m a -> [a] -> m a
-validateUnique2 empty toomuch [] = empty
-validateUnique2 empty toomuch [a] = return a
-validateUnique2 empty toomuch us = toomuch
--}
+getUser :: (CMC.MonadThrow m) => D.Handle m -> Maybe User -> m APIResult
+getUser h Nothing = do
+    D.logDebug h $ getUserFname <> "no user found, throwing unauthorized"
+    Ex.throwUnauthorized
+getUser h (Just u) = do
+    D.logDebug h $ getUserFname <> "found user"
+    D.logDebug h $ GP.textPretty u
+    return $ RGetUser u
 
-getUser :: (CMC.MonadThrow m) => Maybe User -> m APIResult
-getUser Nothing = Ex.throwUnauthorized
-getUser (Just u) = return $ RGetUser u
-                   --let val = Ae.toJSON u
-                   --in  return $ ok "Success" val
+getUserFname = "getUser: "
 
-
-authenticate :: (MonadNews m) => Authenticate -> m APIResult
-authenticate auth = do
-    muser <- getUserByLogin $ _au_login auth
+authenticate :: (CMC.MonadThrow m) => D.Handle m -> Authenticate -> m APIResult
+authenticate h auth = do
+    muser <- D.getUserByLogin h $ _au_login auth
     user <- maybe Ex.throwInvalidLogin return muser
     when (_u_passHash user /= _au_passHash auth) $
         CMC.throwM Ex.InvalidPassword
-    token <- fmap (T.pack) $ randomString1 10
-    token' <- addToken (_u_id user) token
-    --return $ ok "Success" $ Ae.toJSON token'
+    token <- fmap (T.pack) $ D.generateToken h 10
+    token' <- D.addToken h (_u_id user) token
     return $ RGetToken token'
 
 

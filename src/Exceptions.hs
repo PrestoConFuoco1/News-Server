@@ -1,7 +1,6 @@
 module Exceptions where
 
 import Control.Monad.Catch as CMC (Handler(..), catches, SomeException, throwM, Exception(..), MonadCatch(..), MonadThrow(..))
-import MonadLog
 import Database.PostgreSQL.Simple as PS (sqlState, SqlError(..), QueryError)
 import qualified Data.Text as T (Text, pack)
 import qualified GenericPretty as GP (PrettyShow(..), defaultPretty)
@@ -30,7 +29,7 @@ throwForbidden = CMC.throwM Forbidden
 
 {-
 -}
-mainErrorHandler :: (MonadThrow m, MonadLog m) => ServerException -> m U.Response
+mainErrorHandler :: (MonadThrow m) => ServerException -> m U.Response
 mainErrorHandler Default = return $ U.internal U.internalErrorMsg
 mainErrorHandler Unauthorized = return $ U.unauthorized U.unauthorizedMsg
 mainErrorHandler (InvalidUniqueEntities ent xs) = return $ U.internal U.internalErrorMsg
@@ -38,8 +37,8 @@ mainErrorHandler Forbidden = return $ U.bad U.invalidEndpointMsg
 mainErrorHandler InvalidLogin = return $ U.bad $ U.invalidLoginMsg
 mainErrorHandler InvalidPassword = return $ U.bad U.invalidPasswordMsg
 mainErrorHandler NotAnAuthor = return $ U.bad U.notAnAuthorMsg
-mainErrorHandler (TokenShared xs) = logError ("Token shared between users with id in " <> T.pack (show xs))
-        >> return (U.internal U.internalErrorMsg)
+mainErrorHandler (TokenShared xs) = --logError ("Token shared between users with id in " <> T.pack (show xs)) >>
+        return (U.internal U.internalErrorMsg)
 
 instance CMC.Exception ServerException
 
@@ -55,39 +54,39 @@ throwUnauthorized = CMC.throwM $ Unauthorized
 -}
 throwInvalidUnique :: (MonadThrow m) => Entity -> [Int] -> m b
 throwInvalidUnique ent xs = do
---    logError $ T.pack $ GP.defaultPretty xs
+    --logError $ T.pack $ GP.defaultPretty xs
     CMC.throwM $ InvalidUniqueEntities ent xs
 
 
-throwInvalidLogin :: (MonadThrow m, MonadLog m) => m a
+throwInvalidLogin :: (MonadThrow m)=> m a
 throwInvalidLogin = CMC.throwM $ InvalidLogin
 
-notAnAuthor :: (MonadThrow m, MonadLog m) => m a
+notAnAuthor :: (MonadThrow m) => m a
 notAnAuthor = CMC.throwM $ NotAnAuthor
 
-defaultSqlHandler :: (MonadThrow m, MonadLog m) => T.Text -> PS.SqlError -> m a
+defaultSqlHandler :: (MonadThrow m) => T.Text -> PS.SqlError -> m a
 defaultSqlHandler funcMsg e = do
-    logError "Some not caught exception"
-    logError funcMsg
-    logError (T.pack $ displayException e)
+    --logError "Some not caught exception"
+    --logError funcMsg
+    --logError (T.pack $ displayException e)
     CMC.throwM Default
 
-queryErrorHandler :: (MonadThrow m, MonadLog m) => T.Text -> PS.QueryError -> m a
+queryErrorHandler :: (MonadThrow m) => T.Text -> PS.QueryError -> m a
 queryErrorHandler funcMsg e = do
-    logError "Query is used to perform an INSERT-like operation, \
-             \or execute is used to perform a SELECT-like operation."
-    logError funcMsg
-    logError (T.pack $ displayException e)
+    --logError "Query is used to perform an INSERT-like operation, \
+    --         \or execute is used to perform a SELECT-like operation."
+    --logError funcMsg
+    --logError (T.pack $ displayException e)
     CMC.throwM Default
 
-resultErrorHandler :: (MonadThrow m, MonadLog m) => T.Text -> PS.QueryError -> m a
+resultErrorHandler :: (MonadThrow m) => T.Text -> PS.QueryError -> m a
 resultErrorHandler funcMsg e = do
-    logError "Conversion from a SQL value to Haskell value failed."
-    logError funcMsg
-    logError (T.pack $ displayException e)
+    --logError "Conversion from a SQL value to Haskell value failed."
+    --logError funcMsg
+    --logError (T.pack $ displayException e)
     CMC.throwM Default
 
-defaultHandlers :: (MonadThrow m, MonadLog m) => T.Text -> [Handler m a]
+defaultHandlers :: (MonadThrow m) => T.Text -> [Handler m a]
 defaultHandlers funcMsg = [Handler $ queryErrorHandler funcMsg,
                            Handler $ resultErrorHandler funcMsg,
                            Handler $ defaultSqlHandler funcMsg]
@@ -101,9 +100,9 @@ withExceptionHandlers = flip CMC.catches
 withHandler :: (CMC.MonadCatch m, Exception e) => (e -> m a) -> m a -> m a
 withHandler = flip CMC.catch
 
-defaultMainHandler :: (MonadLog m, MonadThrow m) => SomeException -> m U.Response
+defaultMainHandler :: (MonadThrow m) => SomeException -> m U.Response
 defaultMainHandler e = do
-    logError $ T.pack $ displayException e
+    --logError $ T.pack $ displayException e
     return $ U.internal U.internalErrorMsg
 
 

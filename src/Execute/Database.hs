@@ -17,8 +17,6 @@ import qualified Control.Monad.Catch as CMC (catches, Handler(..), MonadCatch, t
 import qualified Data.Text.Encoding as E (decodeUtf8, encodeUtf8)
 import Execute.Types
 import Result
-import MonadLog
-import MonadNews
 import Exceptions as Ex
 
 import Database.SqlValue
@@ -33,7 +31,7 @@ getThis1 f x = do
     --return $ RGet $ RGettable cat
     return $ RGet $ RGettable xs
 
-createThis1 :: (CMC.MonadCatch m, MonadLog m) => Entity -> (a -> m (Either ModifyError Int)) -> a -> m APIResult
+createThis1 :: (CMC.MonadCatch m) => Entity -> (a -> m (Either ModifyError Int)) -> a -> m APIResult
 createThis1 name create x = do
 --      (CMC.Handler (Ex.creUpdExceptionHandler1 name)
 --       : Ex.defaultHandlers "createThis1") $ do
@@ -48,7 +46,7 @@ createThis1 name create x = do
 deleteErrorToApiResult :: Entity -> DeleteError -> APIResult
 deleteErrorToApiResult ent DNoAction = RNotFound ent
 
-deleteThis1 :: (CMC.MonadCatch m, MonadLog m) => Entity -> (a -> m (Either DeleteError Int)) -> a -> m APIResult
+deleteThis1 :: (CMC.MonadCatch m) => Entity -> (a -> m (Either DeleteError Int)) -> a -> m APIResult
 deleteThis1 name delete x = do --withExceptionHandlers (Ex.defaultHandlers "deleteThis1") $ do
     eithDeleted <- delete x
     --deleted <- validateUnique (hrowDelNotFound name) dels
@@ -58,7 +56,7 @@ deleteThis1 name delete x = do --withExceptionHandlers (Ex.defaultHandlers "dele
         Right int -> return $ RDeleted name int
         Left err -> return $ deleteErrorToApiResult name err
 
-editThis1 :: (CMC.MonadCatch m, MonadLog m) => Entity -> (a -> m (Either ModifyError Int)) -> a -> m APIResult
+editThis1 :: (CMC.MonadCatch m) => Entity -> (a -> m (Either ModifyError Int)) -> a -> m APIResult
 editThis1 name update x = do
 --      (CMC.Handler (Ex.creUpdExceptionHandler1 name)
 --      : Ex.defaultHandlers "editThis1") $ do

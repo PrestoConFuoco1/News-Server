@@ -2,8 +2,36 @@
              FlexibleContexts #-}
 module Execute.HasTags where
 
+
 import qualified Data.Text as T (pack, Text)
+
+import qualified Database.PostgreSQL.Simple.Types as PSTy
 import qualified Database.PostgreSQL.Simple as PS
+
+
+import Execute.Types
+import MonadLog
+--import Execute.Utils
+
+import IO.ServerIO
+import MonadNews
+--import MonadNewsInstances
+import Database.SqlValue
+--import Execute.Actions
+import Database.Create
+import Database.Update
+import Result
+--import Execute.HasTags
+import qualified Exceptions as Ex
+
+import qualified Data.Aeson as Ae (Value(..))
+import Database.Read
+
+import Types
+import Execute.Database
+import Execute.Utils
+import qualified Control.Monad.Catch as CMC
+
 
 class (Show (HIdent s)) => HasTags s where
     type HIdent s :: *
@@ -30,7 +58,7 @@ instance HasTags HPost where
     hName' _ = "post"
 
 
-{-
+-- {-
 attachTags :: (HasTags s) => s -> HIdent s -> [Int] -> ServerIO (Either TagsError [Int])
 attachTags s hasTagsId [] = do
     logInfo $ "No tags attached to " <> hName' s <> " with id = " <> (T.pack $ show hasTagsId)
@@ -72,7 +100,7 @@ removeAllButGivenTags s hasTagsId tags = do
     tagsDel <- fmap (map PSTy.fromOnly) $ query str params
     logDebug $ "Removed tags with id in " <> (T.pack $ show tagsDel) <> " from " <> hName' s <> " with id = " <> (T.pack $ show hasTagsId)
     return tagsDel
--}
+-- -}
 
 
 

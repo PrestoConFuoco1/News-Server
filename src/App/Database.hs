@@ -1,4 +1,4 @@
-{-# LANGUAGE ExistentialQuantification #-}
+{-# LANGUAGE ExistentialQuantification, RankNTypes #-}
 module App.Database where
 
 import Types
@@ -7,7 +7,7 @@ import Prelude hiding (log)
 import qualified App.Logger as Logger
 
 
-data Handle m = forall a. Handle
+data Handle m = {- forall a. -} Handle
     {
 
     -- logger
@@ -54,7 +54,7 @@ data Handle m = forall a. Handle
 
     -- drafts, posts, publish,
 
-    withTransaction :: m a -> m a,
+    withTransaction :: (forall a. m a -> m a),
 
 
     getDrafts :: Paginated (WithAuthor GetDrafts) -> m [Draft],
@@ -75,3 +75,12 @@ data Handle m = forall a. Handle
     removeAllButGivenTagsPost :: PostId -> [TagId] -> m [TagId]
 
     }
+
+
+logDebug, logInfo, logWarning, logError :: Handle m -> T.Text -> m ()
+
+logDebug h = Logger.logDebug (log h)
+logInfo h = Logger.logInfo (log h)
+logWarning h = Logger.logWarning (log h)
+logError h = Logger.logError (log h)
+logFatal h = Logger.logFatal (log h)

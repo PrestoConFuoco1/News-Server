@@ -2,7 +2,7 @@ module IO.Postgres where
 
 import Database
 import Database.Update
-import Execute.HasTags
+import Database.HasTags
 import Database.SqlValue
 import Prelude hiding (Read)
 import qualified Data.Text as T
@@ -11,6 +11,7 @@ import qualified Database.PostgreSQL.Simple.Types as PSTy
 import qualified Exceptions as Ex
 import Types
 import qualified Utils as U
+--import qualified App.Logger as L
 
 generateToken1 :: Int -> IO String
 generateToken1 = U.randomString'

@@ -17,7 +17,7 @@ module GenericPretty where
 
 import GHC.Generics
 
-import qualified Data.Text as T (Text)
+import qualified Data.Text as T (Text, pack)
 import qualified Data.Text.Lazy as TL (Text, pack, unpack)
 
 import Data.Void
@@ -98,6 +98,9 @@ withIndent ind str = numToIndent ind ++ str
 defaultPretty :: (PrettyShow a) => a -> String
 --defaultPretty title x = prettyUnit 0 (LayoutUnit title $ prettyShow x)
 defaultPretty x = prettyValue 0 (prettyShow x)
+
+textPretty :: (PrettyShow a) => a -> T.Text
+textPretty = T.pack . defaultPretty
 
 prettyUnit :: Int -> LayoutUnit -> String
 prettyUnit _ (LayoutUnit s (LEmpty)) = ""

@@ -10,7 +10,7 @@ import qualified Database.PostgreSQL.Simple as PS
 import qualified App.Logger as Logger
 import Prelude hiding (log)
 import Database
-import Execute.HasTags
+import Database.HasTags
 import Types
 import Control.Monad ((>=>))
 

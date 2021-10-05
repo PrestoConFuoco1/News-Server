@@ -14,7 +14,7 @@ module Handler.Logger (
 import Prelude hiding (log)
 import qualified Data.Text as T (Text, pack, unpack)
 
-newtype Handle = Handle { log :: Priority -> T.Text -> IO () }
+newtype Handle m = Handle { log :: Priority -> T.Text -> m () }
 
 type LoggerEntry = (Priority, T.Text)
 
@@ -26,7 +26,7 @@ data Priority = Debug
             deriving (Eq, Ord, Show)
 
 
-logDebug, logInfo, logWarning, logError :: Handle -> T.Text -> IO ()
+logDebug, logInfo, logWarning, logError :: Handle m -> T.Text -> m ()
 logDebug = (`log` Debug)
 logInfo = (`log` Info)
 logWarning = (`log` Warning)

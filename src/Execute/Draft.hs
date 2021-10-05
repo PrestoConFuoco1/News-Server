@@ -10,17 +10,12 @@ import qualified Database.PostgreSQL.Simple as PS
 
 
 import Execute.Types
-import MonadLog
---import Execute.Utils
+import qualified App.Database as D
 
-import MonadNews
-import MonadNewsInstances
 import Database.SqlValue
---import Execute.Actions
 import Database.Create
 import Database.Update
 import Result
---import Execute.HasTags
 import qualified Exceptions as Ex
 
 import qualified Data.Aeson as Ae (Value(..))
@@ -30,118 +25,103 @@ import Types
 import Execute.Database
 import Execute.Utils
 import qualified Control.Monad.Catch as CMC
-{-
-draftActionHandler :: (MonadThrow m, MonadLog m) => T.Text -> SomeException -> m a
-draftActionHandler action e =
-    let str = "Failed to " <> action <> " draft."
-    in  logError (str <> ", all changes are discarded")
-                            >> CMC.throwM e
-
-publishHandler :: (MonadThrow m, MonadLog m) => SomeException -> m a
-publishHandler e = draftActionHandler "publish" e
-draftCreateHandler :: (MonadThrow m, MonadLog m) => SomeException -> m a
-draftCreateHandler e = draftActionHandler "create" e
-draftEditHandler :: (MonadThrow m, MonadLog m) => SomeException -> m a
-draftEditHandler e = draftActionHandler "edit" e
--}
-
 
 draftModifyErrorToApiResult :: DraftModifyError -> APIResult
 draftModifyErrorToApiResult (DModifyError x) = modifyErrorToApiResult EDraft x
 draftModifyErrorToApiResult (DTagsError (TagsAttachError (ForeignViolation field value))) = RInvalidTag value
 
-draftModifyHandler :: (MonadNews m) => DraftModifyError -> m APIResult
+draftModifyHandler :: (CMC.MonadCatch m) => DraftModifyError -> m APIResult
 draftModifyHandler = return . draftModifyErrorToApiResult
 
-createDraft :: (MonadNews m) => WithAuthor CreateDraft -> m APIResult
-createDraft x@(WithAuthor a CreateDraft{..}) = --Ex.withHandler draftCreateHandler $
-  Ex.withHandler draftModifyHandler $ withTransaction' $ do
-    eithDraft <- createDraftN x
-  --  logDebug $ "Created draft with id = " <> (T.pack $ show draft)
+createDraft :: (CMC.MonadCatch m) => D.Handle m -> WithAuthor CreateDraft -> m APIResult
+createDraft h x@(WithAuthor a CreateDraft{..}) =
+  Ex.withHandler draftModifyHandler $ D.withTransaction h $ do
+    eithDraft <- D.createDraft h x
     case eithDraft of
         Left err -> CMC.throwM $ DModifyError err
         Right draft -> do
-            eithTags <- attachTagsToDraft draft _cd_tags
+            D.logDebug h $ "Created draft with id = " <> (T.pack $ show draft)
+            eithTags <- D.attachTagsToDraft h draft _cd_tags
             case eithTags of
               Left err -> CMC.throwM $ DTagsError err 
-            --logInfo $ attached "draft" tags draft
-              Right tags -> return $ RCreated EDraft draft
---return $ okCreated ("Draft successfully created. " <> idInResult) draft
+              Right tags -> do
+                D.logInfo h $ attached "draft" tags draft
+                return $ RCreated EDraft draft
 
-editDraft :: (MonadNews m) => WithAuthor EditDraft -> m APIResult
-editDraft x@(WithAuthor a EditDraft{..}) = Ex.withHandler draftModifyHandler $
-                                                withTransaction' $ do
-    eithDraft <- editDraftN x
+editDraft :: (CMC.MonadCatch m) => D.Handle m -> WithAuthor EditDraft -> m APIResult
+editDraft
+    h@(D.Handle { withTransaction = withTr })
+    x@(WithAuthor a EditDraft{..}) =
+        Ex.withHandler draftModifyHandler $
+            withTr $ do
+    eithDraft <- D.editDraft h x
     case eithDraft of
         Left err -> CMC.throwM $ DModifyError err
         Right draft ->
             case _ed_tags of
                 Nothing -> return $ RCreated EDraft draft
                 Just tags -> do
-                    eithTs <- attachTagsToDraft draft tags
+                    eithTs <- D.attachTagsToDraft h draft tags
                     case eithTs of
                         Left err -> CMC.throwM $ DTagsError err
                         Right ts -> do
-                            logInfo $ attached "draft" ts draft
-                            tsRem <- removeAllButGivenTagsDraft draft tags
-                            logInfo $ removed "draft" tsRem draft
+                            D.logInfo h $ attached "draft" ts draft
+                            tsRem <- D.removeAllButGivenTagsDraft h draft tags
+                            D.logInfo h $ removed "draft" tsRem draft
                             return $ RCreated EDraft draft
          
-            --return (ok "Draft successfully edited" Ae.Null)
 
 
-publishHandler :: MonadNews m => DraftModifyError -> m APIResult
+publishHandler :: CMC.MonadCatch m => DraftModifyError -> m APIResult
 publishHandler = draftModifyHandler
 
-publish :: (MonadNews m) => WithAuthor Publish -> m APIResult
-publish x@(WithAuthor a Publish{..}) = Ex.withHandler publishHandler $
-                                       withTransaction' $ do
-    eithDraft <- getDraftRaw x
+publish :: (CMC.MonadCatch m) => D.Handle m -> WithAuthor Publish -> m APIResult
+publish h x@(WithAuthor a Publish{..}) = Ex.withHandler publishHandler $
+                                       D.withTransaction h $ do
+    eithDraft <- D.getDraftRaw h x
     case eithDraft of
         Nothing -> return $ RNotFound EDraft
         Just draft ->
             case _dr_postId draft of
-                Nothing -> publishCreate draft
-                Just post -> publishEdit post draft
+                Nothing -> publishCreate h draft
+                Just post -> publishEdit h post draft
 
 
-publishCreate :: (MonadNews m) => DraftRaw -> m APIResult
-publishCreate x = do
-    eithPost <- createPost x
+publishCreate :: (CMC.MonadCatch m) => D.Handle m -> DraftRaw -> m APIResult
+publishCreate h x = do
+    eithPost <- D.createPost h x
     case eithPost of
         Left err -> CMC.throwM $ DModifyError err
         Right post -> do
-            logInfo $ "Created post with id = " <> showText post
-            eithDraft <- editDraftPublish (EditDraftPublish post $ _dr_draftId x)
+            D.logInfo h $ "Created post with id = " <> showText post
+            eithDraft <- D.editDraftPublish h (EditDraftPublish post $ _dr_draftId x)
             case eithDraft of
                 Left err -> CMC.throwM $ DModifyError err
                 Right draft -> do
-                    logInfo $ "Added post_id to draft with id = " <> showText draft
-                    eithTags_ <- attachTagsToPost post (_dr_tagIds x)
+                    D.logInfo h $ "Added post_id to draft with id = " <> showText draft
+                    eithTags_ <- D.attachTagsToPost h post (_dr_tagIds x)
                     case eithTags_ of
                         Left err -> CMC.throwM $ DTagsError err
                         Right tags_ -> do
-                            logInfo $ attached "post" tags_ post
+                            D.logInfo h $ attached "post" tags_ post
                             return $ RCreated EPost post
-                            --return $ okCreated "Post successfully created" post
 
 
-publishEdit :: (MonadNews m) => Int -> DraftRaw -> m APIResult
-publishEdit post draft = Ex.withHandler draftModifyHandler $ withTransaction' $ do
+publishEdit :: (CMC.MonadCatch m) => D.Handle m -> Int -> DraftRaw -> m APIResult
+publishEdit h post draft = Ex.withHandler draftModifyHandler $ D.withTransaction h $ do
     let
         publishPost = func post draft
-    eithPost_ <- editPostPublish publishPost
+    eithPost_ <- D.editPostPublish h publishPost
     post_ <- th DModifyError eithPost_
-    eithTs <- attachTagsToPost post $ _dr_tagIds draft
+    eithTs <- D.attachTagsToPost h post $ _dr_tagIds draft
     ts <- th DTagsError eithTs
-    logInfo $ attached "post" ts post
-    tsRem <- removeAllButGivenTagsPost post $ _dr_tagIds draft
-    logInfo $ removed "post" tsRem draft
-    --return $ okCreated "Draft successfully published, post_id is in \"result\"" post
+    D.logInfo h $ attached "post" ts post
+    tsRem <- D.removeAllButGivenTagsPost h post $ _dr_tagIds draft
+    D.logInfo h $ removed "post" tsRem draft
     return $ REdited EPost post_
-{-
--}
-th :: (CMC.MonadThrow m) => (e -> DraftModifyError) -> Either e a -> m a
+
+
+th :: (CMC.MonadCatch m) => (e -> DraftModifyError) -> Either e a -> m a
 th f x = either (CMC.throwM . f) return x
 
 func :: Int -> DraftRaw -> PublishEditPost
