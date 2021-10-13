@@ -1,5 +1,6 @@
 
 
+
 module Lib
     ( someFunc
     ) where
@@ -29,6 +30,7 @@ import Migrations
 
 import qualified App.Database as D
 import qualified App.Database.Postgres as DP
+import Config
 
 port :: Int
 port = 5555
@@ -39,15 +41,12 @@ someFunc = migrationMain >> someFunc1
 someFunc1 :: IO ()
 someFunc1 = do
     CMC.bracket 
-        --(PS.connectPostgreSQL "dbname='batadase'")
-        --(PS.connectPostgreSQL "dbname=batadase user=app password='789456123'")
-        (PS.connectPostgreSQL "dbname=migration2 user=migration2_app password='0000'")
+        --(PS.connectPostgreSQL "dbname=newsdb user=newsdb_app password='0000'")
+        (PS.connectPostgreSQL $ appConnectionString defaultConfig)
         (\conn -> PS.close conn) -- close connection
         (\conn -> let serverH = DP.connectionToHandle (DP.Connection conn) L.simpleLog in
          Warp.run port $ mainFunc1 serverH)
 
-connectToDB :: IO PS.Connection
-connectToDB = PS.connectPostgreSQL "dbname='batadase'"
 
 mainFunc1 :: D.Handle IO -> W.Application
 mainFunc1 h req respond = do
@@ -91,4 +90,9 @@ toResponse (RAlreadyInUse ent field value) = bad (alreadyInUseMsg ent field valu
 toResponse (RInvalidForeign ent field value) = bad (invalidForeignMsg field value)
 toResponse (RInvalidTag value) = bad (tagNotFoundMsg value)
 
+
+
+
+action :: a
+action = undefined
 

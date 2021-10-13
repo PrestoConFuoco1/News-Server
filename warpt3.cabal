@@ -38,6 +38,7 @@ library
       App.Database
       App.Database.Postgres
       App.Logger
+      Config
       Database
       Database.Create
       Database.Delete

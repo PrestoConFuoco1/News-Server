@@ -26,7 +26,7 @@ migrationMain = do
 -}
 
 migrationMain = do
-    con <- connectPostgreSQL "dbname=migration2 user=migration2_owner password='0000'"
+    con <- connectPostgreSQL "dbname=newsdb user=newsdb_owner password='0000'"
     runMigrations1 con
 
 
