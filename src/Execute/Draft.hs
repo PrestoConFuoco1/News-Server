@@ -8,6 +8,7 @@ import qualified Data.Text as T (pack, Text)
 import qualified Database.PostgreSQL.Simple.Types as PSTy
 import qualified Database.PostgreSQL.Simple as PS
 import qualified App.Database as D
+import qualified App.Logger as L
 import Database.SqlValue
 import Database
 import Result
@@ -22,15 +23,18 @@ draftModifyErrorToApiResult :: DraftModifyError -> APIResult
 draftModifyErrorToApiResult (DModifyError x) = modifyErrorToApiResult EDraft x
 draftModifyErrorToApiResult (DTagsError (TagsAttachError (ForeignViolation field value))) = RInvalidTag value
 
-draftModifyHandler :: (CMC.MonadCatch m) => DraftModifyError -> m APIResult
-draftModifyHandler = return . draftModifyErrorToApiResult
+draftModifyHandler :: (CMC.MonadCatch m) => L.Handle m -> DraftModifyError -> m APIResult
+draftModifyHandler logger err = do
+    L.logError logger $ "Error occured, all changes are discarded"
+    L.logError logger $ T.pack $ CMC.displayException err
+    return $ draftModifyErrorToApiResult err
 
 createDraft :: (CMC.MonadCatch m) => D.Handle m -> WithAuthor CreateDraft -> m APIResult
 createDraft h x@(WithAuthor a CreateDraft{..}) =
-  Ex.withHandler draftModifyHandler $ D.withTransaction h $ do
+  Ex.withHandler (draftModifyHandler $ D.log h) $ D.withTransaction h $ do
     eithDraft <- D.createDraft h (D.log h) x
     draft <- th DModifyError eithDraft
-    D.logDebug h $ "Created draft with id = " <> (T.pack $ show draft)
+    D.logInfo h $ "Created draft with id = " <> (T.pack $ show draft)
     eithTags <- D.attachTagsToDraft h (D.log h) draft _cd_tags
     tags <- th DTagsError eithTags
     D.logInfo h $ attached "draft" tags draft
@@ -39,7 +43,7 @@ createDraft h x@(WithAuthor a CreateDraft{..}) =
 
 editDraft :: (CMC.MonadCatch m) => D.Handle m -> WithAuthor EditDraft -> m APIResult
 editDraft h x@(WithAuthor a EditDraft{..}) =
-        Ex.withHandler draftModifyHandler $
+        Ex.withHandler (draftModifyHandler $ D.log h) $
             D.withTransaction h $ do
     eithDraft <- D.editDraft h (D.log h) x
     draft <- th DModifyError eithDraft
@@ -54,11 +58,11 @@ editDraft h x@(WithAuthor a EditDraft{..}) =
 
 
 
-publishHandler :: CMC.MonadCatch m => DraftModifyError -> m APIResult
+publishHandler :: CMC.MonadCatch m => L.Handle m -> DraftModifyError -> m APIResult
 publishHandler = draftModifyHandler
 
 publish :: (CMC.MonadCatch m) => D.Handle m -> WithAuthor Publish -> m APIResult
-publish h x@(WithAuthor a Publish{..}) = Ex.withHandler publishHandler $
+publish h x@(WithAuthor a Publish{..}) = Ex.withHandler (publishHandler $ D.log h) $
                                        D.withTransaction h $ do
     eithDraft <- D.getDraftRaw h (D.log h) x
 
@@ -85,7 +89,7 @@ publishCreate h x = do
 
 
 publishEdit :: (CMC.MonadCatch m) => D.Handle m -> Int -> DraftRaw -> m APIResult
-publishEdit h post draft = Ex.withHandler draftModifyHandler $ D.withTransaction h $ do
+publishEdit h post draft = Ex.withHandler (draftModifyHandler $ D.log h) $ D.withTransaction h $ do
     let
         publishPost = func post draft
     eithPost_ <- D.editPostPublish h (D.log h) publishPost

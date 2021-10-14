@@ -33,16 +33,21 @@ throwForbidden = CMC.throwM Forbidden
 
 {-
 -}
-mainErrorHandler :: (MonadThrow m) => L.Handle IO -> ServerException -> m U.Response
-mainErrorHandler logger Default = return $ U.internal U.internalErrorMsg
-mainErrorHandler logger SqlErrorAlreadyLogged = return $ U.internal U.internalErrorMsg
-mainErrorHandler logger Unauthorized = return $ U.unauthorized U.unauthorizedMsg
-mainErrorHandler logger (InvalidUniqueEntities ent xs) = return $ U.internal U.internalErrorMsg
-mainErrorHandler logger Forbidden = return $ U.bad U.invalidEndpointMsg
-mainErrorHandler logger InvalidLogin = return $ U.bad $ U.invalidLoginMsg
-mainErrorHandler logger InvalidPassword = return $ U.bad U.invalidPasswordMsg
-mainErrorHandler logger NotAnAuthor = return $ U.bad U.notAnAuthorMsg
-mainErrorHandler logger (TokenShared xs) = --logError ("Token shared between users with id in " <> T.pack (show xs)) >>
+mainErrorHandler :: (MonadThrow m) => L.Handle m -> ServerException -> m U.Response
+mainErrorHandler logger err = do
+    L.logError logger $ T.pack $ displayException err
+    mainErrorHandler logger err
+
+mainErrorHandler' :: (MonadThrow m) => L.Handle m -> ServerException -> m U.Response
+mainErrorHandler' logger Default = return $ U.internal U.internalErrorMsg
+mainErrorHandler' logger SqlErrorAlreadyLogged = return $ U.internal U.internalErrorMsg
+mainErrorHandler' logger Unauthorized = return $ U.unauthorized U.unauthorizedMsg
+mainErrorHandler' logger (InvalidUniqueEntities ent xs) = return $ U.internal U.internalErrorMsg
+mainErrorHandler' logger Forbidden = return $ U.bad U.invalidEndpointMsg
+mainErrorHandler' logger InvalidLogin = return $ U.bad $ U.invalidLoginMsg
+mainErrorHandler' logger InvalidPassword = return $ U.bad U.invalidPasswordMsg
+mainErrorHandler' logger NotAnAuthor = return $ U.bad U.notAnAuthorMsg
+mainErrorHandler' logger (TokenShared xs) = --logError ("Token shared between users with id in " <> T.pack (show xs)) >>
         return (U.internal U.internalErrorMsg)
 
 instance CMC.Exception ServerException

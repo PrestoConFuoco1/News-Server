@@ -31,7 +31,7 @@ showE x = unCap $ drop 1 $ show x
 showEText :: Entity -> T.Text
 showEText = T.pack . showE
 
-class (Ae.ToJSON a) => Gettable a
+class (Ae.ToJSON a, Show a, GP.PrettyShow a) => Gettable a
 
 instance Gettable User
 instance Gettable Author

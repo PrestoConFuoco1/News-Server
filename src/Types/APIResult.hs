@@ -4,8 +4,10 @@ module Types.APIResult where
 import Types.Entity
 import Data.Text
 --import Types.APIErrors
-
-
+import GHC.Generics
+import GenericPretty
+import Prelude as P
+import Utils
 
 
 data APIResult =
@@ -20,7 +22,18 @@ data APIResult =
     | RInvalidForeign Entity Text Text
     | RInvalidTag Text
  --   | RError Ex.ServerException
+    deriving (Show, Generic)
 
+logResult :: APIResult -> Text
+logResult (RGet x) = showText x
+logResult (RGetUser u) = textPretty u
+logResult x = showText x
 
-data RGettable = forall a. (Gettable a) => RGettable [a]
+data RGettable = forall a. (Gettable a, Show a) => RGettable [a]
+
+instance Show RGettable where
+    show (RGettable xs) = show xs
+
+instance PrettyShow RGettable where
+    prettyShow (RGettable xs) = prettyShow xs
 --data SqlValue = forall a. (PSF.ToField a) => SqlValue a

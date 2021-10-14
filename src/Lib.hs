@@ -11,7 +11,7 @@ import qualified Network.Wai.Handler.Warp as Warp (run)
 import qualified Network.Wai as W (Request(..), Response, Application, responseLBS)
 import qualified Data.Text as T (pack)
 
-import qualified GenericPretty as GP (defaultPretty)
+import qualified GenericPretty as GP (defaultPretty, textPretty)
 
 import Action.RequestToAction (requestToAction)
 import Execute (executeAction, handleError)
@@ -111,7 +111,12 @@ mainServer req resources = do
             D.logDebug h "Action type is"
             D.logDebug h $ T.pack $ GP.defaultPretty $ _ww_action whowhat
 
-            let action = fmap toResponse (executeAction h whowhat)
+            let withLog res = do
+                    r <- res
+                    D.logDebug h $ "Result is"
+                    D.logDebug h $ logResult r
+                    return $ toResponse r
+                action = withLog (executeAction h whowhat)
                     `CMC.catches` [CMC.Handler $ Ex.mainErrorHandler logger,
                                    CMC.Handler $ Ex.defaultMainHandler logger]
                 action' = fmap coerceResponse action
