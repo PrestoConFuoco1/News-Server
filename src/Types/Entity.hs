@@ -26,7 +26,7 @@ data Entity =
     deriving (Show, Eq)
 
 showE :: Entity -> String
-showE x = drop 1 $ unCap $ show x
+showE x = unCap $ drop 1 $ show x
 
 showEText :: Entity -> T.Text
 showEText = T.pack . showE

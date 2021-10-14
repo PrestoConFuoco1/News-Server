@@ -309,7 +309,7 @@ def mainfunc():
 if len(sys.argv) == 2:
     tot = int(sys.argv[1])
 else:
-    tot = 4
+    tot = 1
 if True:
     for i in range(tot):
         mainfunc()

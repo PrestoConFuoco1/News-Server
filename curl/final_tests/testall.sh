@@ -1,7 +1,10 @@
 #!/bin/bash
 
-# usage: ./testall | grep -v admin | grep False
-# should produce no input
+# to make sure that everything is OK, run two tests:
+# 1) ./testall | grep -v admin | grep False
+# 2) ./testall | grep Internal
+
+# both commands should produce no input
 
 echo "testing authors"
 ./authors.py #| grep False

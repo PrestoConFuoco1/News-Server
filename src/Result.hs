@@ -45,7 +45,7 @@ deletedMsg ent = let enttext = showEText ent
     in "Successfully deleted " <> enttext <> ", " <> enttext <> "_id is in \"result\" field"
 
 entityNotFoundMsg :: Entity -> T.Text
-entityNotFoundMsg ent = let enttext = showText ent
+entityNotFoundMsg ent = let enttext = showEText ent
                      in  enttext <> " not found"
 
 alreadyInUseMsg :: Entity -> T.Text -> T.Text -> T.Text

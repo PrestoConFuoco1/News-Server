@@ -50,7 +50,7 @@ editDraft
         Left err -> CMC.throwM $ DModifyError err
         Right draft ->
             case _ed_tags of
-                Nothing -> return $ RCreated EDraft draft
+                Nothing -> return $ REdited EDraft draft
                 Just tags -> do
                     eithTs <- D.attachTagsToDraft h (D.log h) draft tags
                     case eithTs of
@@ -59,7 +59,7 @@ editDraft
                             D.logInfo h $ attached "draft" ts draft
                             tsRem <- D.removeAllButGivenTagsDraft h (D.log h) draft tags
                             D.logInfo h $ removed "draft" tsRem draft
-                            return $ RCreated EDraft draft
+                            return $ REdited EDraft draft
          
 
 
@@ -81,22 +81,47 @@ publish h x@(WithAuthor a Publish{..}) = Ex.withHandler publishHandler $
 publishCreate :: (CMC.MonadCatch m) => D.Handle m -> DraftRaw -> m APIResult
 publishCreate h x = do
     eithPost <- D.createPost h (D.log h) x
+    post <- th DModifyError eithPost
+    D.logInfo h $ "Created post with id = " <> showText post
+    eithDraft <- D.editDraftPublish h (D.log h) (EditDraftPublish post $ _dr_draftId x)
+    draft <- th DModifyError eithDraft
+    D.logInfo h $ "Added post_id to draft with id = " <> showText draft
+    eithTags_ <- D.attachTagsToPost h (D.log h) post (_dr_tagIds x)
+    tags_ <- th DTagsError eithTags_
+    D.logInfo h $ attached "post" tags_ post
+    return $ RCreated EPost post
+
+
+{-
     case eithPost of
         Left err -> CMC.throwM $ DModifyError err
         Right post -> do
             D.logInfo h $ "Created post with id = " <> showText post
             eithDraft <- D.editDraftPublish h (D.log h) (EditDraftPublish post $ _dr_draftId x)
+            draft <- th DModifyError eithDraft
+            D.logInfo h $ "Added post_id to draft with id = " <> showText draft
+            eithTags_ <- D.attachTagsToPost h (D.log h) post (_dr_tagIds x)
+            tags_ <- th DTagsError eithTags_
+            D.logInfo h $ attached "post" tags_ post
+            return $ RCreated EPost post
+
             case eithDraft of
                 Left err -> CMC.throwM $ DModifyError err
                 Right draft -> do
                     D.logInfo h $ "Added post_id to draft with id = " <> showText draft
                     eithTags_ <- D.attachTagsToPost h (D.log h) post (_dr_tagIds x)
+                    tags_ <- th DTagsError eithTags_
+                    D.logInfo h $ attached "post" tags_ post
+                    return $ RCreated EPost post
+-}
+{-
+
                     case eithTags_ of
                         Left err -> CMC.throwM $ DTagsError err
                         Right tags_ -> do
                             D.logInfo h $ attached "post" tags_ post
                             return $ RCreated EPost post
-
+-}
 
 publishEdit :: (CMC.MonadCatch m) => D.Handle m -> Int -> DraftRaw -> m APIResult
 publishEdit h post draft = Ex.withHandler draftModifyHandler $ D.withTransaction h $ do
