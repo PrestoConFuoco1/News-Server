@@ -1,40 +1,4 @@
-{-
-module Database(
-CreateSQL(..),
-UpdateSQL(..),
-Read(..),
-DeleteSQL(..),
-pageingClause,
-updateParams,
-authorDummy,
-dummyCAuthor,
-dummyUAuthor,
-dummyDAuthor,
-tagDummy,
-dummyCTag,
-dummyUTag,
-dummyDTag,
-catDummy,
-dummyCCat,
-dummyUCat,
-dummyDCat,
-dummyCUser,
-dummyDUser,
-commentDummy,
-dummyCComment,
-dummyDComment,
-userTokenDummy,
-postDummy,
-draftDummy,
-dummyDDraft,
-draftCreateDummy,
-draftEditDummy,
-draftRawDummy,
-draftEditPublishDummy,
-dummyUPost,
-dummyCPost
-) where
--}
+
 module Database (module D) where
 
 import Database.Read as D

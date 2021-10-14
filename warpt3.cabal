@@ -53,8 +53,6 @@ library
       Execute.Draft
       Execute.Utils
       GenericPretty
-      Handler.Database
-      Handler.Logger
       IO.Postgres
       Lib
       Migrations
