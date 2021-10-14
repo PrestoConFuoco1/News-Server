@@ -79,7 +79,7 @@ bad = Response NHT.status400 . errR
 
 unauthorized = Response NHT.unauthorized401 . errR 
 
---notFound = Response NHT.status404 . errR
+notFound = Response NHT.status404 . errR
 
 internal = Response NHT.internalServerError500 . errR
 

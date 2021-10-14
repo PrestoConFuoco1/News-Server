@@ -140,6 +140,3 @@ toResponse (RInvalidTag value) = bad (tagNotFoundMsg value)
 
 
 
-action :: a
-action = undefined
-

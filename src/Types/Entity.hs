@@ -70,13 +70,7 @@ instance Ae.ToJSON Author where
  
 instance PSR.FromRow Author where
     fromRow = Author <$> PSR.field <*> PSR.field <*> PSR.fromRow
-    {-fromRow = do
-        (id, desc, uid, fn, ln, img, login, pass, creat) <-
-            (,,,,,,,,) <$> PSR.field <*> PSR.field <*> PSR.field <*> PSR.field
-                       <*> PSR.field <*> PSR.field <*> PSR.field <*> PSR.field <*> PSR.field
-        return $ Author id desc $ User uid fn ln img login pass creat Nothing
--}
-   
+  
 
 data Category = Category {
     _cat_categoryId :: CategoryId,
@@ -90,16 +84,13 @@ instance Ae.ToJSON Category where
 instance PSR.FromRow Category where
     fromRow = fmap listToCategory $ zip <$> PSR.field <*> PSR.field
 
---instance PSF.FromField Category where
---    fromField f b = fmap listToCategory $ PSF.fromField f b
-
 defaultCategoryId = 1 :: CategoryId
 
 
 listToCategory :: [(CategoryId, T.Text)] -> Category
 listToCategory [] = Category defaultCategoryId "default" Nothing
 listToCategory ((catId, txt):xs) = Category catId txt $ foldr f Nothing xs
-    where f :: (CategoryId, T.Text) -> Maybe Category -> Maybe Category
+    where
           f (cid, t) cat = Just $ Category cid t cat
 
 
