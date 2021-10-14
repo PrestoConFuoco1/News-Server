@@ -27,12 +27,12 @@ draftModifyHandler = return . draftModifyErrorToApiResult
 createDraft :: (CMC.MonadCatch m) => D.Handle m -> WithAuthor CreateDraft -> m APIResult
 createDraft h x@(WithAuthor a CreateDraft{..}) =
   Ex.withHandler draftModifyHandler $ D.withTransaction h $ do
-    eithDraft <- D.createDraft h x
+    eithDraft <- D.createDraft h (D.log h) x
     case eithDraft of
         Left err -> CMC.throwM $ DModifyError err
         Right draft -> do
             D.logDebug h $ "Created draft with id = " <> (T.pack $ show draft)
-            eithTags <- D.attachTagsToDraft h draft _cd_tags
+            eithTags <- D.attachTagsToDraft h (D.log h) draft _cd_tags
             case eithTags of
               Left err -> CMC.throwM $ DTagsError err 
               Right tags -> do
@@ -45,19 +45,19 @@ editDraft
     x@(WithAuthor a EditDraft{..}) =
         Ex.withHandler draftModifyHandler $
             withTr $ do
-    eithDraft <- D.editDraft h x
+    eithDraft <- D.editDraft h (D.log h) x
     case eithDraft of
         Left err -> CMC.throwM $ DModifyError err
         Right draft ->
             case _ed_tags of
                 Nothing -> return $ RCreated EDraft draft
                 Just tags -> do
-                    eithTs <- D.attachTagsToDraft h draft tags
+                    eithTs <- D.attachTagsToDraft h (D.log h) draft tags
                     case eithTs of
                         Left err -> CMC.throwM $ DTagsError err
                         Right ts -> do
                             D.logInfo h $ attached "draft" ts draft
-                            tsRem <- D.removeAllButGivenTagsDraft h draft tags
+                            tsRem <- D.removeAllButGivenTagsDraft h (D.log h) draft tags
                             D.logInfo h $ removed "draft" tsRem draft
                             return $ RCreated EDraft draft
          
@@ -69,7 +69,7 @@ publishHandler = draftModifyHandler
 publish :: (CMC.MonadCatch m) => D.Handle m -> WithAuthor Publish -> m APIResult
 publish h x@(WithAuthor a Publish{..}) = Ex.withHandler publishHandler $
                                        D.withTransaction h $ do
-    eithDraft <- D.getDraftRaw h x
+    eithDraft <- D.getDraftRaw h (D.log h) x
     case eithDraft of
         Nothing -> return $ RNotFound EDraft
         Just draft ->
@@ -80,17 +80,17 @@ publish h x@(WithAuthor a Publish{..}) = Ex.withHandler publishHandler $
 
 publishCreate :: (CMC.MonadCatch m) => D.Handle m -> DraftRaw -> m APIResult
 publishCreate h x = do
-    eithPost <- D.createPost h x
+    eithPost <- D.createPost h (D.log h) x
     case eithPost of
         Left err -> CMC.throwM $ DModifyError err
         Right post -> do
             D.logInfo h $ "Created post with id = " <> showText post
-            eithDraft <- D.editDraftPublish h (EditDraftPublish post $ _dr_draftId x)
+            eithDraft <- D.editDraftPublish h (D.log h) (EditDraftPublish post $ _dr_draftId x)
             case eithDraft of
                 Left err -> CMC.throwM $ DModifyError err
                 Right draft -> do
                     D.logInfo h $ "Added post_id to draft with id = " <> showText draft
-                    eithTags_ <- D.attachTagsToPost h post (_dr_tagIds x)
+                    eithTags_ <- D.attachTagsToPost h (D.log h) post (_dr_tagIds x)
                     case eithTags_ of
                         Left err -> CMC.throwM $ DTagsError err
                         Right tags_ -> do
@@ -102,12 +102,12 @@ publishEdit :: (CMC.MonadCatch m) => D.Handle m -> Int -> DraftRaw -> m APIResul
 publishEdit h post draft = Ex.withHandler draftModifyHandler $ D.withTransaction h $ do
     let
         publishPost = func post draft
-    eithPost_ <- D.editPostPublish h publishPost
+    eithPost_ <- D.editPostPublish h (D.log h) publishPost
     post_ <- th DModifyError eithPost_
-    eithTs <- D.attachTagsToPost h post $ _dr_tagIds draft
+    eithTs <- D.attachTagsToPost h (D.log h) post $ _dr_tagIds draft
     ts <- th DTagsError eithTs
     D.logInfo h $ attached "post" ts post
-    tsRem <- D.removeAllButGivenTagsPost h post $ _dr_tagIds draft
+    tsRem <- D.removeAllButGivenTagsPost h (D.log h) post $ _dr_tagIds draft
     D.logInfo h $ removed "post" tsRem draft
     return $ REdited EPost post_
 

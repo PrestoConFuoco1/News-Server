@@ -168,6 +168,9 @@ extra-deps:
 - regex-pcre-0.95.0.0@sha256:6845745ebc369e33b39387dd11d4ff15b6b4aae82754ad348467ecda8e17bed7,2514
 - regex-base-0.94.0.1@sha256:35ff2d13c0e3ac364469c19e4c7c8775f5148977d8fcef58a424df0a10a53fa7,2608
 
+- configurator-0.3.0.0@sha256:a96d4c52b93a4a7d5909421853964a26f1153f32f8c4f11f9e04b249653e4034,2653
+
+
 
 # Override default flag values for local packages and extra-deps
 # flags: {}

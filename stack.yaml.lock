@@ -613,4 +613,11 @@ packages:
       sha256: adcdadb479567d388c9b8f2a48ad37a967b5a3292c8f8d19c26caba19fa10166
   original:
     hackage: regex-base-0.94.0.1@sha256:35ff2d13c0e3ac364469c19e4c7c8775f5148977d8fcef58a424df0a10a53fa7,2608
+- completed:
+    hackage: configurator-0.3.0.0@sha256:a96d4c52b93a4a7d5909421853964a26f1153f32f8c4f11f9e04b249653e4034,2653
+    pantry-tree:
+      size: 813
+      sha256: 39a832225810dbde572ce161e5f76e980e9dec67e9e00f139e1c40db699a0255
+  original:
+    hackage: configurator-0.3.0.0@sha256:a96d4c52b93a4a7d5909421853964a26f1153f32f8c4f11f9e04b249653e4034,2653
 snapshots: []

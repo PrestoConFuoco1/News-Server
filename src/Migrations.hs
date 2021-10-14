@@ -1,4 +1,7 @@
-{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE
+    TemplateHaskell
+    , RecordWildCards
+    #-}
 module Migrations where
 
 
@@ -15,7 +18,21 @@ import System.Exit
 import Control.Monad
 
 
-migrationMain :: IO ()
+data Config = Config {
+    databaseName :: BS.ByteString
+    , adminName :: BS.ByteString
+    , adminPassword :: BS.ByteString
+    } deriving (Show)
+
+
+{-
+-}
+adminConnectionString :: Config -> BS.ByteString
+adminConnectionString Config {..} =
+    "dbname=" <> databaseName <>
+    " user=" <> adminName <>
+    " password='" <> adminPassword <> "'"
+
 --migrationMain = mapM_ (\(f, s) -> putStrLn f >> BS.putStrLn s) sortedMigrations
 {-
 migrationMain = do
@@ -25,8 +42,13 @@ migrationMain = do
     return ()
 -}
 
-migrationMain = do
-    con <- connectPostgreSQL "dbname=newsdb user=newsdb_owner password='0000'"
+
+
+migrationMain :: Config -> IO ()
+migrationMain conf = do
+    let conStr = adminConnectionString conf
+    --con <- connectPostgreSQL "dbname=newsdb user=newsdb_owner password='0000'"
+    con <- connectPostgreSQL conStr
     runMigrations1 con
 
 

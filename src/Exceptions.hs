@@ -1,18 +1,22 @@
 module Exceptions where
 
 import Control.Monad.Catch as CMC (Handler(..), catches, SomeException, throwM, Exception(..), MonadCatch(..), MonadThrow(..))
-import Database.PostgreSQL.Simple as PS (sqlState, SqlError(..), QueryError)
+import Database.PostgreSQL.Simple as PS (sqlState, SqlError(..), QueryError, Query)
+import Database.SqlValue
+import qualified Database.PostgreSQL.Simple.Types as PSTy (fromQuery)
 import qualified Data.Text as T (Text, pack)
-import qualified GenericPretty as GP (PrettyShow(..), defaultPretty)
+import qualified GenericPretty as GP (PrettyShow(..), defaultPretty, textPretty)
 
 import qualified Result as U
 import Data.Text.Encoding as E (decodeUtf8)
 import Types
-import Utils (getPair)
+import Utils (getPair, showText)
+import qualified App.Logger as L
 
 
 data ServerException =
-      Default
+    Default
+    | SqlErrorAlreadyLogged
     | Unauthorized
     | InvalidUniqueEntities Entity [Int]
     | Forbidden
@@ -29,15 +33,16 @@ throwForbidden = CMC.throwM Forbidden
 
 {-
 -}
-mainErrorHandler :: (MonadThrow m) => ServerException -> m U.Response
-mainErrorHandler Default = return $ U.internal U.internalErrorMsg
-mainErrorHandler Unauthorized = return $ U.unauthorized U.unauthorizedMsg
-mainErrorHandler (InvalidUniqueEntities ent xs) = return $ U.internal U.internalErrorMsg
-mainErrorHandler Forbidden = return $ U.bad U.invalidEndpointMsg
-mainErrorHandler InvalidLogin = return $ U.bad $ U.invalidLoginMsg
-mainErrorHandler InvalidPassword = return $ U.bad U.invalidPasswordMsg
-mainErrorHandler NotAnAuthor = return $ U.bad U.notAnAuthorMsg
-mainErrorHandler (TokenShared xs) = --logError ("Token shared between users with id in " <> T.pack (show xs)) >>
+mainErrorHandler :: (MonadThrow m) => L.Handle IO -> ServerException -> m U.Response
+mainErrorHandler logger Default = return $ U.internal U.internalErrorMsg
+mainErrorHandler logger SqlErrorAlreadyLogged = return $ U.internal U.internalErrorMsg
+mainErrorHandler logger Unauthorized = return $ U.unauthorized U.unauthorizedMsg
+mainErrorHandler logger (InvalidUniqueEntities ent xs) = return $ U.internal U.internalErrorMsg
+mainErrorHandler logger Forbidden = return $ U.bad U.invalidEndpointMsg
+mainErrorHandler logger InvalidLogin = return $ U.bad $ U.invalidLoginMsg
+mainErrorHandler logger InvalidPassword = return $ U.bad U.invalidPasswordMsg
+mainErrorHandler logger NotAnAuthor = return $ U.bad U.notAnAuthorMsg
+mainErrorHandler logger (TokenShared xs) = --logError ("Token shared between users with id in " <> T.pack (show xs)) >>
         return (U.internal U.internalErrorMsg)
 
 instance CMC.Exception ServerException
@@ -64,33 +69,42 @@ throwInvalidLogin = CMC.throwM $ InvalidLogin
 notAnAuthor :: (MonadThrow m) => m a
 notAnAuthor = CMC.throwM $ NotAnAuthor
 
-defaultSqlHandler :: (MonadThrow m) => T.Text -> PS.SqlError -> m a
-defaultSqlHandler funcMsg e = do
-    --logError "Some not caught exception"
-    --logError funcMsg
-    --logError (T.pack $ displayException e)
-    CMC.throwM Default
 
-queryErrorHandler :: (MonadThrow m) => T.Text -> PS.QueryError -> m a
-queryErrorHandler funcMsg e = do
-    --logError "Query is used to perform an INSERT-like operation, \
-    --         \or execute is used to perform a SELECT-like operation."
-    --logError funcMsg
-    --logError (T.pack $ displayException e)
-    CMC.throwM Default
+{-
+-}
+defaultSqlHandler :: (MonadThrow m) => L.Handle m -> PS.SqlError -> m a
+defaultSqlHandler logger e = do
+    L.logError logger "Unexpected SQL exception"
+    L.logError logger $ (T.pack $ displayException e)
+    CMC.throwM SqlErrorAlreadyLogged
 
-resultErrorHandler :: (MonadThrow m) => T.Text -> PS.QueryError -> m a
-resultErrorHandler funcMsg e = do
-    --logError "Conversion from a SQL value to Haskell value failed."
-    --logError funcMsg
-    --logError (T.pack $ displayException e)
-    CMC.throwM Default
+queryErrorHandler :: (MonadThrow m) => L.Handle m -> PS.QueryError -> m a
+queryErrorHandler logger e = do
+    L.logError logger $ "Query is used to perform an INSERT-like operation, \
+             \or execute is used to perform a SELECT-like operation."
+    L.logError logger (T.pack $ displayException e)
+    CMC.throwM SqlErrorAlreadyLogged
 
-defaultHandlers :: (MonadThrow m) => T.Text -> [Handler m a]
-defaultHandlers funcMsg = [Handler $ queryErrorHandler funcMsg,
-                           Handler $ resultErrorHandler funcMsg,
-                           Handler $ defaultSqlHandler funcMsg]
+resultErrorHandler :: (MonadThrow m) => L.Handle m -> PS.QueryError -> m a
+resultErrorHandler logger e = do
+    L.logError logger "Conversion from a SQL value to Haskell value failed."
+    L.logError logger (T.pack $ displayException e)
+    CMC.throwM SqlErrorAlreadyLogged
 
+sqlHandlers :: (MonadThrow m, GP.PrettyShow q) => L.Handle m -> PS.Query -> q -> [Handler m a]
+sqlHandlers h qu params = map f [
+        Handler $ queryErrorHandler h,
+        Handler $ resultErrorHandler h,
+        Handler $ defaultSqlHandler h
+    ]
+  where f (Handler func) = Handler $ \e -> do
+            L.logError h $ "SQL query caused an exception"
+            L.logError h $ "query is:"
+            L.logError h $ E.decodeUtf8 $ PSTy.fromQuery qu
+            L.logError h $ "params: "
+            --L.logError h $ showText params
+            L.logError h $ GP.textPretty params
+            func e
 
 
 
@@ -100,9 +114,9 @@ withExceptionHandlers = flip CMC.catches
 withHandler :: (CMC.MonadCatch m, Exception e) => (e -> m a) -> m a -> m a
 withHandler = flip CMC.catch
 
-defaultMainHandler :: (MonadThrow m) => SomeException -> m U.Response
-defaultMainHandler e = do
-    --logError $ T.pack $ displayException e
+defaultMainHandler :: (MonadThrow m) => L.Handle m -> SomeException -> m U.Response
+defaultMainHandler logger e = do
+    L.logError logger $ T.pack $ displayException e
     return $ U.internal U.internalErrorMsg
 
 

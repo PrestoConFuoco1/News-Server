@@ -59,6 +59,7 @@ library
       Lib
       Migrations
       Result
+      RunOptions
       Types
       Types.APIErrors
       Types.APIResult
@@ -81,6 +82,7 @@ library
       aeson
     , base >=4.7 && <5
     , bytestring
+    , configurator
     , exceptions
     , file-embed
     , http-types
@@ -109,6 +111,7 @@ executable warpt3
       aeson
     , base >=4.7 && <5
     , bytestring
+    , configurator
     , exceptions
     , file-embed
     , http-types
@@ -140,6 +143,7 @@ test-suite warpt3-test
       aeson
     , base >=4.7 && <5
     , bytestring
+    , configurator
     , exceptions
     , file-embed
     , hspec

@@ -19,7 +19,7 @@ withAuthor :: (CMC.MonadThrow m) => D.Handle m -> Maybe Token -> m Author
 withAuthor h y = do
     muser <- withAuth h y
     user <- maybeUserToUser h muser
-    mauthor <- D.userAuthor h user
+    mauthor <- D.userAuthor h (D.log h) user
     maybe Ex.notAnAuthor return mauthor
 
 
@@ -33,7 +33,7 @@ withAuth h mtoken = do
             return Nothing
         Just token -> do
             D.logDebug h $ fname <> "searching for user with token = " <> token
-            D.getUserByToken h token
+            D.getUserByToken h (D.log h) token
     return muser
 
 checkAdmin :: (CMC.MonadThrow m) => D.Handle m -> Maybe User -> m ()
@@ -87,12 +87,12 @@ getUserFname = "getUser: "
 
 authenticate :: (CMC.MonadThrow m) => D.Handle m -> Authenticate -> m APIResult
 authenticate h auth = do
-    muser <- D.getUserByLogin h $ _au_login auth
+    muser <- D.getUserByLogin h (D.log h) $ _au_login auth
     user <- maybe Ex.throwInvalidLogin return muser
     when (_u_passHash user /= _au_passHash auth) $
         CMC.throwM Ex.InvalidPassword
     token <- fmap (T.pack) $ D.generateToken h 10
-    token' <- D.addToken h (_u_id user) token
+    token' <- D.addToken h (D.log h) (_u_id user) token
     return $ RGetToken token'
 
 

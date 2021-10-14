@@ -52,3 +52,6 @@ randomString' int = do
         xs <- sequence $ replicate int $ randomRIO (1, len)
         return $ map (arr !) xs
 
+
+withMaybe :: Maybe a -> b -> (a -> b) -> b
+withMaybe x nothing just = maybe nothing just x

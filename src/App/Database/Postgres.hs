@@ -1,3 +1,7 @@
+{-# LANGUAGE
+    RecordWildCards
+    , DeriveAnyClass
+    #-}
 module App.Database.Postgres where
 
 --import qualified App.Database as D
@@ -13,23 +17,48 @@ import Database
 import Database.HasTags
 import Types
 import Control.Monad ((>=>))
+import GHC.Generics
+import GenericPretty
 
 data Config = Config {
-    databaseName :: B.ByteString,
-    userName :: B.ByteString,
-    password :: B.ByteString
-    } deriving (Show)
+    databaseName :: B.ByteString
+    , userName :: B.ByteString
+    , password :: B.ByteString
+    , port :: Int
+    } deriving (Show, PrettyShow, Generic)
 
 
-data Connection = Connection {
+data Resources = Resources {
     postgresConnection :: PS.Connection
     } -- deriving (Show)
 
 --withHandle :: Connection -> (Handle -> IO a) -> IO a
 --withHandle (Connection conn) func = do
 
-connectionToHandle :: Connection -> Logger.Handle IO -> Handle IO
-connectionToHandle (Connection con) logger =
+connectionString :: Config -> B.ByteString
+connectionString Config {..} =
+    "dbname=" <> databaseName <>
+    " user=" <> userName <>
+    " password='" <> password <> "'"
+
+
+--withResources :: 
+
+initResources :: Logger.Handle IO -> Config -> IO Resources
+initResources logger conf = do
+    let conStr = connectionString conf
+    con <- PS.connectPostgreSQL $ conStr
+    return Resources {
+        postgresConnection = con
+        }
+
+closeResources :: Resources -> IO ()
+closeResources resources =
+    let conn = postgresConnection resources
+    in PS.close conn -- close connection
+
+resourcesToHandle :: Resources -> Logger.Handle IO -> Handle IO
+resourcesToHandle (Resources con) logger =
     Handle {
 
 
@@ -80,7 +109,7 @@ connectionToHandle (Connection con) logger =
         editDraft = editThis con draftEditDummy,
         removeAllButGivenTagsDraft = IOP.removeAllButGivenTags con dummyHDraft,
         removeAllButGivenTagsPost = IOP.removeAllButGivenTags con dummyHPost,
-        getDraftRaw = getThis con draftRawDummy >=> checkUnique Nothing Just EDraft _dr_draftId,
+        getDraftRaw = \l -> getThis con draftRawDummy l >=> checkUnique Nothing Just EDraft _dr_draftId,
 
         createDraft = createThis con draftCreateDummy,
         editDraftPublish = editThis con draftEditPublishDummy,

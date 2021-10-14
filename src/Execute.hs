@@ -41,54 +41,54 @@ executeAction h (WhoWhat y (AComments x)) = executeComments h (WhoWhat y x)
 executeAction h (WhoWhat y (ADrafts x)) = executeDraft h (WhoWhat y x)
 executeAction h (WhoWhat y (APublish x)) = executePublish h (WhoWhat y x)
 
-executePosts h (WhoWhat y (GC x)) = getThis1 (D.getComments h) x
+executePosts h (WhoWhat y (GC x)) = getThis1 (D.getComments h (D.log h)) x
 
 executePosts h (WhoWhat y (AP (Read x))) = do
-    getThis1 (D.getPosts h) x
+    getThis1 (D.getPosts h (D.log h)) x
 
 
 executeAuthor :: CMC.MonadCatch m => D.Handle m -> WhoWhat ActionAuthors -> m APIResult
 executeAuthor h (WhoWhat y (Read x)) =
-    withAuthAdmin h y >> getThis1 (D.getAuthors h) x
+    withAuthAdmin h y >> getThis1 (D.getAuthors h (D.log h)) x
 executeAuthor h (WhoWhat y (Create x)) =
-    withAuthAdmin h y >> createThis1 EAuthor (D.createAuthor h) x
+    withAuthAdmin h y >> createThis1 EAuthor (D.createAuthor h (D.log h)) x
 executeAuthor h (WhoWhat y (Update x)) =
-    withAuthAdmin h y >> editThis1 EAuthor (D.editAuthor h) x
+    withAuthAdmin h y >> editThis1 EAuthor (D.editAuthor h (D.log h)) x
 executeAuthor h (WhoWhat y (Delete x)) =
-    withAuthAdmin h y >> deleteThis1 EAuthor (D.deleteAuthor h) x
+    withAuthAdmin h y >> deleteThis1 EAuthor (D.deleteAuthor h (D.log h)) x
 {-
 -}
 
-executeTags h (WhoWhat y (Read x)) = getThis1 (D.getTags h) x
+executeTags h (WhoWhat y (Read x)) = getThis1 (D.getTags h (D.log h)) x
 executeTags h (WhoWhat y (Create x)) =
-    withAuthAdmin h y >> createThis1 ETag (D.createTag h) x
+    withAuthAdmin h y >> createThis1 ETag (D.createTag h (D.log h)) x
 executeTags h (WhoWhat y (Update x)) = 
-    withAuthAdmin h y >> editThis1 ETag (D.editTag h) x
+    withAuthAdmin h y >> editThis1 ETag (D.editTag h (D.log h)) x
 executeTags h (WhoWhat y (Delete x)) =
-    withAuthAdmin h y >> deleteThis1 ETag (D.deleteTag h) x
+    withAuthAdmin h y >> deleteThis1 ETag (D.deleteTag h (D.log h)) x
 
 
-executeCategory h (WhoWhat y (Read x)) = getThis1 (D.getCategories h) x
+executeCategory h (WhoWhat y (Read x)) = getThis1 (D.getCategories h (D.log h)) x
 executeCategory h (WhoWhat y (Create x)) =
-    withAuthAdmin h y >> createThis1 ECategory (D.createCategory h) x
+    withAuthAdmin h y >> createThis1 ECategory (D.createCategory h (D.log h)) x
 executeCategory h (WhoWhat y (Update x)) =
-    withAuthAdmin h y >> editThis1 ECategory (D.editCategory h) x
+    withAuthAdmin h y >> editThis1 ECategory (D.editCategory h (D.log h)) x
 executeCategory h (WhoWhat y (Delete x)) =
-    withAuthAdmin h y >> deleteThis1 ECategory (D.deleteCategory h) x
+    withAuthAdmin h y >> deleteThis1 ECategory (D.deleteCategory h (D.log h)) x
 
 executeUsers h (WhoWhat y (Create x)) =
-    createThis1 EUser (D.createUser h) x
+    createThis1 EUser (D.createUser h (D.log h)) x
 executeUsers h (WhoWhat y (Delete x)) =
-    withAuthAdmin h y >> deleteThis1 EUser (D.deleteUser h) x
+    withAuthAdmin h y >> deleteThis1 EUser (D.deleteUser h (D.log h)) x
 executeUsers h (WhoWhat y (Read GetProfile)) =
     withAuth h y >>= getUser h
 
 executeComments h (WhoWhat y (Read x)) =
-    getThis1 (D.getComments h) x
+    getThis1 (D.getComments h (D.log h)) x
 executeComments h (WhoWhat y (Create x)) =
-    withAuth h y >>= maybeUserToUser h >>= \u -> createThis1 EComment (D.createComment h) $ WithUser u x
+    withAuth h y >>= maybeUserToUser h >>= \u -> createThis1 EComment (D.createComment h (D.log h)) $ WithUser u x
 executeComments h (WhoWhat y (Delete x)) =
-    withAuth h y >>= maybeUserToUser h >>= \u -> deleteThis1 EComment (D.deleteComment h) $ WithUser u x
+    withAuth h y >>= maybeUserToUser h >>= \u -> deleteThis1 EComment (D.deleteComment h (D.log h)) $ WithUser u x
 
 executeDraft :: (CMC.MonadCatch m) => D.Handle m -> WhoWhat ActionDrafts -> m APIResult
 executeDraft h (WhoWhat y (Create x)) =
@@ -97,10 +97,10 @@ executeDraft h (WhoWhat y (Create x)) =
 
 executeDraft h (WhoWhat y (Read (Paginated p s x))) =
     withAuthor h y >>=
-        \a -> getThis1 (D.getDrafts h) $ Paginated p s (WithAuthor (Ty._a_authorId a) x)
+        \a -> getThis1 (D.getDrafts h (D.log h)) $ Paginated p s (WithAuthor (Ty._a_authorId a) x)
 executeDraft h (WhoWhat y (Delete x)) =
     withAuthor h y >>=
-        \a -> deleteThis1 EDraft (D.deleteDraft h) $ WithAuthor (Ty._a_authorId a) x
+        \a -> deleteThis1 EDraft (D.deleteDraft h (D.log h)) $ WithAuthor (Ty._a_authorId a) x
 executeDraft h (WhoWhat y (Update x)) =
     withAuthor h y >>=
         \a -> editDraft h $ WithAuthor (Ty._a_authorId a) x

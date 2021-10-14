@@ -25,6 +25,7 @@ import Data.Aeson.Types
 import Data.Aeson (encode)
 import Data.Char
 import Data.Text.Lazy.Encoding (decodeUtf8)
+import qualified Data.ByteString as B
 
 import qualified Data.Time as Time
 ---------
@@ -147,6 +148,8 @@ instance PrettyShow T.Text where
 instance PrettyShow TL.Text where
     prettyShow = LStr . show
 
+instance PrettyShow B.ByteString where
+    prettyShow = LStr . show
 
 instance PrettyShow Value where
     --prettyShow val = LStr $ "JSON value"

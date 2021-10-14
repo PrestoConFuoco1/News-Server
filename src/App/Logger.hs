@@ -14,7 +14,7 @@ data Priority = Debug
               | Warning
               | Error
               | Fatal
-            deriving (Eq, Ord, Show)
+            deriving (Eq, Ord, Show, Read)
 
 
 logDebug, logInfo, logWarning, logError :: Handle m -> T.Text -> m ()
