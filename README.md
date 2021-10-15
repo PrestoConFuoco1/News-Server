@@ -233,3 +233,6 @@ given priority or higher. For example, to log Warning, Error and Fatal messages 
 `-lWarning`. The default is `-lDebug`, which logs all messages.
 + `--logpath=<path>` is used to define the path to the log file.
 
+# API
+
+

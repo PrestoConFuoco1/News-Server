@@ -56,10 +56,6 @@ runWithConf opts path = do
         else let loggerSettings = runOptsToLoggerSettings opts
              in  someFunc1 loggerSettings $ configToAppConfig conf
 
-{-
-someFunc :: IO ()
-someFunc = migrationMain >> someFunc1
--}
 runOptsToLoggerSettings :: RunOptions -> L.LoggerConfig
 runOptsToLoggerSettings opts = L.LoggerConfig {
     lcFilter = loggerSettings opts

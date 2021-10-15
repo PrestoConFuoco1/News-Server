@@ -126,7 +126,7 @@ selfSufficientLogger resourcesRef pred pri s = do
     resources <- readIORef resourcesRef
     let action =
                 T.hPutStrLn (flHandle resources) (logString pri s)
-                -- >> T.hPutStrLn S.stderr (logString pri s)
+                 >> T.hPutStrLn S.stderr (logString pri s)
         errHandler = \e -> loggerHandler resources e >>= writeIORef resourcesRef
     action `C.catch` errHandler
 

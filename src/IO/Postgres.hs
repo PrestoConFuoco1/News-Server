@@ -112,10 +112,10 @@ editThis con s logger u = case updateParams s u of
   Just (q, vals) -> do
     let str = updateQuery s q
         params = vals ++ identifParams s u
-        modifyHandler = C.Handler $ fmap Left . Ex.modifyErrorHandler
+        modifyHandler = fmap Left . Ex.modifyErrorHandler
 
-    Ex.withExceptionHandlers    
-        ([modifyHandler] ++ Ex.sqlHandlers logger str params) $ do
+    Ex.withExceptionHandlers (Ex.sqlHandlers logger str params) $
+        Ex.withHandler modifyHandler $ do
         ids <- fmap (map PSTy.fromOnly) $ PS.query con str params
         case ids of
             [] -> return (Left MNoAction)
@@ -125,10 +125,10 @@ editThis con s logger u = case updateParams s u of
 createThis :: (CreateSQL s) => PS.Connection -> s -> L.Handle IO -> Create s -> IO (Either ModifyError Int)
 createThis con s logger cres = do
     let (str, params) = createQuery s cres
-        modifyHandler = C.Handler $ fmap Left . Ex.modifyErrorHandler
+        modifyHandler = fmap Left . Ex.modifyErrorHandler
 
-    Ex.withExceptionHandlers    
-        ([modifyHandler] ++ Ex.sqlHandlers logger str params) $ do
+    Ex.withExceptionHandlers (Ex.sqlHandlers logger str params) $ 
+        Ex.withHandler modifyHandler $ do
         ints <- fmap (map PSTy.fromOnly) $ PS.query con str params
         case ints of
             [] -> return $ Left MNoAction
@@ -174,13 +174,13 @@ attachTags con s logger hasTagsId tags = do
         str = maybe "" id $ intercalateWith (hName s) strChunks
         returning = maybe "" id $ intercalateWith (hName s) returningChunks
         qu = str <> insertUnits <> returning :: PS.Query
-        modifyHandler = C.Handler $ fmap Left . Ex.tagsErrorHandler
+        modifyHandler = fmap Left . Ex.tagsErrorHandler
     
     --debugStr <- formatQuery qu insertParams
     --logDebug $ T.pack $ show debugStr
 
-    Ex.withExceptionHandlers    
-        ([modifyHandler] ++ Ex.sqlHandlers logger qu insertParams) $ do
+    Ex.withExceptionHandlers (Ex.sqlHandlers logger qu insertParams) $
+        Ex.withHandler modifyHandler $ do
         ids <- fmap (map PSTy.fromOnly) $ PS.query con qu insertParams
         return $ Right ids
 

@@ -22,8 +22,6 @@ class CreateSQL s where
     type Create s :: *
     createQuery :: s -> Create s -> (PS.Query, [SqlValue])
     cName :: s -> Ty.Entity
-    cUniqueField :: s -> T.Text -- ???
-    cForeign :: s -> T.Text -- ?????
 
 
 
@@ -35,8 +33,6 @@ instance CreateSQL CTag where
     createQuery _ CreateTag{..} =
         ("INSERT INTO news.tag (name) VALUES (?) RETURNING tag_id", [SqlValue _ct_tagName])
     cName _ = Ty.ETag
-    cUniqueField _ = "name"
-    cForeign _ = "error"
 
 
 newtype CCat = CCat ()
@@ -48,8 +44,6 @@ instance CreateSQL CCat where
         ("INSERT INTO news.category (name, parent_category_Id) VALUES (?, ?) RETURNING category_id",
         [SqlValue _cc_catName, SqlValue _cc_parentCat])
     cName _ = Ty.ECategory
-    cUniqueField _ = "name"
-    cForeign _ = "parent_id"
 
 newtype CUser = CUser ()
 dummyCUser = CUser ()
@@ -60,8 +54,6 @@ instance CreateSQL CUser where
         ("INSERT INTO news.users (login, pass_hash, firstname, lastname) VALUES (?, ?, ?, ?) RETURNING user_id",
         [SqlValue _cu_login, SqlValue _cu_passHash, SqlValue _cu_firstName, SqlValue _cu_lastName])
     cName _ = Ty.EUser
-    cUniqueField _ = "login"
-    cForeign _ = "error"
 
 newtype CAuthor = CAuthor ()
 dummyCAuthor = CAuthor ()
@@ -70,10 +62,10 @@ instance CreateSQL CAuthor where
     type Create CAuthor = CreateAuthor
     createQuery _ CreateAuthor{..} =
         ("INSERT INTO news.author (user_id, description) VALUES (?, ?) RETURNING author_id",
+        --("INSERT INTO author (user_id, description) VALUES (?, ?) RETURNING author_id",
+        -- this is bad query
         [SqlValue _ca_userId, SqlValue _ca_description])
     cName _ = Ty.EAuthor
-    cUniqueField _ = "user_id"
-    cForeign _ = "user_id"
 
 newtype CComment = CComment ()
 dummyCComment = CComment ()
@@ -85,8 +77,6 @@ instance CreateSQL CComment where
         [SqlValue $ _u_id u, SqlValue _ccom_postId, SqlValue _ccom_content])
 --insert into comment (post_id, content, user_id) values (1, 'comment to first post', 2);
     cName _ = Ty.EComment
-    cUniqueField _ = "unique error"
-    cForeign _ = "post_id"
 
 
 
@@ -107,8 +97,6 @@ instance CreateSQL CPost where
         SqlValue $ fmap PSTy.PGArray _dr_extraPhotos])
 --insert into comment (post_id, content, user_id) values (1, 'comment to first post', 2);
     cName _ = Ty.EPost
-    cUniqueField _ = "unique error"
-    cForeign _ = "foreign error"
 
 
 newtype CDraft = CDraft ()
@@ -122,7 +110,5 @@ instance CreateSQL CDraft where
         [SqlValue _cd_title, SqlValue a, SqlValue _cd_categoryId, SqlValue _cd_content,
          SqlValue _cd_mainPhoto, SqlValue $ fmap PSTy.PGArray _cd_extraPhotos])
     cName _ = Ty.EDraft
-    cUniqueField _ = "for what the fuck i created this function? it's wothless"
-    cForeign _ = "author_id or category_id"
 
 

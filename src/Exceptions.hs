@@ -1,7 +1,7 @@
 module Exceptions where
 
 import Control.Monad.Catch as CMC (Handler(..), catches, SomeException, throwM, Exception(..), MonadCatch(..), MonadThrow(..))
-import Database.PostgreSQL.Simple as PS (sqlState, SqlError(..), QueryError, Query)
+import Database.PostgreSQL.Simple as PS (sqlState, SqlError(..), QueryError, Query, ResultError, FormatError)
 import Database.SqlValue
 import qualified Database.PostgreSQL.Simple.Types as PSTy (fromQuery)
 import qualified Data.Text as T (Text, pack)
@@ -77,9 +77,16 @@ notAnAuthor = CMC.throwM $ NotAnAuthor
 
 {-
 -}
+
 defaultSqlHandler :: (MonadThrow m) => L.Handle m -> PS.SqlError -> m a
 defaultSqlHandler logger e = do
     L.logError logger "Unexpected SQL exception"
+    L.logError logger $ (T.pack $ displayException e)
+    CMC.throwM SqlErrorAlreadyLogged
+
+formatErrorHandler :: (MonadThrow m) => L.Handle m -> PS.FormatError -> m a
+formatErrorHandler logger e = do
+    L.logError logger "SQL query format error"
     L.logError logger $ (T.pack $ displayException e)
     CMC.throwM SqlErrorAlreadyLogged
 
@@ -90,7 +97,7 @@ queryErrorHandler logger e = do
     L.logError logger (T.pack $ displayException e)
     CMC.throwM SqlErrorAlreadyLogged
 
-resultErrorHandler :: (MonadThrow m) => L.Handle m -> PS.QueryError -> m a
+resultErrorHandler :: (MonadThrow m) => L.Handle m -> PS.ResultError -> m a
 resultErrorHandler logger e = do
     L.logError logger "Conversion from a SQL value to Haskell value failed."
     L.logError logger (T.pack $ displayException e)
@@ -98,9 +105,10 @@ resultErrorHandler logger e = do
 
 sqlHandlers :: (MonadThrow m, GP.PrettyShow q) => L.Handle m -> PS.Query -> q -> [Handler m a]
 sqlHandlers h qu params = map f [
-        Handler $ queryErrorHandler h,
-        Handler $ resultErrorHandler h,
         Handler $ defaultSqlHandler h
+        , Handler $ formatErrorHandler h
+        , Handler $ queryErrorHandler h
+        , Handler $ resultErrorHandler h
     ]
   where f (Handler func) = Handler $ \e -> do
             L.logError h $ "SQL query caused an exception"
