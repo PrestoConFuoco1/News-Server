@@ -235,4 +235,51 @@ given priority or higher. For example, to log Warning, Error and Fatal messages 
 
 # API
 
+Server takes HTTP requests and returns JSON values. 
+Response value always consists of three fields.
+The first one, '\_ok', indicates whether everything went right and has the Boolean type. The second field,
+'message', always contains the description of what just happened, either for a success or for an error.
+Finally, there is a 'result' field, which contain a result for a succeeded requests. The type of result
+is specified for each supported request in the sections below.
 
+## Types
+
+All these types of JSON values are obtained by converting types from `Types/Entity.hs` to JSON
+using `Aeson` library.
+
+### User
+
++ `id` (Integer) - the unique identifier of a user;
++ `firstname` (String) - the user's firstname;
++ `lastname` (String) - the user's lastname;
++ `pictureUrl` (String) - URL of the user's profile picture;
++ `login` (String) - the unique user's login;
++ `passHash` (String) - the user's password hash;
++ `creationDate` (String) - the day of user creation, format 'yyyy-mm-dd';
++ `admin` (String, optional) - whether user is admin or not.
+
+### Author
+
++ `authorId` (Integer) - the unique identifier of an author;
++ `description` (String) - a short description of the author;
++ `user` (User) - data of a corresponding user.
+
+### Category
+
++ `categoryId` (Integer) - the unique identifier of a category;
++ `description` (String) - category name;
++ `parentCategory` (Category, optional) - the parent category.
+    It is equal to null if the given category is the root one.
+
+### Tag
+
++ `tagId` (Integer) - the unique identifier of a tag;
++ `tagName` (String) - the tag name;
+
+### Post
+
++ `postId` (Integer) - the unique identifier of a post;
++ `title` (String) - the post title;
++ `creationDate` (String) - the day of the post creation;
++ `author` (Author) - post author;
++ `
