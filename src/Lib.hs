@@ -36,6 +36,7 @@ import System.Exit as Q
 import System.Environment (getArgs)
 import System.IO
 import Control.Monad (when)
+import qualified Utils as S
 
 someFunc :: IO ()
 someFunc = do
@@ -79,35 +80,11 @@ configToMigrationsConfig C.Config {..} = M.Config {
     , M.adminName = dbAdmin
     , M.adminPassword = dbAdminPassword
     }
-{-
-someFunc1 :: L.LoggerConfig -> DP.Config -> IO ()
-someFunc1 loggerConfig conf1 = do
-    --let conf1 = configToAppConfig conf --C.defaultConfig
-  CMC.bracket
-    (L.initializeSelfSufficientLoggerResources loggerConfig)
-    (L.closeSelfSufficientLogger) $
-    \loggerResourcesRef -> CMC.bracket 
-        --(PS.connectPostgreSQL "dbname=newsdb user=newsdb_app password='0000'")
-        (DP.initResources L.stdHandle conf1)
-        DP.closeResources -- close connection
-        (\resources -> do
-            let logger = L.Handle $
-                    L.selfSufficientLogger loggerResourcesRef $
-                        L.lcFilter loggerConfig
- 
-            resourcesRef <- newIORef resources
-            Warp.run (DP.port conf1) $ mainFunc1 logger resourcesRef)
--}
 
 someFunc1 :: L.LoggerConfig -> DP.Config -> IO ()
 someFunc1 loggerConfig conf1 = do
-    --let conf1 = configToAppConfig conf --C.defaultConfig
-    L.withSelfSufficientLogger loggerConfig $ \loggerResourcesRef ->
+    L.withSelfSufficientLogger loggerConfig $ \logger ->
         DP.withPostgresHandle L.stdHandle conf1 $ \resources -> do
-            let logger = L.Handle $
-                    L.selfSufficientLogger loggerResourcesRef $
-                        L.lcFilter loggerConfig
- 
             resourcesRef <- newIORef resources
             Warp.run (DP.port conf1) $ mainFunc1 logger resourcesRef
 
@@ -128,8 +105,8 @@ mainServer req logger resources = do
         f x = x >>= \q -> return (q, resources)
     D.logDebug h ""
     D.logDebug h "Got request"
-    D.logDebug h $ ("Path: " <>) $ T.pack $ show $ W.pathInfo req
-    D.logDebug h $ ("Args: " <>) $ T.pack $ show $ W.queryString req
+    D.logDebug h $ ("Path: " <>) $ S.showText $ W.pathInfo req
+    D.logDebug h $ ("Args: " <>) $ S.showText $ W.queryString req
     let eithWhoWhat = requestToAction req
 
     case eithWhoWhat of
