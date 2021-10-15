@@ -70,7 +70,7 @@ are described in the `Types/APIErrors.hs` module.
 
 The "production" implementation of handle function is described in the `App/Database/Postgres.hs` and `IO/Postgres.hs` modules.
 All the functions there hardly refer to the SQL and, in particular, PostgreSQL.
-For tests some "dummy" implementations are made for tests (see `tests` directory).
+For tests some "dummy" implementations are made (see `tests` directory).
 
 `IO/Postgres.hs` contains all the functions that explicitly call the database. For most common actions
 (create, read, update, delete of any entity) there are five functions: getThis, getThisPaginated,
@@ -111,12 +111,12 @@ exist independently (like tags, users, categories), and other entities refer the
 The correctness of that database contents is keeped using constraints.
 
 There are only two (in compare to other) difficulties in all this stuff. The first thing is categories,
-which are supposed to fetched recursively. So each row of category contains a reference to the parent,
+which are supposed to be fetched recursively. So each row of category contains a reference to the parent,
 and getting categories uses not very obvious fixed-point semantics, that is often used in Haskell, too.
 See migrations/013.sql.
 
 Second thing is tags and posts (drafts) relationship, which can be defined as "many-to-many relationship".
-It's optimal to have well normalized database, so for this case besides two tables for entities itself
+It's optimal to have well normalized database, so for this case besides two tables for entities themselves
 the third table for post-tag relation is used. The getting operation uses joins between these tables.
 
 # How to get it working?

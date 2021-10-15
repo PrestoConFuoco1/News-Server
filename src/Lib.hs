@@ -79,24 +79,38 @@ configToMigrationsConfig C.Config {..} = M.Config {
     , M.adminName = dbAdmin
     , M.adminPassword = dbAdminPassword
     }
-
+{-
 someFunc1 :: L.LoggerConfig -> DP.Config -> IO ()
 someFunc1 loggerConfig conf1 = do
     --let conf1 = configToAppConfig conf --C.defaultConfig
   CMC.bracket
     (L.initializeSelfSufficientLoggerResources loggerConfig)
     (L.closeSelfSufficientLogger) $
-    \loggerResources -> CMC.bracket 
+    \loggerResourcesRef -> CMC.bracket 
         --(PS.connectPostgreSQL "dbname=newsdb user=newsdb_app password='0000'")
         (DP.initResources L.stdHandle conf1)
         DP.closeResources -- close connection
         (\resources -> do
             let logger = L.Handle $
-                    L.selfSufficientLogger loggerResources $
+                    L.selfSufficientLogger loggerResourcesRef $
                         L.lcFilter loggerConfig
  
             resourcesRef <- newIORef resources
             Warp.run (DP.port conf1) $ mainFunc1 logger resourcesRef)
+-}
+
+someFunc1 :: L.LoggerConfig -> DP.Config -> IO ()
+someFunc1 loggerConfig conf1 = do
+    --let conf1 = configToAppConfig conf --C.defaultConfig
+    L.withSelfSufficientLogger loggerConfig $ \loggerResourcesRef ->
+        DP.withPostgresHandle L.stdHandle conf1 $ \resources -> do
+            let logger = L.Handle $
+                    L.selfSufficientLogger loggerResourcesRef $
+                        L.lcFilter loggerConfig
+ 
+            resourcesRef <- newIORef resources
+            Warp.run (DP.port conf1) $ mainFunc1 logger resourcesRef
+
 
 
 mainFunc1 :: L.Handle IO -> IORef DP.Resources -> W.Application

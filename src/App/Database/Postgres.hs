@@ -19,6 +19,7 @@ import Types
 import Control.Monad ((>=>))
 import GHC.Generics
 import GenericPretty
+import qualified Control.Monad.Catch as C
 
 data Config = Config {
     databaseName :: B.ByteString
@@ -43,6 +44,13 @@ connectionString Config {..} =
 
 
 --withResources :: 
+
+withPostgresHandle :: Logger.Handle IO -> Config -> (Resources -> IO a) -> IO a
+withPostgresHandle logger conf action =
+    C.bracket
+        (initResources logger conf)
+        closeResources
+        action
 
 initResources :: Logger.Handle IO -> Config -> IO Resources
 initResources logger conf = do
@@ -74,8 +82,6 @@ resourcesToHandle (Resources con) logger =
         getUserByLogin = getUserByLogin1 con,
     
         addToken = addToken1 con,
-        --randomString1 len = liftIO $ randomString' len,
-        --randomString1 = \len -> undefined,
         generateToken = generateToken1,
     
      
