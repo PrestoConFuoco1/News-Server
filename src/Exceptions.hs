@@ -36,7 +36,7 @@ throwForbidden = CMC.throwM Forbidden
 mainErrorHandler :: (MonadThrow m) => L.Handle m -> ServerException -> m U.Response
 mainErrorHandler logger err = do
     L.logError logger $ T.pack $ displayException err
-    mainErrorHandler logger err
+    mainErrorHandler' logger err
 
 mainErrorHandler' :: (MonadThrow m) => L.Handle m -> ServerException -> m U.Response
 mainErrorHandler' logger Default = return $ U.internal U.internalErrorMsg

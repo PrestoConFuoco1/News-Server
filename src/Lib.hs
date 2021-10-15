@@ -18,7 +18,7 @@ import Execute (executeAction, handleError)
 import Types
 import Result
 
-import qualified App.Logger as L (simpleLog, logDebug, Priority, logInfo, logError)
+import qualified App.Logger as L
 import qualified Database.PostgreSQL.Simple as PS (connectPostgreSQL, Connection, close)
 import qualified Data.Aeson as Ae (encode, ToJSON(..))
 
@@ -47,17 +47,23 @@ someFunc = do
 
 runWithConf :: RunOptions -> FilePath -> IO ()
 runWithConf opts path = do
-    let configLogger = L.simpleLog
+    let configLogger = L.stdHandle
     conf <- C.loadConfig configLogger path `CMC.catches` C.configHandlers configLogger
     when (testConfig opts) $ Q.exitWith (Q.ExitSuccess)
     if migrations opts
         then M.migrationMain $ configToMigrationsConfig conf
-        else someFunc1 $ configToAppConfig conf
+        else let loggerSettings = runOptsToLoggerSettings opts
+             in  someFunc1 loggerSettings $ configToAppConfig conf
 
 {-
 someFunc :: IO ()
 someFunc = migrationMain >> someFunc1
 -}
+runOptsToLoggerSettings :: RunOptions -> L.LoggerConfig
+runOptsToLoggerSettings opts = L.LoggerConfig {
+    lcFilter = loggerSettings opts
+    , lcPath = logPath opts
+    }
 
 configToAppConfig :: C.Config -> DP.Config
 configToAppConfig C.Config {..} = DP.Config {
@@ -74,29 +80,36 @@ configToMigrationsConfig C.Config {..} = M.Config {
     , M.adminPassword = dbAdminPassword
     }
 
-someFunc1 :: DP.Config -> IO ()
-someFunc1 conf1 = do
+someFunc1 :: L.LoggerConfig -> DP.Config -> IO ()
+someFunc1 loggerConfig conf1 = do
     --let conf1 = configToAppConfig conf --C.defaultConfig
-    CMC.bracket 
+  CMC.bracket
+    (L.initializeSelfSufficientLoggerResources loggerConfig)
+    (L.closeSelfSufficientLogger) $
+    \loggerResources -> CMC.bracket 
         --(PS.connectPostgreSQL "dbname=newsdb user=newsdb_app password='0000'")
-        (DP.initResources L.simpleLog conf1)
+        (DP.initResources L.stdHandle conf1)
         DP.closeResources -- close connection
         (\resources -> do
+            let logger = L.Handle $
+                    L.selfSufficientLogger loggerResources $
+                        L.lcFilter loggerConfig
+ 
             resourcesRef <- newIORef resources
-            Warp.run (DP.port conf1) $ mainFunc1 resourcesRef)
+            Warp.run (DP.port conf1) $ mainFunc1 logger resourcesRef)
 
 
-mainFunc1 :: IORef DP.Resources -> W.Application
-mainFunc1 resourcesRef req respond = do
+mainFunc1 :: L.Handle IO -> IORef DP.Resources -> W.Application
+mainFunc1 logger resourcesRef req respond = do
     resources <- readIORef resourcesRef
-    (response, resources') <- mainServer req resources
+    (response, resources') <- mainServer req logger resources
     writeIORef resourcesRef resources'
     respond response
 
-mainServer :: W.Request -> DP.Resources -> IO (W.Response, DP.Resources)
-mainServer req resources = do
+mainServer :: W.Request -> L.Handle IO -> DP.Resources -> IO (W.Response, DP.Resources)
+mainServer req logger resources = do
     let
-        logger = L.simpleLog
+ --       logger = L.stdHandle
         h = DP.resourcesToHandle resources logger
         f x = x >>= \q -> return (q, resources)
     D.logDebug h ""
