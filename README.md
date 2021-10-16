@@ -282,4 +282,76 @@ using `Aeson` library.
 + `title` (String) - the post title;
 + `creationDate` (String) - the day of the post creation;
 + `author` (Author) - post author;
-+ `
++ `tags` (Array of Tag) - post tags;
++ `category` (Category) - post category. If the post has no category, default category is used;
++ `content` (String) - post contents;
++ `mainPhoto` (String) - URL of post main photo;
++ `extraPhotos` (Array of String, optional) - URLs of extra post photos.
+
+### Draft
+
++ `draftId` (Integer) - the unique identifier of a draft;
++ `title` (String) - the draft title;
++ `creationDate` (String) - the day of the draft creation;
++ `author` (Author) - draft author;
++ `tags` (Array of Tag) - draft tags;
++ `category` (Category) - draft category. If the draft has no category, default category is used;
++ `content` (String) - draft contents;
++ `mainPhoto` (String) - URL of draft main photo;
++ `extraPhotos` (Array of String, optional) - URLs of extra draft photos.
++ `postId` (Integer, optional) - the unique identnfier of the corresponding post; it is present
+if the given draft has been published at least once.
+
+### Comment
+
++ `commentId` (Integer) - the unique identifier of a comment;
++ `content` (String) - the comment contents;
++ `user` (User) - the comment author.
+
+## Methods
+
+Some of methods require token authentication, and the token is expected
+to be passed as a first parameter of a query string. If one has no token
+he should use `/auth` method.
+
+### Users
+
+#### `/auth`
+This is used for users authentication.
+Parameters:
++ `login` - user's login;
++ `pass_hash` - user's password;
+The `result` field contains a new user's token that should be used
+to pass to all other methods that require authentication.
+
+#### `/users/create`
+Create a new user.
+Parameters:
++ `login` - the unique user's login;
++ `pass_hash` - user's password;
++ `firstname` - user's first name;
++ `lastname` - user's last name.
+The new user's id is returned as a `result`.
+
+#### `/users/profile`
+Get profile by user's token.
+Requires token, no other parameters.
+`User` is returned as a `result`.
+
+#### `users/delete`
+Delete user, requires token, available only for admins.
+Parameters:
++ `user_id` - the unique user's identifier
+The `result` field contains id of deleted user.
+
+### Authors
+
+### Categories
+
+### Tags
+
+### Posts
+
+### Comments
+
+### Drafts
