@@ -19,21 +19,21 @@ instance GP.PrettyShow GetCategories where
 
 
 data GetCategories = GetCategories
-    deriving (Show, Generic)
+    deriving (Show, Eq, Generic)
 
 data CreateCategory = CreateCategory {
     _cc_catName :: T.Text,
     _cc_parentCat :: CategoryId
-    } deriving (Show, Generic, GP.PrettyShow, PS.ToRow)
+    } deriving (Show, Eq, Generic, GP.PrettyShow, PS.ToRow)
 
 data EditCategory = EditCategory {
     _ec_catId :: CategoryId,
     _ec_catName :: Maybe T.Text,
     _ec_parentId :: Maybe CategoryId
-    } deriving (Show, Generic, GP.PrettyShow, PS.ToRow)
+    } deriving (Show, Eq, Generic, GP.PrettyShow, PS.ToRow)
 
 data DeleteCategory = DeleteCategory {
     _dc_catId :: CategoryId
-    } deriving (Show, Generic, GP.PrettyShow, PS.ToRow)
+    } deriving (Show, Eq, Generic, GP.PrettyShow, PS.ToRow)
 
 

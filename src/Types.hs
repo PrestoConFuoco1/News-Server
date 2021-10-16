@@ -41,7 +41,7 @@ type Token = T.Text
 data WhoWhat a = WhoWhat {
     _ww_token  :: Maybe Token,
     _ww_action :: a
-    } deriving (Show, Generic) 
+    } deriving (Show, Eq, Generic) 
 
 
 

@@ -38,7 +38,7 @@ data Action = AAuthors ActionAuthors
             | AComments ActionComments
             | ADrafts ActionDrafts
             | APublish Publish
-    deriving (Generic, Show)
+    deriving (Generic, Show, Eq)
 
 
 requestToAction :: W.Request -> Either (WhoWhat ActionErrorPerms) (WhoWhat Action)
@@ -47,7 +47,10 @@ requestToAction req =
         pathInfo = W.pathInfo req
     in  requestToAction1 pathInfo queryString
 
-requestToAction1 :: [T.Text] -> [(BS.ByteString, Maybe BS.ByteString)] -> Either (WhoWhat ActionErrorPerms) (WhoWhat Action)
+requestToAction1 ::
+    [T.Text]
+    -> [(BS.ByteString, Maybe BS.ByteString)]
+    -> Either (WhoWhat ActionErrorPerms) (WhoWhat Action)
 requestToAction1 pathInfo queryString =
   let
     maybeToken = case queryString of

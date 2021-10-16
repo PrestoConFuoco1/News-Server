@@ -25,18 +25,18 @@ type ActionComments = CRUD CreateComment (Paginated GetComments) Void DeleteComm
 
 data GetComments = GetComments {
     _gc_postId :: PostId
-    } deriving (Show, Generic, GP.PrettyShow)
+    } deriving (Show, Eq, Generic, GP.PrettyShow)
 
 data CreateComment = CreateComment {
     _ccom_postId :: PostId,
     _ccom_content :: T.Text
     -- user id will be known from auth token
-    } deriving (Show, Generic, GP.PrettyShow, PS.ToRow)
+    } deriving (Show, Eq, Generic, GP.PrettyShow, PS.ToRow)
 
 data DeleteComment = DeleteComment {
     _dc_commentId :: CommentId
     -- user id will be known from auth token
-    } deriving (Show, Generic, GP.PrettyShow, PS.ToRow)
+    } deriving (Show, Eq, Generic, GP.PrettyShow, PS.ToRow)
 
 
 
@@ -55,7 +55,7 @@ data PublishEditPost = PublishEditPost {
 
 
 data ActionPosts1 = AP ActionPosts | GC (Paginated GetComments)
-    deriving (Show, Generic, GP.PrettyShow)
+    deriving (Show, Eq, Generic, GP.PrettyShow)
 type ActionPosts = CRUD Void (Paginated GetPosts) Void Void
 
 data GetPosts = GetPosts {
@@ -63,27 +63,27 @@ data GetPosts = GetPosts {
     _gp_tags :: Maybe TagsOptions,
     _gp_search :: Maybe SearchOptions,
     _gp_sort :: SortOptions
-    } deriving (Show, Generic)
+    } deriving (Show, Eq, Generic)
 
 
 data CreationDateOptions = Created Time.Day
                          | CreatedEarlier Time.Day
                          | CreatedLater Time.Day
-            deriving (Show, Generic)
+            deriving (Show, Eq, Generic)
 data TagsOptions = OneTag TagId | TagsIn [TagId] | TagsAll [TagId]
-    deriving (Show, Generic)
+    deriving (Show, Eq, Generic)
 data SearchOptions = SearchOptions T.Text
-    deriving (Show, Generic)
+    deriving (Show, Eq, Generic)
 
 data SortEntity = SEDate | SEAuthor | SECategory | SEPhotoNumber
-    deriving (Show)
+    deriving (Show, Eq)
 data SortOrder  = SOAscending | SODescending
-    deriving (Show)
+    deriving (Show, Eq)
 data SortOptions = SortOptions {
     _so_sortBy :: SortEntity,
     _so_order :: SortOrder
     }
-    deriving (Show, Generic)
+    deriving (Show, Eq, Generic)
 
 
 instance GP.PrettyShow CreationDateOptions where

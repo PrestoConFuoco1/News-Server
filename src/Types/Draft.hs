@@ -30,10 +30,10 @@ data CreateDraft = CreateDraft {
     _cd_mainPhoto :: Maybe T.Text,
     _cd_extraPhotos :: Maybe [T.Text]
  
-    } deriving (Show, Generic, GP.PrettyShow)
+    } deriving (Show, Eq, Generic, GP.PrettyShow)
 
 data GetDrafts = GetDrafts
-    deriving (Show, Generic)
+    deriving (Show, Eq, Generic)
 
 instance GP.PrettyShow GetDrafts where
     prettyShow s = GP.LStr $ show s
@@ -46,20 +46,20 @@ data EditDraft = EditDraft {
     _ed_content :: Maybe T.Text,
     _ed_mainPhoto :: Maybe T.Text,
     _ed_extraPhotos :: Maybe [T.Text] 
-    } deriving (Show, Generic, GP.PrettyShow)
+    } deriving (Show, Eq, Generic, GP.PrettyShow)
 
 data EditDraftPublish = EditDraftPublish {
     _edp_postId :: PostId,
     _edp_draftId :: DraftId
-    } deriving (Show, Generic, GP.PrettyShow)
+    } deriving (Show, Eq, Generic, GP.PrettyShow)
 
 data DeleteDraft = DeleteDraft {
     _dd_draft_id :: DraftId
-    } deriving (Show, Generic, GP.PrettyShow, PS.ToRow)
+    } deriving (Show, Eq, Generic, GP.PrettyShow, PS.ToRow)
 
 
 data Publish = Publish {
     _p_draftId :: DraftId
-    } deriving (Show, Generic, GP.PrettyShow, PS.ToRow)
+    } deriving (Show, Eq, Generic, GP.PrettyShow, PS.ToRow)
 
    

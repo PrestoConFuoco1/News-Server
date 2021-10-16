@@ -20,14 +20,14 @@ type Query = HS.HashMap BS.ByteString BS.ByteString
 data ActionError = EInvalidEndpoint
     | ERequiredFieldMissing BS.ByteString
     | EInvalidFieldValue BS.ByteString
-    deriving (Show, Generic)
+    deriving (Show, Generic, Eq)
 
 -- invalidEP = AError EInvalidEndpoint
 
 data ActionErrorPerms = ActionErrorPerms {
     _ae_admin :: Bool,
     _ae_error :: ActionError
-    } deriving (Show, Generic)
+    } deriving (Show, Generic, Eq)
 
 data RoutingEnv = RoutingEnv {
     _re_admin :: Bool,

@@ -19,21 +19,21 @@ instance GP.PrettyShow GetAuthors where
 
 data GetAuthors = GetAuthors {
     _ga_userId :: Maybe UserId
-    } deriving (Show, Generic)
+    } deriving (Show, Eq, Generic)
 
 data CreateAuthor = CreateAuthor {
     _ca_userId :: UserId,
     _ca_description :: T.Text
-    } deriving (Show, Generic, GP.PrettyShow, PS.ToRow)
+    } deriving (Show, Eq, Generic, GP.PrettyShow) --, PS.ToRow)
 
 data DeleteAuthor = DeleteAuthor {
     _da_authorId :: AuthorId
-    } deriving (Show, Generic, GP.PrettyShow, PS.ToRow)
+    } deriving (Show, Eq, Generic, GP.PrettyShow) --, PS.ToRow)
 
 data EditAuthor = EditAuthor {
     _ea_authorId :: AuthorId,
     _ea_description :: Maybe T.Text,
     _ea_userId :: Maybe UserId
-    } deriving (Show, Generic, GP.PrettyShow, PS.ToRow)
+    } deriving (Show, Eq, Generic, GP.PrettyShow) --, PS.ToRow)
 
 

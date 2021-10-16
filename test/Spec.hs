@@ -1,11 +1,13 @@
 import Test.Hspec
 
 import AuthenticationLogic (emulatedLogic)
+import Routing
 
 main :: IO ()
 --main = putStrLn "Test suite not yet implemented"
 main = hspec $ do
     emulatedLogic
+    testRouting
 
 {-  describe "Prelude" $ do
     describe "read" $ do

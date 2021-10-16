@@ -14,7 +14,7 @@ import Data.Bifunctor (first)
 --import Control.Applicativ
 
 data CRUD c r u d = Create c | Read r | Update u | Delete d
-    deriving (Generic, Show)
+    deriving (Show, Eq, Generic)
 instance (GP.PrettyShow c, GP.PrettyShow r,
           GP.PrettyShow u, GP.PrettyShow d) => GP.PrettyShow (CRUD c r u d)
 
@@ -24,7 +24,7 @@ data Paginated a = Paginated {
     _pag_page :: Int,
     _pag_size :: Int,
     _pag_data :: a
-    } deriving (Show, Generic)
+    } deriving (Show, Eq, Generic)
 
 instance GP.PrettyShow a => GP.PrettyShow (Paginated a) 
 
