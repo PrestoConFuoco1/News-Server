@@ -5,14 +5,14 @@ import qualified App.Logger as L
 import Prelude hiding (log)
 import Types
 
-noUserByToken :: Token -> IO (Maybe User)
-noUserByToken _ = return Nothing
+noUserByToken :: L.Handle IO -> Token -> IO (Maybe User)
+noUserByToken _ _ = return Nothing
 
-notAdminByToken :: Token -> IO (Maybe User)
-notAdminByToken _ = return (Just $ User { _u_admin = Just False })
+notAdminByToken :: L.Handle IO -> Token -> IO (Maybe User)
+notAdminByToken _ _ = return (Just $ User { _u_admin = Just False })
 
-adminByToken :: Token -> IO (Maybe User)
-adminByToken _ = return (Just $ User { _u_admin = Just True })
+adminByToken :: L.Handle IO -> Token -> IO (Maybe User)
+adminByToken _ _ = return (Just $ User { _u_admin = Just True })
 
 
 

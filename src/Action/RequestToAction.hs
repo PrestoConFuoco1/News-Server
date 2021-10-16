@@ -43,9 +43,13 @@ data Action = AAuthors ActionAuthors
 
 requestToAction :: W.Request -> Either (WhoWhat ActionErrorPerms) (WhoWhat Action)
 requestToAction req =
+    let queryString = W.queryString req
+        pathInfo = W.pathInfo req
+    in  requestToAction1 pathInfo queryString
+
+requestToAction1 :: [T.Text] -> [(BS.ByteString, Maybe BS.ByteString)] -> Either (WhoWhat ActionErrorPerms) (WhoWhat Action)
+requestToAction1 pathInfo queryString =
   let
-    queryString = W.queryString req
-    pathInfo = W.pathInfo req
     maybeToken = case queryString of
         ((tokenPar, Just tokenVal):ys) ->
                 if tokenPar == "token"
@@ -53,13 +57,13 @@ requestToAction req =
                 else Nothing
         _ -> Nothing
     hash :: Query
-    hash = HS.fromList . Mb.catMaybes . map f $ W.queryString req
+    hash = HS.fromList . Mb.catMaybes . map f $ queryString
     f (x, y) = fmap ((,) x) y
-  in  bimap (WhoWhat maybeToken) (WhoWhat maybeToken) $ requestToAction' pathInfo hash
+  in  bimap (WhoWhat maybeToken) (WhoWhat maybeToken) $ requestToAction2 pathInfo hash
 
 
-requestToAction' :: [T.Text] -> Query -> Either ActionErrorPerms Action
-requestToAction' path hash = case path of 
+requestToAction2 :: [T.Text] -> Query -> Either ActionErrorPerms Action
+requestToAction2 path hash = case path of 
     (x:xs)
      | x == "auth"       -> fmap AAuth $ runRouter (renv False hash) requestToActionAuthenticate
      | x == "posts"      -> fmap APosts $ requestToActionPosts xs hash

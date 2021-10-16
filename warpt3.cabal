@@ -130,7 +130,9 @@ test-suite warpt3-test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
+      AuthenticationLogic
       Handlers
+      Routing
       Paths_warpt3
   hs-source-dirs:
       test
