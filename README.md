@@ -346,12 +346,186 @@ The `result` field contains id of deleted user.
 
 ### Authors
 
+#### `/authors/get`
+Get list of authors, requires token, available only for admins.
+No other parameters required. On success, array of Author is returned.
+
+#### `/authors/create`
+Create an author for a given user. Requires token, available only for admins.
+Parameters:
++ `user_id` - the unique user's identifier;
++ `description` - the description of the created author.
+On success, id of created author is returned.
+
+#### `authors/edit`
+Edit an author. Requires token, available only for admins.
+Parameters:
++ `author_id` - the unique identifier of the author to edit;
++ `user_id` - new user\_id of the author;
++ `description` - the new author's description.
+On success, id of edited author is returned.
+
+#### `authors/delete`
+Delete an author. Requires token, available only for admins.
+Parameters:
++ `author_id` - the unique identifier of the author to delete.
+On success, id of deleted author is returned.
+
 ### Categories
+
+#### `/categories/get`
+Get categories. Available for all.
+No parameters required.
+On success, array of Category is returned.
+
+#### `/categories/create`
+Create a category. Requires token, available only for admins.
+Parameters:
++ `name` - category name;
++ `parent_id` - the unique id of the parent category.
+On success, id of created category is returned.
+
+#### `/categories/edit`
+Edit a category. Requires token, available only for admins.
+Parameters:
++ `category_id` - the unique id of the category being edited.
++ `name` - new category name;
++ `parent_id` - new category parent;
+On success, id of the edited category is returned.
+
+#### `/categories/delete`
+Delete a category. Requires token, available only for admins.
+Parameters:
++ `category_id` - the unique id of the category being deleted.
+On success, id of the deleted category is returned.
 
 ### Tags
 
+#### `/tags/get`
+Get categories. Available for all.
+No parameters required.
+On success, array of Tag is returned.
+
+#### `/tags/create`
+Create a tag. Requires token, available only for admins.
+Parameters:
++ `name` - tag name;
+On success, id of created tag is returned.
+
+#### `/tags/edit`
+Edit a tag. Requires token, available only for admins.
+Parameters:
++ `tag_id` - the unique id of the tag being edited.
++ `name` - new tag name;
+On success, id of the edited tag is returned.
+
+#### `/tags/delete`
+Delete a tag. Requires token, available only for admins.
+Parameters:
++ `tag_id` - the unique id of the tag being deleted.
+On success, id of the deleted tag is returned.
+
 ### Posts
+
+The only method here is `/posts/get`
+Get posts. Available for all.
+The available parameters are discussed below.
+
+#### Tags search parameters
+Optional parameter. One of the next parameters can be present:
++ `tag=1` will search posts that have tag with id=1;
++ `tags__in=[1,2,3]` will search for posts which has tags with id = 1, id = 2 or id = 3;
++ `tags__all=[1,2,3]` will search for posts which has all listed tags.
+
+#### Creation date parameters
+Optional parameter. One of the next parameters can be present:
++ `created_at=yyyy-mm-dd` for posts created exactly at yyyy-mm-dd;
++ `created_at__lt=yyyy-mm-dd` for posts created earlier than yyyy-mm-dd;
++ `created_at__gt=yyyy-mm-dd` for posts created later than yyyy-mm-dd.
+
+#### Sort options
+Optional parameter. Default is sort by date descending.
+Format: `sort=xy`, where `x` and `y` are single letters.
+`x` refers to entity to sort by, `y` refers to sort order.
+
+Possible `x` values:
++ `d` to sort by date;
++ `a` to sort by author description;
++ `c` to sort by category name;
++ `p` to sort by number of photos.
+
+Possible `y` values:
+`a` - ascending order;
+`d` - descending order.
+
+#### Search options
+Optional parameter.
+Format: `search=<str>` will search `<str>` in title, content, tags and category.
 
 ### Comments
 
+#### Get comments
+Available for all.
+There are two ways of getting comments:
+* `/comments/get`, requires `post_id=<post_id>` parameter;
+* `/posts/<post_id>/comments`.
+On success an array of Comment is returned.
+
+#### `/comments/create`
+Create comment. Available for authorized users.
+Parameters:
+* `post_id` - the `post_id` of the post that comment will belong to;
+* `content` - comment contents.
+The new comments's id is returned as a `result`.
+
+#### `/comments/delete`
+Delete comment. Requires token. Succeeds if user is admin or comment belongs to user.
+Parameters:
+* `comment_id` - the id of comment to be deleted.
+On success the deleted comment's id is returned.
+
 ### Drafts
+
+#### `/drafts/create`
+
+Create draft. Requires token, available only for authors.
+Parameters:
+* `title` - draft's title;
+* `tags` - draft's tags, format - "tags=[1,2,3]", or "tags=[]" for empty tags list;
+* `category_id` - draft's category identifier;
+* `content` - draft's content;
+* `main_photo` - URL of draft's main photo;
+* `extra_photos` - URLs of draft's extra photos.
+On success, the created draft's id is returned.
+
+#### `/drafts/edit`
+
+Edit draft. Requires token, available only for authors.
+Parameters:
+* `draft_id` - the unique identifier of draft to edit;
+* `title` - draft's title;
+* `tags` - draft's tags, format - "tags=[1,2,3]", or "tags=[]" for empty tags list;
+* `category_id` - draft's category identifier;
+* `content` - draft's content;
+* `main_photo` - URL of draft's main photo;
+* `extra_photos` - URLs of draft's extra photos.
+On success, the edited draft's id is returned.
+
+#### `/drafts/delete`
+
+Delete draft. Requires token, available only for authors.
+Parameters:
+* `draft_id` - the unique identifier of draft to delete.
+On success, the deleted draft's id is returned.
+
+#### `/publish`
+
+Publish draft. If the draft has not been published yet, a new post is created.
+Parameters:
+* `draft_id` - the unique identifier of draft to be published.
+On success, the created or edited post's id is returned.
+
+# Feedback
+
+Contact me on `keepersofsecrets1@gmail.com`.
+
