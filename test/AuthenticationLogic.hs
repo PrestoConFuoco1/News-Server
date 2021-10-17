@@ -20,16 +20,24 @@ emulatedLogic = do
 authorizedLogic :: Spec
 authorizedLogic = do
   let def = defaultHandler
-      nouser = def {getUserByToken = noUserByToken }
+      noUser = def {getUserByToken = noUserByToken }
+      okUser = def {getUserByToken = userByToken }
   describe "Authorization logic" $ do
     it "throws unauthorized exception if no token supplied" $ do
-        (withAuth nouser Nothing >>= maybeUserToUser nouser)
+        (withAuth def Nothing >>= maybeUserToUser def)
             `shouldThrow` unauthorizedSelector
 --    it "throws unauthorized exception if no token supplied" $ do
 --        (withAuth nouser Nothing >>= getUser nouser)
 --            `shouldThrow` unauthorizedSelector
+    it "throws unauthorized exception if no user is returned" $ do
+        (withAuth noUser (Just "asdas") >>= maybeUserToUser def)
+            `shouldThrow` unauthorizedSelector
+
+    it "returns a user if one with such token exists" $ do
+        (withAuth okUser (Just "token1") >>= maybeUserToUser def)
+            `shouldReturn` defaultUser
     it "throws undefined on undefined token" $ do
-        (withAuth nouser undefined >>= maybeUserToUser nouser)
+        (withAuth def undefined >>= maybeUserToUser def)
             `shouldThrow` anyErrorCall
 
 

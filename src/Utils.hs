@@ -13,6 +13,7 @@ import qualified Database.PostgreSQL.Simple.FromField as PSF
 import qualified Database.PostgreSQL.Simple.Types as PST
 import Type.Reflection
 
+import qualified Data.Time as Time
 
 
 instance (Typeable a, PSF.FromField a) => PSF.FromField [a] where
@@ -54,3 +55,12 @@ randomString' int = do
 
 withMaybe :: Maybe a -> b -> (a -> b) -> b
 withMaybe x nothing just = maybe nothing just x
+
+showDay :: Time.Day -> String
+showDay = Time.formatTime Time.defaultTimeLocale "%F"
+
+readDay :: String -> Maybe Time.Day
+readDay = 
+     (Time.parseTimeM True Time.defaultTimeLocale "%Y-%-m-%-d")
+
+

@@ -28,6 +28,7 @@ import Data.Text.Lazy.Encoding (decodeUtf8)
 import qualified Data.ByteString as B
 
 import qualified Data.Time as Time
+import qualified Utils as S
 ---------
 
 
@@ -159,7 +160,8 @@ instance PrettyShow Bool where
     prettyShow = LStr . show
 
 instance PrettyShow Time.Day where
-    prettyShow = LStr . Time.formatTime Time.defaultTimeLocale "%F"
+    --prettyShow = LStr . Time.formatTime Time.defaultTimeLocale "%F"
+    prettyShow = LStr . S.showDay
 
 instance PrettyShow Void where
     prettyShow _ = LStr ""

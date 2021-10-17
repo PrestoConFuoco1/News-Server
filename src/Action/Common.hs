@@ -4,7 +4,7 @@ module Action.Common (
 Query, ActionError(..),
 ActionErrorPerms(..), ask,
 RoutingEnv(..), Router(..), askAdmin, askHash, routerError,
-runRouter, withMaybe, errorOnNothing, renv
+runRouter, withMaybe, errorOnNothing, renv, pathNotFound
 ) where
 
 
@@ -23,6 +23,11 @@ data ActionError = EInvalidEndpoint
     deriving (Show, Generic, Eq)
 
 -- invalidEP = AError EInvalidEndpoint
+
+pathNotFound = ActionErrorPerms {
+    _ae_admin = False
+    , _ae_error = EInvalidEndpoint
+    }
 
 data ActionErrorPerms = ActionErrorPerms {
     _ae_admin :: Bool,

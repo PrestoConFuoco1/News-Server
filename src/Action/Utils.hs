@@ -72,6 +72,8 @@ readInt = Ae.decode . BSL.fromStrict
 readDay :: BS.ByteString -> Maybe Time.Day
 readDay = 
      (Time.parseTimeM True Time.defaultTimeLocale "%Y-%-m-%-d" . T.unpack . E.decodeUtf8)
+
+
 readList :: (Ae.FromJSON a) => BS.ByteString -> Maybe [a]
 readList = (Ae.decode . BSL.fromStrict)
 
@@ -87,12 +89,14 @@ data Paginated a = Paginated {
 
 -}
 
+defaultPage = 0
+defaultSize = 10000
 
 withPagination :: Router a -> Router (Paginated a)
 withPagination m = do
     x <- m
-    page <- requireWithDefault readInt 0 "page"
-    size <- requireWithDefault readInt 10000 "size"
+    page <- requireWithDefault readInt defaultPage "page"
+    size <- requireWithDefault readInt defaultSize "size"
     return $ Paginated page size x
 
 {-

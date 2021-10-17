@@ -67,18 +67,21 @@ requestToAction1 pathInfo queryString =
 
 requestToAction2 :: [T.Text] -> Query -> Either ActionErrorPerms Action
 requestToAction2 path hash = case path of 
-    (x:xs)
+    (x:[])
      | x == "auth"       -> fmap AAuth $ runRouter (renv False hash) requestToActionAuthenticate
+     | x == "publish"    -> fmap APublish $ runRouter (renv False hash) $ publishAction
+     | otherwise         -> Left pathNotFound
+    (x:xs)
      | x == "posts"      -> fmap APosts $ requestToActionPosts xs hash
      | x == "drafts"     -> fmap ADrafts $ requestToActionDrafts xs hash
-     | x == "publish"    -> fmap APublish $ requestToActionPublish xs hash
      | x == "categories" -> fmap ACategory $ requestToActionCats xs hash
      | x == "authors"    -> fmap AAuthors $ requestToActionAuthors xs hash
      | x == "tags"       -> fmap ATags $ requestToActionTags xs hash
      | x == "users"      -> fmap AUsers $ requestToActionUsers xs hash
      | x == "comments"   -> fmap AComments $ requestToActionComments xs hash
+     | otherwise         -> Left pathNotFound
     []
-     | otherwise -> Left  $ ActionErrorPerms False EInvalidEndpoint
+     | otherwise -> Left pathNotFound
 
 
 
@@ -95,8 +98,8 @@ requestToActionPosts path hash = case path of
     | otherwise -> Left $ ActionErrorPerms False EInvalidEndpoint
   (x:xs) -> case readIntText x of
         (Just id) -> fmap GC $ actionWithPost id xs hash
-        Nothing -> Left  $ ActionErrorPerms False EInvalidEndpoint
-  [] -> Left  $ ActionErrorPerms False EInvalidEndpoint
+        Nothing -> Left pathNotFound
+  [] -> Left pathNotFound
 
 requestToActionDrafts :: [T.Text] -> Query -> Either ActionErrorPerms ActionDrafts
 requestToActionDrafts path hash = case path of
@@ -106,12 +109,6 @@ requestToActionDrafts path hash = case path of
     | x == "edit" -> fmap Update $ runRouter (renv False hash) $ editDraftToAction
     | x == "delete" -> fmap Delete $ runRouter (renv False hash) $ deleteDraftToAction
   _ -> Left  $ ActionErrorPerms False EInvalidEndpoint
-
-requestToActionPublish :: [T.Text] -> Query -> Either ActionErrorPerms Publish
-requestToActionPublish path hash = case path of
-    (x:xs) -> Left  $ ActionErrorPerms False EInvalidEndpoint
-    [] -> runRouter (renv False hash) $ publishAction
-
 
 
 requestToActionCats :: [T.Text] -> Query -> Either ActionErrorPerms ActionCategory
