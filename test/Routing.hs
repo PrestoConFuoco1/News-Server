@@ -34,6 +34,18 @@ testRouting = do
             (requestToAction1 ["auth", "extra"] [])
             `shouldBe` Left invalidEndpoint
 
+        testPostsRouting
+        testDraftRouting
+        testCategoriesRouting
+        testTagsRouting
+        testUsersRouting
+        testAuthorsRouting
+        testCommentsRouting
+
+
+testPostsRouting :: Spec
+testPostsRouting = do
+    describe "posts routing" $ do
         it "correctly handles publish" $
             (requestToAction1 ["publish"] [("draft_id", Just "3")]) `shouldBe`
             Right (WhoWhat Nothing $ APublish $ Publish 3)
@@ -58,7 +70,11 @@ testRouting = do
         it "correctly handles getting post comments" $
             requestToAction1 ["posts", "123", "comments"] [] `shouldBe`
             Right (WhoWhat Nothing $ APosts $ GC $ Paginated defaultPage defaultSize $ GetComments 123)
+ 
 
+testDraftRouting :: Spec
+testDraftRouting = do
+    describe "draft routing" $ do
         it "correctly handles getting drafts" $
             requestToAction1 ["drafts", "get"] [] `shouldBe`
             Right (WhoWhat Nothing $ ADrafts $ Read $ Paginated defaultPage defaultSize $ GetDrafts)
@@ -88,6 +104,9 @@ testRouting = do
                 _dd_draft_id = 2
                 })
 
+testCategoriesRouting :: Spec
+testCategoriesRouting = do
+    describe "categories routing" $ do
         it "correctly handles getting categories" $
             requestToAction1 ["categories", "get"] [] `shouldBe`
             Right (WhoWhat Nothing $ ACategory $ Read $ Paginated defaultPage defaultSize $ GetCategories)
@@ -113,7 +132,10 @@ testRouting = do
                 _dc_catId = 5
                 })
 
---tags
+
+testTagsRouting :: Spec
+testTagsRouting = do
+    describe "tags routing" $ do
         it "correctly handles getting tags" $
             requestToAction1 ["tags", "get"] [] `shouldBe`
             Right (WhoWhat Nothing $ ATags $ Read $ Paginated defaultPage defaultSize $ GetTags)
@@ -139,7 +161,10 @@ testRouting = do
 
 
 
--- users
+
+testUsersRouting :: Spec
+testUsersRouting = do
+    describe "users routing" $ do
         it "correctly handles getting profile" $
             requestToAction1 ["users", "profile"] [] `shouldBe`
             Right (WhoWhat Nothing $ AUsers $ Read GetProfile)
@@ -162,7 +187,9 @@ testRouting = do
                 })
 
 
--- authors
+testAuthorsRouting :: Spec
+testAuthorsRouting = do
+    describe "authors routing" $ do
         it "correctly handles getting authors" $
             requestToAction1 ["authors", "get"] [] `shouldBe`
             Right (WhoWhat Nothing $ AAuthors $ Read $ Paginated defaultPage defaultSize $ GetAuthors Nothing)
@@ -191,6 +218,9 @@ testRouting = do
                 _da_authorId = 6
                 })
 
+testCommentsRouting :: Spec
+testCommentsRouting = do
+    describe "comments routing" $ do
         it "correctly handles getting comments" $
             requestToAction1 ["comments", "get"] [("post_id", Just "123")] `shouldBe`
             Right (WhoWhat Nothing $AComments $ Read $ Paginated defaultPage defaultSize $ GetComments 123)
@@ -207,3 +237,5 @@ testRouting = do
             Right (WhoWhat Nothing $ AComments $ Delete $ DeleteComment {
                 _dc_commentId = 3
                 })
+
+

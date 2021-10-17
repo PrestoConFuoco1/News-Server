@@ -11,7 +11,7 @@ import Execute.Utils
 import Test.Hspec
 
 emulatedLogic :: Spec
-emulatedLogic = do
+emulatedLogic = describe "emulated logic tests" $ do
     authorizedLogic
     adminPermissionsLogic
 
