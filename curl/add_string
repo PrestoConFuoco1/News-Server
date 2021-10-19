@@ -1,6 +1,0 @@
-#!/bin/bash
-# echo $1 >> $2
-sed -E 's/posts/posts\/get/' $1 > $1'.temp'
-cat $1'.temp' > $1
-rm $1'.temp'
-
