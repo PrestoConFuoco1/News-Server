@@ -170,6 +170,7 @@ should be used. If the database is on the same machine with the server, the two 
 `pg_hba.conf`:
 
 `local   databaseName    databaseApp     password`
+
 `local   databaseName    databaseOwner   password`
 
 ## Tests
