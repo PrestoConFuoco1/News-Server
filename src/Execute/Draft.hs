@@ -1,19 +1,15 @@
-{-# LANGUAGE TypeFamilies,
-             RecordWildCards #-}
+{-# LANGUAGE
+    TypeFamilies
+    , RecordWildCards
+    #-}
 module Execute.Draft where
 
 
 import qualified Data.Text as T (pack, Text)
-
-import qualified Database.PostgreSQL.Simple.Types as PSTy
-import qualified Database.PostgreSQL.Simple as PS
 import qualified App.Database as D
 import qualified App.Logger as L
 import Database.SqlValue
-import Database
-import Result
 import qualified Exceptions as Ex
-import qualified Data.Aeson as Ae (Value(..))
 import Types
 import Execute.Utils
 import qualified Control.Monad.Catch as CMC

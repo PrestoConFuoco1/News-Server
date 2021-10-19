@@ -1,23 +1,7 @@
 module Execute.Database where
 
-
 import Execute.Utils
-import Prelude hiding (Read)
-import qualified Data.Text as T (pack, Text)
-import Control.Exception (displayException)
-import Control.Monad (when)
-
-import qualified GenericPretty as GP
-
-
-import qualified Database.PostgreSQL.Simple as PS (SqlError(..))
-import qualified Data.Aeson as Ae
 import qualified Control.Monad.Catch as CMC (catches, Handler(..), MonadCatch, throwM)
-import qualified Data.Text.Encoding as E (decodeUtf8, encodeUtf8)
-import Result
-import Exceptions as Ex
-
-import Database.SqlValue
 import Types
 
 --getThis1 :: (CMC.MonadCatch m, Ae.ToJSON b)=> (a -> m [b]) -> a -> m APIResult

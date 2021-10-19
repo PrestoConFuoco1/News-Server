@@ -5,8 +5,6 @@ import qualified Exceptions as Ex
 import Types
 import Control.Monad (when)
 import qualified Data.Text as T
-import qualified Data.Aeson as Ae
-import Result
 import qualified App.Database as D
 import qualified GenericPretty as GP
 

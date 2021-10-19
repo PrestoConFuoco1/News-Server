@@ -1,8 +1,6 @@
 module IO.Postgres where
 
 import Database
-import Database.Update
-import Database.HasTags
 import Database.SqlValue
 import Prelude hiding (Read)
 import qualified Data.Text as T
@@ -13,7 +11,6 @@ import Types
 import qualified Utils as U
 import qualified App.Logger as L
 import GenericPretty
-import qualified Control.Monad.Catch as C
 
 generateToken1 :: Int -> IO String
 generateToken1 = U.randomString'
@@ -21,18 +18,6 @@ generateToken1 = U.randomString'
 withTransaction1 :: PS.Connection -> IO a -> IO a
 withTransaction1 = PS.withTransaction
 
-withDefaultSqlHandlers ::
-    (PS.ToRow q
-        , PrettyShow q
-    --    , Show q
-    ) => L.Handle IO
-    -> (PS.Connection -> PS.Query -> q -> IO d)
-    -> (PS.Connection -> PS.Query -> q -> IO d)
-withDefaultSqlHandlers logger f =
-    \x y z -> Ex.withExceptionHandlers (Ex.sqlHandlers logger y z) $ f x y z
-
-execute logger = withDefaultSqlHandlers logger PS.execute
-query logger = withDefaultSqlHandlers logger PS.query
 
 userAuthor1 :: PS.Connection -> L.Handle IO -> User -> IO (Maybe Author)
 userAuthor1 con logger u = do
@@ -56,10 +41,8 @@ getUserByLogin1 con logger login = do
               \image, login, pass_hash, creation_date, is_admin \
               \FROM news.users WHERE login = ?"
         params = [login]
-    --users <- PS.query con str [login]
 
     Ex.withExceptionHandlers (Ex.sqlHandlers logger str params) $ do
-        --users <- PS.query con str [login]
         users <- PS.query con str params
         case users of
             [] -> return Nothing
@@ -74,7 +57,6 @@ addToken1 con logger id token = do
         params = [SqlValue id, SqlValue token', SqlValue token']
 
     Ex.withExceptionHandlers (Ex.sqlHandlers logger str params) $ do
-        --PS.execute con str (id, token', token')
         PS.execute con str params
         return token'
 
