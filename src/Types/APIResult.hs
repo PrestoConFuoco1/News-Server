@@ -2,7 +2,7 @@
 module Types.APIResult where
 
 import Types.Entity
-import Data.Text
+import qualified Data.Text as T
 --import Types.APIErrors
 import GHC.Generics
 import GenericPretty
@@ -13,19 +13,20 @@ import Utils
 data APIResult =
       RGet RGettable
     | RGetUser User
-    | RGetToken Text
+    | RGetToken T.Text
     | RCreated Entity Int -- id of the created entity
     | REdited  Entity Int -- id of the edited entity
     | RDeleted Entity Int
     | RNotFound Entity
-    | RAlreadyInUse Entity Text Text
-    | RInvalidForeign Entity Text Text
-    | RInvalidTag Text
+    | RAlreadyInUse Entity T.Text T.Text
+    | RInvalidForeign Entity T.Text T.Text
+    | RInvalidTag T.Text
  --   | RError Ex.ServerException
     deriving (Show, Generic)
 
-logResult :: APIResult -> Text
-logResult (RGet x) = showText x
+logResult :: APIResult -> T.Text
+--logResult (RGet x) = showText x
+logResult (RGet (RGettable xs)) = "fetched " <> showText (length xs) <> " entities"
 logResult (RGetUser u) = textPretty u
 logResult x = showText x
 

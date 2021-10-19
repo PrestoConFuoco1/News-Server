@@ -205,6 +205,8 @@ for example using command:
 In the end, if you are interested in what the tests really do, you are welcome to see its sources
 and its output (without using grep).
 
+Also, for pure tests, please use `stack test`.
+
 # Configuration file
 
 Configuration file should contain database data and port numero.
