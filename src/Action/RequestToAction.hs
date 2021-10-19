@@ -1,16 +1,11 @@
-{-# LANGUAGE DeriveAnyClass #-}
 module Action.RequestToAction where
 
 import qualified Network.Wai as W (Request, pathInfo, queryString)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as E (decodeUtf8, encodeUtf8)
-import qualified Data.Aeson as Ae (decode, Value)
-import qualified Data.ByteString.Lazy as BSL (fromStrict, unpack, ByteString)
 import qualified Data.ByteString as BS
-import qualified Data.Time as Time
 import qualified Data.HashMap.Strict as HS (HashMap, fromList, lookup)
 import qualified Data.Maybe as Mb (catMaybes)
-import Control.Applicative ((<|>))
 
 import Data.Bifunctor (bimap)
 import GHC.Generics

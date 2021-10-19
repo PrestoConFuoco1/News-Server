@@ -4,18 +4,14 @@
     #-}
 module Migrations where
 
-
-
---import qualified Database.PostgreSQL.Simple
 import Database.PostgreSQL.Simple
---import qualified Database.PostgreSQL.Simple.Migration
 import Database.PostgreSQL.Simple.Migration
 import qualified Data.ByteString as BS
-import qualified Data.List as L
+import qualified Data.List as L (sortBy)
 import Data.FileEmbed
-import Data.Function
+import Data.Function (on)
 import System.Exit
-import Control.Monad
+import Control.Monad (forM_)
 
 
 data Config = Config {
@@ -25,29 +21,16 @@ data Config = Config {
     } deriving (Show)
 
 
-{-
--}
 adminConnectionString :: Config -> BS.ByteString
 adminConnectionString Config {..} =
     "dbname=" <> databaseName <>
     " user=" <> adminName <>
     " password='" <> adminPassword <> "'"
 
---migrationMain = mapM_ (\(f, s) -> putStrLn f >> BS.putStrLn s) sortedMigrations
-{-
-migrationMain = do
-    con <- connectPostgreSQL "dbname=migration2 user=migration2_owner password='0000'"
-    withTransaction con $ runMigration $
-        MigrationContext MigrationInitialization True con
-    return ()
--}
-
-
 
 migrationMain :: Config -> IO ()
 migrationMain conf = do
     let conStr = adminConnectionString conf
-    --con <- connectPostgreSQL "dbname=newsdb user=newsdb_owner password='0000'"
     con <- connectPostgreSQL conStr
     runMigrations1 con
 

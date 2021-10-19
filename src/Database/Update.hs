@@ -1,23 +1,16 @@
 {-# LANGUAGE
-TypeFamilies,
-FlexibleContexts,
-RecordWildCards
-#-}
+    TypeFamilies
+    , FlexibleContexts
+    , RecordWildCards
+    #-}
 
 
 module Database.Update where
 
-import qualified Data.ByteString as B
-import qualified Data.Text as T
-import qualified Data.Aeson as Ae (Value, encode)
-
 import qualified Database.PostgreSQL.Simple as PS
-
 import Database.SqlValue
 import Data.Maybe (catMaybes)
-
 import qualified Database.PostgreSQL.Simple.Types as PSTy
-import Utils
 import Types
 
 updateParams :: (UpdateSQL s) => s -> Upd s -> Maybe (PS.Query, [SqlValue])
@@ -45,13 +38,6 @@ optionals :: (UpdateSQL s) => s -> Upd s -> [(PS.Query, SqlValue)]
 optionals s = catMaybes . map f . optionalsMaybe s
   where
         f (t, x) = fmap (\a -> (t, a)) x
-{-
-optionalsMaybe :: EditCategory -> [(PS.Query, Maybe SqlValue)]
-optionalsMaybe EditCategory{..} =
-            [("name", fmap SqlValue _ec_catName),
-             ("parent_category_id", fmap SqlValue _ec_parentId)]
- -}
-
 
 
 class UpdateSQL s where
@@ -132,7 +118,6 @@ instance UpdateSQL UDraft where
     uName _ = EDraft
     optionalsMaybe _ (WithAuthor _ EditDraft{..}) =
         [("title", fmap SqlValue _ed_title),
-    --     ("tags", fmap (SqlValue . PSTy.PGArray) _ed_tags),
          ("category_id", fmap SqlValue _ed_categoryId),
          ("content", fmap SqlValue _ed_content),
          ("photo", fmap SqlValue _ed_mainPhoto),
@@ -155,16 +140,6 @@ instance UpdateSQL UPDraft where
 
     identifParams _ EditDraftPublish{..} =
         [SqlValue _edp_draftId]
-
-
-
-
-
-
-
-
-
-
 
 
 

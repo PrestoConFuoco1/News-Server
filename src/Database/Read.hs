@@ -1,34 +1,22 @@
 {-# LANGUAGE
-ScopedTypeVariables,
-TypeFamilies,
-FlexibleContexts
-#-}
---OverloadedStrings
-
-
+    TypeFamilies
+    , FlexibleContexts
+    #-}
 
 module Database.Read where
 
 import Prelude hiding (Read)
 import Data.Maybe (catMaybes)
 import qualified Data.Text.Lazy as TL (fromStrict)
-import qualified Data.Aeson as Ae (Value, encode)
-
 import qualified GenericPretty as GP (PrettyShow(..))
 import GHC.Generics
-
-
 import qualified Database.PostgreSQL.Simple as PS
 import Types
 import qualified Data.Aeson as Ae
 import qualified Database.PostgreSQL.Simple.Types as PSTy
-
 import qualified Data.Time as Time
-
 import Utils
-
 import Database.SqlValue
-import Database.SqlQueryTypes
 import qualified Data.Text as T (pack)
 
 class (Ae.ToJSON (MType s), GP.PrettyShow (MType s), PS.FromRow (MType s), Show (Get s), Show (MType s))
@@ -78,7 +66,6 @@ instance Read PostD where
                 [fmap postsWhereDate cre,
                  fmap postsWhereTags tags,
                  fmap postsWhereSearch search]
- --           orderClause = " ORDER BY post_creation_date DESC "
             orderClause = postsOrder sortOpts
         in  (selectClause <> notEmptyDo (" WHERE " <>) whereClause <> orderClause, args)
 
@@ -97,13 +84,7 @@ ascDescQ SODescending = " DESC "
 fromJust (Just x) = x
 w :: Time.Day
 w = fromJust $ Time.parseTimeM True Time.defaultTimeLocale "%Y-%-m-%-d" "2010-3-04"
-{-
-postsWhereClause1 :: GetPosts -> Where
-postsWhereClause1 (GetPosts cre tags search sortOpts) =
-    foldr And WTrue $ catMaybes [fmap (Unit . postsWhereDate1) cre,
-                                 fmap (Unit . postsWhereTags1) tags,
-                                 fmap postsWhereSearch1 search]
--}
+
 
 postsWhereDate :: CreationDateOptions -> (PS.Query, [SqlValue])
 postsWhereDate (Created day)        = postsWhereDate' "="  day
@@ -113,26 +94,13 @@ postsWhereDate (CreatedLater   day) = postsWhereDate' ">=" day
 postsWhereDate' compareSym day =
     (" post_creation_date " <> compareSym <> " ? ",
     [SqlValue day])
-{-
-postsWhereDate1 :: CreationDateOptions -> WhereUnit
-postsWhereDate1 (Created day)        = CompareDate Eq "post_creation_date" day
-postsWhereDate1 (CreatedEarlier day) = CompareDate LEq "post_creation_date" day
-postsWhereDate1 (CreatedLater   day) = CompareDate GEq "post_creation_date" day
--}
-
 
 
 postsWhereTags :: TagsOptions -> (PS.Query, [SqlValue])
 postsWhereTags (OneTag id)   = ("? && tagids", [SqlValue $ PSTy.PGArray [id]])
 postsWhereTags (TagsIn ids)  = ("? && tagids", [SqlValue $ PSTy.PGArray ids])
 postsWhereTags (TagsAll ids) = ("? <@ tagids", [SqlValue $ PSTy.PGArray ids])
-{-
-postsWhereTags1 :: TagsOptions -> WhereUnit
-postsWhereTags1 (OneTag id) = CompareArr Overlap (ArrInt [id]) tagsarr
-postsWhereTags1 (TagsIn ids) = CompareArr Overlap (ArrInt ids) tagsarr
-postsWhereTags1 (TagsAll ids) = CompareArr IsContainedBy (ArrInt ids) tagsarr
-tagsarr = "tagids"
--}
+
 postsWhereSearch :: SearchOptions -> (PS.Query, [SqlValue])
 postsWhereSearch (SearchOptions text) =
     let str = "title ILIKE ? OR content ILIKE ?\
@@ -140,14 +108,8 @@ postsWhereSearch (SearchOptions text) =
               \ OR catnames[1] ILIKE ?"
              -- \ OR array_to_string(catnames, ',') ILIKE ?"
     in  (str, replicate 4 $ SqlValue $ TL.fromStrict $ enclose "%" text)
-{-
-postsWhereSearch1 :: SearchOptions -> Where
-postsWhereSearch1 (SearchOptions text) =
-    let t = enclose "%" text in
-    Unit (ILike "title" t) `Or` Unit (ILike "content" t) `Or`
-    Unit (ILike "array_to_string(tagnames, ',')" t) `Or`
-    Unit (ILike "array_to_string(catnames, ',')" t)
--}
+
+
 queryIntercalate :: PS.Query -> [(PS.Query, [SqlValue])] -> (PS.Query, [SqlValue])
 queryIntercalate delim = foldr f ("", [])
   where f (q, v) (qacc, vacc) = let qu = notEmptyDo enclosePar q

@@ -31,8 +31,6 @@ data ServerException =
 throwForbidden :: (CMC.MonadThrow m) => m a
 throwForbidden = CMC.throwM Forbidden
 
-{-
--}
 mainErrorHandler :: (MonadThrow m) => L.Handle m -> ServerException -> m U.Response
 mainErrorHandler logger err = do
     L.logError logger $ T.pack $ displayException err
@@ -60,8 +58,7 @@ throwInvalidUpdate :: (MonadThrow m) => m a
 throwInvalidUpdate = CMC.throwM InvalidUpdate
 throwUnauthorized :: (MonadThrow m) => m a
 throwUnauthorized = CMC.throwM $ Unauthorized
-{-
--}
+
 throwInvalidUnique :: (MonadThrow m) => Entity -> [Int] -> m b
 throwInvalidUnique ent xs = do
     --logError $ T.pack $ GP.defaultPretty xs
@@ -74,9 +71,6 @@ throwInvalidLogin = CMC.throwM $ InvalidLogin
 notAnAuthor :: (MonadThrow m) => m a
 notAnAuthor = CMC.throwM $ NotAnAuthor
 
-
-{-
--}
 
 defaultSqlHandler :: (MonadThrow m) => L.Handle m -> PS.SqlError -> m a
 defaultSqlHandler logger e = do

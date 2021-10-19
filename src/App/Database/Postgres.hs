@@ -4,22 +4,17 @@
     #-}
 module App.Database.Postgres where
 
---import qualified App.Database as D
 import App.Database
-
 import IO.Postgres as IOP
-
 import qualified Data.ByteString as B
 import qualified Database.PostgreSQL.Simple as PS
 import qualified App.Logger as Logger
-import Prelude hiding (log)
 import Database
-import Database.HasTags
 import Types
 import Control.Monad ((>=>))
 import GHC.Generics
 import GenericPretty
-import qualified Control.Monad.Catch as C
+import qualified Control.Monad.Catch as C (bracket)
 
 data Config = Config {
     databaseName :: B.ByteString

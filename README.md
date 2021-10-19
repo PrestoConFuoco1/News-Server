@@ -220,7 +220,7 @@ admin_password = "0000"
 port = 5555
 ```
 
-All parameters are required, no optional parameters.
+All parameters are required, except port; default port is 5555.
 
 # Command line options
 

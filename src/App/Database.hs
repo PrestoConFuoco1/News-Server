@@ -7,7 +7,7 @@ import Prelude hiding (log)
 import qualified App.Logger as Logger
 
 
-data Handle m = {- forall a. -} Handle
+data Handle m = Handle
     {
 
     -- logger
@@ -23,7 +23,6 @@ data Handle m = {- forall a. -} Handle
 
     getUserByLogin :: Logger.Handle m -> T.Text -> m (Maybe User),
     addToken :: Logger.Handle m -> UserId -> T.Text -> m T.Text,
-    --randomString :: Int -> m String,
     generateToken :: Int -> m String,
 
     -- entities,

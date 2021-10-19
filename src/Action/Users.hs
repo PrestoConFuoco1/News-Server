@@ -1,14 +1,6 @@
-{-# LANGUAGE DeriveAnyClass #-}
 module Action.Users where
 
-
 import Action.Utils
-
-import GHC.Generics
-import qualified GenericPretty as GP
-import qualified Database.PostgreSQL.Simple as PS
-import qualified Data.Text as T
-import Data.Void
 import Action.Common
 import Types
 

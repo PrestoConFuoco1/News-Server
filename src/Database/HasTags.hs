@@ -1,5 +1,7 @@
-{-# LANGUAGE TypeFamilies,
-             FlexibleContexts #-}
+{-# LANGUAGE
+    TypeFamilies
+    , FlexibleContexts
+    #-}
 module Database.HasTags where
 
 import qualified Data.Text as T (pack, Text)

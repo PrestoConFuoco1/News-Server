@@ -6,8 +6,6 @@ module Config where
 
 
 import qualified Data.ByteString as B
-
-
 import qualified Control.Exception as E
     (catches, Handler (..), SomeException, IOException)
 import qualified Control.Monad.Catch as C
@@ -15,29 +13,11 @@ import qualified System.IO.Error as E
     (isDoesNotExistError, isPermissionError, isAlreadyInUseError)
 import qualified Data.Configurator as C
 import qualified Data.Configurator.Types as CT
-
 import qualified System.Exit as Q (ExitCode (..), exitWith)
-import System.Environment (getArgs)
-import System.IO (hPutStrLn, stderr)
 import qualified App.Logger as L
-import Control.Monad (when, forever)
-
-import Data.IORef
-import App.Database as D
-import qualified Utils as S (withMaybe)
-import Data.List (isPrefixOf)
-import Text.Read (readMaybe)
 import qualified Data.Text as T (pack)
 import GHC.Generics
 import GenericPretty
-
-{-
-data ConfigException = RequiredFieldMissing
-    deriving (Show, Eq)
-
-instance C.Exception ConfigException
--}
-
 
 data Config = Config {
     databaseName :: B.ByteString
@@ -49,32 +29,8 @@ data Config = Config {
     } deriving (Show, Eq, Generic)
 
 instance PrettyShow Config
-{-
-defaultConfig = Config {
-    databaseName = "newsdb"
-    , dbUser = "newsdb_app"
-    , dbPassword = "0000"
-    , dbAdmin = "newsdb_owner"
-    , dbAdminPassword = "0000"
-    , dbPort = 5555
-    }
--}
-defaultPort = 5555
 
-{-
-appConnectionString :: Config -> B.ByteString
-appConnectionString Config {..} =
-    "dbname=" <> databaseName <>
-    " user=" <> dbUser <>
-    " password='" <> dbPassword <> "'"
--}
-{-
-adminConnectionString :: Config -> B.ByteString
-adminConnectionString Config {..} =
-    "dbname=" <> databaseName <>
-    " user=" <> dbAdmin <>
-    " password='" <> dbAdminPassword <> "'"
--}
+defaultPort = 5555
 
 loadConfig :: L.Handle IO -> FilePath -> IO Config
 loadConfig handle path = do
@@ -124,12 +80,6 @@ handleIOError logger exc
 handleConfigError :: L.Handle IO -> CT.ConfigError -> IO ()
 handleConfigError logger (CT.ParseError path s) =
     L.logError logger $ "Failed to parse configuration file."
-{-
-handleConfigError logger e = do
-    L.logError logger $ "Unknown ConfigError occured"
-    L.logError logger $ T.pack $ C.displayException e
--- this pattern is redundant because ConfigError has only one constructor
--}
 
 handleKeyError :: L.Handle IO -> CT.KeyError -> IO ()
 handleKeyError logger (CT.KeyError name) = do

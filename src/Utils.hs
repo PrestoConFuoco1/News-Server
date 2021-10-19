@@ -2,17 +2,14 @@ module Utils where
 
 import qualified Data.Text as T
 import qualified Data.ByteString as B
-import Text.Regex.PCRE
+import Text.Regex.PCRE ((=~))
 import qualified Data.Text.Encoding as E
-import Data.Char
-import System.Random
+import Data.Char (toLower)
+import System.Random (randomRIO)
 import GHC.Arr
-
-import GHC.Generics
 import qualified Database.PostgreSQL.Simple.FromField as PSF
 import qualified Database.PostgreSQL.Simple.Types as PST
 import Type.Reflection
-
 import qualified Data.Time as Time
 
 

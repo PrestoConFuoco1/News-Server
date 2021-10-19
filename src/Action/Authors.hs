@@ -3,12 +3,7 @@ module Action.Authors where
 
 
 import Action.Utils
-import GHC.Generics
-import qualified GenericPretty as GP
-import qualified Database.PostgreSQL.Simple as PS
 import Action.Common
-import Data.Void
-import qualified Data.Text as T
 import Types
 
 createAuthorToAction :: Router CreateAuthor

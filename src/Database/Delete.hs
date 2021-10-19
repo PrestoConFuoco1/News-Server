@@ -1,19 +1,13 @@
 {-# LANGUAGE
-ScopedTypeVariables,
-TypeFamilies,
-FlexibleContexts
+    TypeFamilies
 #-}
 module Database.Delete where
 
 
-import qualified Data.ByteString as B
-import qualified Data.Text as T
 import qualified Database.PostgreSQL.Simple as PS
-
 import Database.SqlValue
 import qualified Database.PostgreSQL.Simple.Types as PSTy
 import Types
-import Utils
 
 
 class DeleteSQL s where
@@ -61,7 +55,6 @@ dummyDComment = DComment ()
 
 
 isAdmin :: User -> Bool
---isAdmin u = _u_admin u /= Just True
 isAdmin u = maybe False id $ _u_admin u
 
 

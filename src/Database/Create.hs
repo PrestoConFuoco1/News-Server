@@ -1,21 +1,16 @@
 {-# LANGUAGE
-ScopedTypeVariables,
-TypeFamilies,
-FlexibleContexts,
-RecordWildCards
-#-}
+    TypeFamilies
+    , RecordWildCards
+    #-}
 
 
 module Database.Create where
 
 
 import qualified Database.PostgreSQL.Simple as PS
-import qualified Data.ByteString as B
-import Data.Text as T (Text, pack)
 import qualified Database.PostgreSQL.Simple.Types as PSTy
 import Database.SqlValue
 import qualified Types as Ty
-import Utils
 import Types
 
 class CreateSQL s where
@@ -75,7 +70,6 @@ instance CreateSQL CComment where
     createQuery _ (WithUser u CreateComment{..}) =
         ("INSERT INTO news.comment (user_id, post_id, content) values (?, ?, ?) RETURNING comment_id",
         [SqlValue $ _u_id u, SqlValue _ccom_postId, SqlValue _ccom_content])
---insert into comment (post_id, content, user_id) values (1, 'comment to first post', 2);
     cName _ = Ty.EComment
 
 
@@ -95,7 +89,6 @@ instance CreateSQL CPost where
                            \ ) values (?, ?, ?, ?, ?, ?) RETURNING post_id",
         [SqlValue _dr_title, SqlValue _dr_authorId, SqlValue _dr_categoryId, SqlValue _dr_content, SqlValue _dr_mainPhoto,
         SqlValue $ fmap PSTy.PGArray _dr_extraPhotos])
---insert into comment (post_id, content, user_id) values (1, 'comment to first post', 2);
     cName _ = Ty.EPost
 
 

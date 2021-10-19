@@ -1,19 +1,10 @@
-{-# LANGUAGE DeriveAnyClass #-}
 module Action.Posts where
-
 
 import Action.Common
 import Action.Utils
 import qualified Data.ByteString as BS
 import Prelude hiding (readList)
-
-
-import GHC.Generics
-import qualified GenericPretty as GP
-import qualified Database.PostgreSQL.Simple as PS
 import qualified Data.Text as T
-import qualified Data.Time as Time
-import Data.Void
 import Types
 
 defaultSortOptions :: SortOptions
@@ -24,11 +15,8 @@ actionWithPost :: Int -> [T.Text] -> Query -> Either ActionErrorPerms (Paginated
 actionWithPost id path hash = case path of
   (x:[])
     | x == "comments" -> runRouter (renv False hash) $ withPagination $ return $ GetComments id
---    | x == "comments" -> runRouter (renv False hash) $ getCommentsToAction
   _ -> Left $ ActionErrorPerms False EInvalidEndpoint
 
-
---[Router (Maybe a)] -> Router (Maybe a)
 
 getPostsAction :: Router GetPosts
 getPostsAction = do

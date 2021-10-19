@@ -1,15 +1,8 @@
-{-# LANGUAGE DeriveAnyClass #-}
 module Action.Draft where
 
 import Action.Utils
 import Prelude hiding (readList)
-import GHC.Generics
-import qualified GenericPretty as GP
-import qualified Database.PostgreSQL.Simple as PS
-import qualified Data.Text as T
-import qualified Data.Time as Time
 import Action.Common
-import Data.Void
 import Types
 
 

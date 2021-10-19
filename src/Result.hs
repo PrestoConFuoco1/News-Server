@@ -4,13 +4,9 @@ module Result where
 
 import qualified Network.HTTP.Types as NHT
 import qualified Data.Aeson as Ae
-
 import qualified Data.Text as T
-import qualified Data.ByteString as B
-import qualified Data.Text.Encoding as E
 import GHC.Generics
 import Types
-import Utils
 
 successGet = "Success" :: T.Text
 successGetProfile = "Got profile successfully" :: T.Text

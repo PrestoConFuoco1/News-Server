@@ -10,31 +10,23 @@ import Data.IORef
 import qualified Network.Wai.Handler.Warp as Warp (run)
 import qualified Network.Wai as W (Request(..), Response, Application, responseLBS)
 import qualified Data.Text as T (pack)
-
 import qualified GenericPretty as GP (defaultPretty, textPretty)
-
 import Action.RequestToAction (requestToAction)
 import Execute (executeAction, handleError)
 import Types
 import Result
-
 import qualified App.Logger as L
-import qualified Database.PostgreSQL.Simple as PS (connectPostgreSQL, Connection, close)
 import qualified Data.Aeson as Ae (encode, ToJSON(..))
-
 import qualified Exceptions as Ex (mainErrorHandler, defaultMainHandler)
 import qualified Control.Monad.Catch as CMC
-
-import qualified Database.PostgreSQL.Simple.Migration as PSM
 import qualified Migrations as M
-
 import RunOptions
 import qualified App.Database as D
 import qualified App.Database.Postgres as DP
 import qualified Config as C
 import System.Exit as Q
 import System.Environment (getArgs)
-import System.IO
+import System.IO (hPutStrLn, stderr)
 import Control.Monad (when)
 import qualified Utils as S
 
