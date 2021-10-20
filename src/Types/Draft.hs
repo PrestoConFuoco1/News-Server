@@ -7,9 +7,7 @@ import qualified GenericPretty as GP
 import qualified Database.PostgreSQL.Simple as PS
 import qualified Data.Text as T
 import Types.Tags
-import qualified Data.Time as Time
 import Types.Common
-import Data.Void
 import Types.Category
 import Types.Posts
 

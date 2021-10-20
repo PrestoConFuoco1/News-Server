@@ -8,23 +8,24 @@ import qualified Data.Text as T
 import GHC.Generics
 import Types
 
-successGet = "Success" :: T.Text
-successGetProfile = "Got profile successfully" :: T.Text
-successNewToken = "Got token successfully" :: T.Text
+successGet, successGetProfile, successNewToken :: T.Text
+successGet = "Success"
+successGetProfile = "Got profile successfully"
+successNewToken = "Got token successfully"
 
-forbidden = "Access only for administrators, sending 404 invalid endpoint." :: T.Text
+forbidden, badInsert, idInResult, unauthorizedMsg :: T.Text
+forbidden = "Access only for administrators, sending 404 invalid endpoint."
+badInsert = "Bad insertion"
+idInResult = "id is int \"result\" field"
+unauthorizedMsg = "Unauthorized, use /auth"
 
-badInsert = "Bad insertion" :: T.Text
+invalidPasswordMsg, invalidLoginMsg :: T.Text
+invalidPasswordMsg = "Invalid password"
+invalidLoginMsg = "Invalid login"
 
-idInResult = "id is int \"result\" field" :: T.Text
-
-unauthorizedMsg = "Unauthorized, use /auth" :: T.Text
-invalidPasswordMsg = "Invalid password" :: T.Text
-invalidLoginMsg = "Invalid login" :: T.Text
-
-invalidEndpointMsg = "Invalid endpoint" :: T.Text
-internalErrorMsg = "Internal error" :: T.Text
-
+invalidEndpointMsg, internalErrorMsg, notAnAuthorMsg :: T.Text
+invalidEndpointMsg = "Invalid endpoint"
+internalErrorMsg = "Internal error"
 notAnAuthorMsg = "Not an author" :: T.Text
 
 createdMsg :: Entity -> T.Text
@@ -55,12 +56,12 @@ tagNotFoundMsg :: T.Text -> T.Text
 tagNotFoundMsg tag = "Failed: no tag found with id = " <> tag
 
 okCreated :: T.Text -> Int -> Response
-okCreated msg id = Response NHT.ok200 val
-  where val = Ae.toJSON $ Result True (Just msg) (Just $ Ae.toJSON id)
+okCreated msg eid = Response NHT.ok200 val
+  where val = Ae.toJSON $ Result True (Just msg) (Just $ Ae.toJSON eid)
 
 okDeleted :: (Ae.ToJSON a) => T.Text -> a -> Response
-okDeleted msg id = Response NHT.ok200 val
-  where val = Ae.toJSON $ Result True (Just msg) (Just $ Ae.toJSON id)
+okDeleted msg eid = Response NHT.ok200 val
+  where val = Ae.toJSON $ Result True (Just msg) (Just $ Ae.toJSON eid)
 
 ok :: T.Text -> Ae.Value -> Response
 ok text res = Response NHT.ok200 val
@@ -69,14 +70,10 @@ ok text res = Response NHT.ok200 val
 errR :: T.Text -> Ae.Value
 errR t = Ae.toJSON $ Result False (Just t) Nothing
 
+bad, unauthorized, notFound, internal :: T.Text -> Response
 bad = Response NHT.status400 . errR
-
-
-
 unauthorized = Response NHT.unauthorized401 . errR 
-
 notFound = Response NHT.status404 . errR
-
 internal = Response NHT.internalServerError500 . errR
 
 

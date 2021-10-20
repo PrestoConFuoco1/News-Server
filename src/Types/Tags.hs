@@ -1,8 +1,6 @@
 {-# LANGUAGE DeriveAnyClass #-}
 module Types.Tags where
 
-import qualified Data.Text as T
-
 import GHC.Generics
 import qualified GenericPretty as GP
 import qualified Database.PostgreSQL.Simple as PS

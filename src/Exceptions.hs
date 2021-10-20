@@ -2,15 +2,14 @@ module Exceptions where
 
 import Control.Monad.Catch as CMC (Handler(..), catches, SomeException, throwM, Exception(..), MonadCatch(..), MonadThrow(..))
 import Database.PostgreSQL.Simple as PS (sqlState, SqlError(..), QueryError, Query, ResultError, FormatError)
-import Database.SqlValue
 import qualified Database.PostgreSQL.Simple.Types as PSTy (fromQuery)
-import qualified Data.Text as T (Text, pack)
-import qualified GenericPretty as GP (PrettyShow(..), defaultPretty, textPretty)
+import qualified Data.Text as T (pack)
+import qualified GenericPretty as GP (PrettyShow(..), textPretty)
 
 import qualified Result as U
 import Data.Text.Encoding as E (decodeUtf8)
 import Types
-import Utils (getPair, showText)
+import Utils (getPair)
 import qualified App.Logger as L
 
 
@@ -37,15 +36,16 @@ mainErrorHandler logger err = do
     mainErrorHandler' logger err
 
 mainErrorHandler' :: (MonadThrow m) => L.Handle m -> ServerException -> m U.Response
-mainErrorHandler' logger Default = return $ U.internal U.internalErrorMsg
-mainErrorHandler' logger SqlErrorAlreadyLogged = return $ U.internal U.internalErrorMsg
-mainErrorHandler' logger Unauthorized = return $ U.unauthorized U.unauthorizedMsg
-mainErrorHandler' logger (InvalidUniqueEntities ent xs) = return $ U.internal U.internalErrorMsg
-mainErrorHandler' logger Forbidden = return $ U.bad U.invalidEndpointMsg
-mainErrorHandler' logger InvalidLogin = return $ U.bad $ U.invalidLoginMsg
-mainErrorHandler' logger InvalidPassword = return $ U.bad U.invalidPasswordMsg
-mainErrorHandler' logger NotAnAuthor = return $ U.bad U.notAnAuthorMsg
-mainErrorHandler' logger (TokenShared xs) = --logError ("Token shared between users with id in " <> T.pack (show xs)) >>
+mainErrorHandler' _ Default = return $ U.internal U.internalErrorMsg
+mainErrorHandler' _ SqlErrorAlreadyLogged = return $ U.internal U.internalErrorMsg
+mainErrorHandler' _ Unauthorized = return $ U.unauthorized U.unauthorizedMsg
+mainErrorHandler' _ (InvalidUniqueEntities _ _) = return $ U.internal U.internalErrorMsg
+mainErrorHandler' _ Forbidden = return $ U.bad U.invalidEndpointMsg
+mainErrorHandler' _ InvalidLogin = return $ U.bad $ U.invalidLoginMsg
+mainErrorHandler' _ InvalidUpdate = return $ U.bad $ "invalid data to update"
+mainErrorHandler' _ InvalidPassword = return $ U.bad U.invalidPasswordMsg
+mainErrorHandler' _ NotAnAuthor = return $ U.bad U.notAnAuthorMsg
+mainErrorHandler' _ (TokenShared xs) = --logError ("Token shared between users with id in " <> T.pack (show xs)) >>
         return (U.internal U.internalErrorMsg)
 
 instance CMC.Exception ServerException
@@ -127,7 +127,7 @@ defaultMainHandler logger e = do
     return $ U.internal U.internalErrorMsg
 
 
-
+uniqueConstraintViolated, foreignKeyViolated, constraintViolated :: PS.SqlError -> Bool
 uniqueConstraintViolated e = PS.sqlState e == "23505"
 foreignKeyViolated e = PS.sqlState e == "23503"
 constraintViolated e = PS.sqlState e == "23514"
@@ -176,8 +176,8 @@ getForeignViolationData = maybe Nothing (Just . f) . getPair . sqlErrorDetail
 
 tagsErrorHandler :: (CMC.MonadCatch m) => PS.SqlError -> m TagsError
 tagsErrorHandler e = maybe (CMC.throwM e) return (toAttachTagsError e)
-  where toAttachTagsError e
-            | foreignKeyViolated e = fmap TagsAttachError $ getForeignViolationData e
+  where toAttachTagsError err
+            | foreignKeyViolated err = fmap TagsAttachError $ getForeignViolationData err
             | otherwise = Nothing
 
 

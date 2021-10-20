@@ -15,6 +15,6 @@ createUserToAction = do
 
 deleteUserToAction :: Router DeleteUser
 deleteUserToAction = do
-    id <- requireField readInt "user_id"
-    return $ DeleteUser id
+    uid <- requireField readInt "user_id"
+    return $ DeleteUser uid
 

@@ -9,15 +9,13 @@ import Prelude hiding (Read)
 import Data.Maybe (catMaybes)
 import qualified Data.Text.Lazy as TL (fromStrict)
 import qualified GenericPretty as GP (PrettyShow(..))
-import GHC.Generics
 import qualified Database.PostgreSQL.Simple as PS
 import Types
 import qualified Data.Aeson as Ae
 import qualified Database.PostgreSQL.Simple.Types as PSTy
 import qualified Data.Time as Time
-import Utils
 import Database.SqlValue
-import qualified Data.Text as T (pack)
+import qualified Data.Text as T
 
 class (Ae.ToJSON (MType s), GP.PrettyShow (MType s), PS.FromRow (MType s), Show (Get s), Show (MType s))
         => Read s where
@@ -26,6 +24,7 @@ class (Ae.ToJSON (MType s), GP.PrettyShow (MType s), PS.FromRow (MType s), Show 
     selectQuery :: s -> Get s -> (PS.Query, [SqlValue])
 
 newtype PostD = PostD ()
+postDummy :: PostD
 postDummy = PostD ()
 
 
@@ -73,33 +72,37 @@ instance Read PostD where
 postsOrder :: SortOptions -> PS.Query
 postsOrder (SortOptions ent order) = " ORDER BY " <> getEntity ent <> " " <> ascDescQ order <> " NULLS LAST "
 
+getEntity :: SortEntity -> PS.Query
 getEntity SEDate = " post_creation_date "
 getEntity SEAuthor = " lower(author_description) "
 getEntity SECategory = " lower(catnames[1]) "
 getEntity SEPhotoNumber = " COALESCE(array_length(extra_photos, 1), 0) "
 
+ascDescQ :: SortOrder -> PS.Query
 ascDescQ SOAscending = " ASC "
 ascDescQ SODescending = " DESC "
 
+{-
 fromJust (Just x) = x
 w :: Time.Day
 w = fromJust $ Time.parseTimeM True Time.defaultTimeLocale "%Y-%-m-%-d" "2010-3-04"
-
+-}
 
 postsWhereDate :: CreationDateOptions -> (PS.Query, [SqlValue])
 postsWhereDate (Created day)        = postsWhereDate' "="  day
 postsWhereDate (CreatedEarlier day) = postsWhereDate' "<=" day
 postsWhereDate (CreatedLater   day) = postsWhereDate' ">=" day
 
+postsWhereDate' :: PS.Query -> Time.Day -> (PS.Query, [SqlValue])
 postsWhereDate' compareSym day =
     (" post_creation_date " <> compareSym <> " ? ",
     [SqlValue day])
 
 
 postsWhereTags :: TagsOptions -> (PS.Query, [SqlValue])
-postsWhereTags (OneTag id)   = ("? && tagids", [SqlValue $ PSTy.PGArray [id]])
-postsWhereTags (TagsIn ids)  = ("? && tagids", [SqlValue $ PSTy.PGArray ids])
-postsWhereTags (TagsAll ids) = ("? <@ tagids", [SqlValue $ PSTy.PGArray ids])
+postsWhereTags (OneTag tid)   = ("? && tagids", [SqlValue $ PSTy.PGArray [tid]])
+postsWhereTags (TagsIn tids)  = ("? && tagids", [SqlValue $ PSTy.PGArray tids])
+postsWhereTags (TagsAll tids) = ("? <@ tagids", [SqlValue $ PSTy.PGArray tids])
 
 postsWhereSearch :: SearchOptions -> (PS.Query, [SqlValue])
 postsWhereSearch (SearchOptions text) =
@@ -116,14 +119,21 @@ queryIntercalate delim = foldr f ("", [])
                                          <> notEmptyDo (delim <>) qacc
                                 in (qu, v++vacc)
 
+notEmptyDo :: (PS.Query -> PS.Query) -> PS.Query -> PS.Query
 notEmptyDo func qu
     | qu == "" = ""
     | otherwise = func qu
+
+enclosePar :: PS.Query -> PS.Query
 enclosePar qu = "(" <> qu <> ")"
+
+--enclose :: PS.Query -> PS.Query -> PS.Query
+enclose :: T.Text -> T.Text -> T.Text
 enclose p qu = p <> qu <> p
 -----------------------------------------------------------------
 
 newtype CatD = CatD ()
+catDummy :: CatD
 catDummy = CatD ()
 
 
@@ -137,6 +147,7 @@ instance Read CatD where
 
 
 newtype AuthorD = AuthorD ()
+authorDummy :: AuthorD
 authorDummy = AuthorD ()
 
 
@@ -155,6 +166,7 @@ instance Read AuthorD where
 --------- other instances for getting
 
 newtype TagD = TagD ()
+tagDummy :: TagD
 tagDummy = TagD ()
 
 
@@ -170,22 +182,24 @@ instance Read TagD where
 
 
 newtype CommentD = CommentD ()
+commentDummy :: CommentD
 commentDummy = CommentD ()
 
 instance Read CommentD where
     type MType CommentD = Comment
     type Get CommentD = GetComments
-    selectQuery _ (GetComments id) =
+    selectQuery _ (GetComments pid) =
         let selectClause = "SELECT comment_id, content,  \
                             \ user_id, firstname, lastname, image, login, \
                             \ pass_hash, creation_date, is_admin \
                             \ FROM news.get_comments WHERE post_id = ?"
-            args = [SqlValue id]
+            args = [SqlValue pid]
         in  (selectClause, args)
 
 
 
 newtype DraftD = DraftD ()
+draftDummy :: DraftD
 draftDummy = DraftD ()
 
 
@@ -217,6 +231,7 @@ instance Read DraftD where
         in  (selectClause, [SqlValue a])
 
 newtype DraftR = DraftR ()
+draftRawDummy :: DraftR
 draftRawDummy = DraftR ()
 
 
@@ -238,6 +253,7 @@ instance Read DraftR where
 
 
 newtype UserTokenR = UserTokenR ()
+userTokenDummy :: UserTokenR
 userTokenDummy = UserTokenR ()
 
 

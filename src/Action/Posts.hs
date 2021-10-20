@@ -2,7 +2,6 @@ module Action.Posts where
 
 import Action.Common
 import Action.Utils
-import qualified Data.ByteString as BS
 import Prelude hiding (readList)
 import qualified Data.Text as T
 import Types
@@ -12,9 +11,9 @@ defaultSortOptions = SortOptions SEDate SODescending -- newer posts first
 
 
 actionWithPost :: Int -> [T.Text] -> Query -> Either ActionErrorPerms (Paginated GetComments)
-actionWithPost id path hash = case path of
+actionWithPost pid path hash = case path of
   (x:[])
-    | x == "comments" -> runRouter (renv False hash) $ withPagination $ return $ GetComments id
+    | x == "comments" -> runRouter (renv False hash) $ withPagination $ return $ GetComments pid
   _ -> Left $ ActionErrorPerms False EInvalidEndpoint
 
 
@@ -39,7 +38,7 @@ getPostsAction = do
 sortOptions :: T.Text -> Maybe SortOptions
 sortOptions text = sortOptions' $ T.unpack text
 
-
+sortOptions' :: String -> Maybe SortOptions
 sortOptions' (x:y:_) = SortOptions <$> toSortBy x <*> ascDesc y
 sortOptions' _ = Nothing
 

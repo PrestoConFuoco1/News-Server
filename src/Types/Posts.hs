@@ -3,7 +3,6 @@ module Types.Posts where
 
 
 import Types.Common
-import qualified Data.ByteString as BS
 import Prelude hiding (readList)
 
 
@@ -14,8 +13,6 @@ import qualified Data.Text as T
 import Types.Tags
 import qualified Data.Time as Time
 import Data.Void
-
-import Types.Authors
 import Types.Category
 
 type PostId = Int

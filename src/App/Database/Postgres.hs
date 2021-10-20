@@ -48,7 +48,7 @@ withPostgresHandle logger conf action =
         action
 
 initResources :: Logger.Handle IO -> Config -> IO Resources
-initResources logger conf = do
+initResources _ conf = do
     let conStr = connectionString conf
     con <- PS.connectPostgreSQL $ conStr
     return Resources {

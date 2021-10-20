@@ -16,6 +16,7 @@ import qualified Data.Time as Time
 instance (Typeable a, PSF.FromField a) => PSF.FromField [a] where
     fromField f b = fmap PST.fromPGArray $ PSF.fromField f b
 
+defaultModifier :: String -> String
 defaultModifier ('_':xs) = case dropWhile (/= '_') xs of
     ('_':ys) -> ys
     _ -> xs
@@ -28,15 +29,17 @@ showText :: (Show a) => a -> T.Text
 showText = T.pack . show
 
 
-test1 = "Key (user_id)=(6666) is not present in table \"users\"." :: B.ByteString
-test2 = "Key (user_id)=(2) already exists." :: B.ByteString
+test1, test2 :: B.ByteString
+test1 = "Key (user_id)=(6666) is not present in table \"users\"."
+test2 = "Key (user_id)=(2) already exists."
 
 getPair :: B.ByteString -> Maybe (T.Text, T.Text)
 getPair str = let patt = "\\((\\w+)\\)=\\((\\w+)\\)" :: B.ByteString
           in  case str =~ patt of
-                (x:y:z:_) : _ -> Just (E.decodeUtf8 y, E.decodeUtf8 z)
+                (_:y:z:_) : _ -> Just (E.decodeUtf8 y, E.decodeUtf8 z)
                 _ -> Nothing
 
+unCap :: String -> String
 unCap (x:xs) = toLower x : xs
 unCap ys = ys
 

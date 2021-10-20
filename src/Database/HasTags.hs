@@ -4,7 +4,7 @@
     #-}
 module Database.HasTags where
 
-import qualified Data.Text as T (pack, Text)
+import qualified Data.Text as T (Text)
 import qualified Database.PostgreSQL.Simple as PS
 
 class (Show (HIdent s)) => HasTags s where
@@ -14,6 +14,7 @@ class (Show (HIdent s)) => HasTags s where
     hName' :: s -> T.Text
 
 newtype HDraft = HDraft ()
+dummyHDraft :: HDraft
 dummyHDraft = HDraft ()
 
 instance HasTags HDraft where
@@ -23,6 +24,7 @@ instance HasTags HDraft where
     hName' _ = "draft"
 
 newtype HPost = HPost ()
+dummyHPost :: HPost
 dummyHPost = HPost ()
 
 instance HasTags HPost where

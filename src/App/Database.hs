@@ -76,7 +76,7 @@ data Handle m = Handle
     }
 
 
-logDebug, logInfo, logWarning, logError :: Handle m -> T.Text -> m ()
+logDebug, logInfo, logWarning, logError, logFatal :: Handle m -> T.Text -> m ()
 
 logDebug h = Logger.logDebug (log h)
 logInfo h = Logger.logInfo (log h)

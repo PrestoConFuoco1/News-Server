@@ -6,7 +6,6 @@ module Database.Delete where
 
 import qualified Database.PostgreSQL.Simple as PS
 import Database.SqlValue
-import qualified Database.PostgreSQL.Simple.Types as PSTy
 import Types
 
 
@@ -16,6 +15,7 @@ class DeleteSQL s where
     dName :: s -> Entity
 
 newtype DTag = DTag ()
+dummyDTag :: DTag
 dummyDTag = DTag ()
 
 instance DeleteSQL DTag where
@@ -25,6 +25,7 @@ instance DeleteSQL DTag where
 
 
 newtype DCat = DCat ()
+dummyDCat :: DCat
 dummyDCat = DCat ()
 
 instance DeleteSQL DCat where
@@ -34,6 +35,7 @@ instance DeleteSQL DCat where
 
 
 newtype DAuthor = DAuthor ()
+dummyDAuthor :: DAuthor
 dummyDAuthor = DAuthor ()
 
 instance DeleteSQL DAuthor where
@@ -42,6 +44,7 @@ instance DeleteSQL DAuthor where
     dName _ = EAuthor
 
 newtype DUser = DUser ()
+dummyDUser :: DUser
 dummyDUser = DUser ()
 
 instance DeleteSQL DUser where
@@ -51,6 +54,7 @@ instance DeleteSQL DUser where
 
 
 newtype DComment = DComment ()
+dummyDComment :: DComment
 dummyDComment = DComment ()
 
 
@@ -77,6 +81,7 @@ instance DeleteSQL DComment where
 
 
 newtype DDraft = DDraft ()
+dummyDDraft :: DDraft
 dummyDDraft = DDraft ()
 
 instance DeleteSQL DDraft where

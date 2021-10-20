@@ -21,6 +21,7 @@ class CreateSQL s where
 
 
 newtype CTag = CTag ()
+dummyCTag :: CTag
 dummyCTag = CTag ()
 
 instance CreateSQL CTag where
@@ -31,6 +32,7 @@ instance CreateSQL CTag where
 
 
 newtype CCat = CCat ()
+dummyCCat :: CCat
 dummyCCat = CCat ()
 
 instance CreateSQL CCat where
@@ -41,6 +43,7 @@ instance CreateSQL CCat where
     cName _ = Ty.ECategory
 
 newtype CUser = CUser ()
+dummyCUser :: CUser
 dummyCUser = CUser ()
 
 instance CreateSQL CUser where
@@ -51,6 +54,7 @@ instance CreateSQL CUser where
     cName _ = Ty.EUser
 
 newtype CAuthor = CAuthor ()
+dummyCAuthor :: CAuthor
 dummyCAuthor = CAuthor ()
 
 instance CreateSQL CAuthor where
@@ -63,6 +67,7 @@ instance CreateSQL CAuthor where
     cName _ = Ty.EAuthor
 
 newtype CComment = CComment ()
+dummyCComment :: CComment
 dummyCComment = CComment ()
 
 instance CreateSQL CComment where
@@ -75,6 +80,7 @@ instance CreateSQL CComment where
 
 
 newtype CPost = CPost ()
+dummyCPost :: CPost
 dummyCPost = CPost ()
 
 instance CreateSQL CPost where
@@ -93,12 +99,13 @@ instance CreateSQL CPost where
 
 
 newtype CDraft = CDraft ()
+draftCreateDummy :: CDraft
 draftCreateDummy = CDraft ()
 
 
 instance CreateSQL CDraft where
     type Create CDraft = WithAuthor CreateDraft
-    createQuery s (WithAuthor a CreateDraft{..}) = ("INSERT INTO news.draft (title, author_id, category_id, content, photo, extra_photos) \
+    createQuery _ (WithAuthor a CreateDraft{..}) = ("INSERT INTO news.draft (title, author_id, category_id, content, photo, extra_photos) \
          \VALUES (?, ?, ?, ?, ?, ?) RETURNING draft_id",
         [SqlValue _cd_title, SqlValue a, SqlValue _cd_categoryId, SqlValue _cd_content,
          SqlValue _cd_mainPhoto, SqlValue $ fmap PSTy.PGArray _cd_extraPhotos])

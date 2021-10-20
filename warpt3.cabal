@@ -44,7 +44,6 @@ library
       Database.Delete
       Database.HasTags
       Database.Read
-      Database.SqlQueryTypes
       Database.SqlValue
       Database.Update
       Exceptions
@@ -104,7 +103,7 @@ executable warpt3
       app
   default-extensions:
       OverloadedStrings, DeriveGeneric
-  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N -Wall -Werror
   build-depends:
       aeson
     , base >=4.7 && <5

@@ -5,9 +5,8 @@ module Action.Common where
 import qualified Data.ByteString as BS
 import GHC.Generics
 import qualified GenericPretty as GP
-import qualified Data.HashMap.Strict as HS (HashMap, fromList, lookup)
+import qualified Data.HashMap.Strict as HS (HashMap)
 import Control.Monad.Reader
-import Data.Bifunctor (first)
 
 type Query = HS.HashMap BS.ByteString BS.ByteString
 
@@ -16,8 +15,8 @@ data ActionError = EInvalidEndpoint
     | EInvalidFieldValue BS.ByteString
     deriving (Show, Generic, Eq)
 
--- invalidEP = AError EInvalidEndpoint
 
+pathNotFound :: ActionErrorPerms
 pathNotFound = ActionErrorPerms {
     _ae_admin = False
     , _ae_error = EInvalidEndpoint
@@ -51,7 +50,7 @@ askHash = fmap _re_hash ask
 
 routerError :: ActionError -> Router a
 routerError err = askAdmin >>= \admin ->
-    Router $ ReaderT $ \e -> Left $ ActionErrorPerms admin err
+    Router $ ReaderT $ \_ -> Left $ ActionErrorPerms admin err
 
 runRouter :: RoutingEnv -> Router a -> Either ActionErrorPerms a
 runRouter e rt = runReaderT (unR rt) e
@@ -62,6 +61,7 @@ withMaybe r = maybe r return
 errorOnNothing :: ActionError -> Maybe a -> Router a
 errorOnNothing e = maybe (routerError e) return
 
+renv :: Bool -> Query -> RoutingEnv
 renv b hash = RoutingEnv b hash
 
 

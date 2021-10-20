@@ -4,9 +4,7 @@ module Types.Authors where
 
 import GHC.Generics
 import qualified GenericPretty as GP
-import qualified Database.PostgreSQL.Simple as PS
 import Types.Common
-import Data.Void
 import qualified Data.Text as T
 import Types.Users
 

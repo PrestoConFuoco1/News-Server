@@ -81,6 +81,7 @@ getUser h (Just u) = do
     D.logDebug h $ GP.textPretty u
     return $ RGetUser u
 -}
+getUserFname :: String
 getUserFname = "getUser: "
 
 authenticate :: (CMC.MonadThrow m) => D.Handle m -> Authenticate -> m APIResult

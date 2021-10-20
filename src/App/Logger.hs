@@ -25,7 +25,7 @@ data Priority = Debug
             deriving (Eq, Ord, Show, Read)
 
 
-logDebug, logInfo, logWarning, logError :: Handle m -> T.Text -> m ()
+logDebug, logInfo, logWarning, logError, logFatal :: Handle m -> T.Text -> m ()
 logDebug = (`log` Debug)
 logInfo = (`log` Info)
 logWarning = (`log` Warning)
@@ -43,10 +43,10 @@ stdHandle :: Handle IO
 stdHandle = Handle $ fileLogger S.stderr
 
 fileLogger :: S.Handle -> Priority -> T.Text -> IO ()
-fileLogger h p s = S.hPutStrLn S.stderr $ '[' : show p ++ "]: " ++ T.unpack s
+fileLogger _ p s = S.hPutStrLn S.stderr $ '[' : show p ++ "]: " ++ T.unpack s
 
 emptyLogger :: Handle IO
-emptyLogger = Handle $ \p s -> return ()
+emptyLogger = Handle $ \_ _ -> return ()
 
 
 logString :: Priority -> T.Text -> T.Text
@@ -74,11 +74,12 @@ initializeErrorHandler e = do
     func e
     Q.exitWith (Q.ExitFailure 1)
   where
-   func e
-    | IOE.isAlreadyInUseError e = logError stdHandle lockedmsg
-    | IOE.isPermissionError e   = logError stdHandle "not enough permissions"
-    | otherwise = logError stdHandle $ "unexpected IO error: " <> T.pack (C.displayException e)
+   func x
+    | IOE.isAlreadyInUseError x = logError stdHandle lockedmsg
+    | IOE.isPermissionError x   = logError stdHandle "not enough permissions"
+    | otherwise = logError stdHandle $ "unexpected IO error: " <> T.pack (C.displayException x)
 
+lockedmsg :: T.Text
 lockedmsg = "target log file is locked"
 
 initializeDefaultHandler :: C.SomeException -> IO a
@@ -122,9 +123,9 @@ closeSelfSufficientLogger resourcesRef = do
 
 
 selfSufficientLogger :: IORef LoggerResources -> (Priority -> Bool) -> Priority -> T.Text -> IO ()
-selfSufficientLogger resourcesRef pred pri s = do
+selfSufficientLogger resourcesRef predicate pri s = do
     resources <- readIORef resourcesRef
-    let action =
+    let action = when (predicate pri) $
                 T.hPutStrLn (flHandle resources) (logString pri s)
                  >> T.hPutStrLn S.stderr (logString pri s)
         errHandler = \e -> loggerHandler resources e >>= writeIORef resourcesRef
@@ -135,7 +136,7 @@ loggerHandler resources e = do
     logError stdHandle "failed to use log file, error is:"
     logError stdHandle $ T.pack $ C.displayException e
     logError stdHandle "using standard error handle"
-    error "logger fail"
+    --error "logger fail"
     return $ resources { flHandle = S.stderr }
 
 

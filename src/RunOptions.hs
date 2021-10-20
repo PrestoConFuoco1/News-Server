@@ -1,7 +1,7 @@
 module RunOptions where
 
 import Utils as S
-import qualified App.Logger as L (simpleLog, logDebug, Priority)
+import qualified App.Logger as L (Priority)
 import Data.List (isPrefixOf)
 import Text.Read (readMaybe)
 
@@ -12,6 +12,8 @@ data RunOptions = RunOptions {
     , logPath :: FilePath
     , migrations :: Bool
     }
+
+defaultRunOpts :: RunOptions
 defaultRunOpts = RunOptions {
     loggerSettings = const True
     , testConfig = False

@@ -23,15 +23,16 @@ intercalateQ :: [PS.Query] -> Maybe PS.Query
 intercalateQ [] = Nothing
 intercalateQ xs = Just $ f xs
   where
-        f [x] = x
-        f (x:xs) = x <> ", " <> f xs
+        f [y] = y
+        f (y:ys) = y <> ", " <> f ys
 
 intercalateWith :: PS.Query -> [PS.Query] -> Maybe PS.Query
 intercalateWith delim [] = Nothing
 intercalateWith delim xs = Just $ f xs
-  where f [x] = x
-        f (x:xs) = x <> delim <> f xs
+  where f [y] = y
+        f (y:ys) = y <> delim <> f ys
 
+setUnit :: PS.Query -> PS.Query
 setUnit fname = fname <> " = ?"
 
 optionals :: (UpdateSQL s) => s -> Upd s -> [(PS.Query, SqlValue)]
@@ -49,6 +50,8 @@ class UpdateSQL s where
 
 
 newtype UTag = UTag ()
+
+dummyUTag :: UTag
 dummyUTag = UTag ()
 
 instance UpdateSQL UTag where
@@ -63,6 +66,7 @@ instance UpdateSQL UTag where
 
 
 newtype UCat = UCat ()
+dummyUCat :: UCat
 dummyUCat = UCat ()
 
 instance UpdateSQL UCat where
@@ -77,6 +81,7 @@ instance UpdateSQL UCat where
 
 
 newtype UAuthor = UAuthor ()
+dummyUAuthor :: UAuthor
 dummyUAuthor = UAuthor ()
 
 instance UpdateSQL UAuthor where
@@ -90,6 +95,7 @@ instance UpdateSQL UAuthor where
 
 
 newtype UPost = UPost ()
+dummyUPost :: UPost
 dummyUPost = UPost ()
 
 instance UpdateSQL UPost where
@@ -109,6 +115,7 @@ instance UpdateSQL UPost where
 
 
 newtype UDraft = UDraft ()
+draftEditDummy :: UDraft
 draftEditDummy = UDraft ()
 
 instance UpdateSQL UDraft where
@@ -128,6 +135,7 @@ instance UpdateSQL UDraft where
 
 
 newtype UPDraft = UPDraft ()
+draftEditPublishDummy :: UPDraft
 draftEditPublishDummy = UPDraft ()
 
 instance UpdateSQL UPDraft where

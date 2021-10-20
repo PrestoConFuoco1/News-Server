@@ -8,7 +8,6 @@ module Execute.Draft where
 import qualified Data.Text as T (pack, Text)
 import qualified App.Database as D
 import qualified App.Logger as L
-import Database.SqlValue
 import qualified Exceptions as Ex
 import Types
 import Execute.Utils
@@ -26,7 +25,7 @@ draftModifyHandler logger err = do
     return $ draftModifyErrorToApiResult err
 
 createDraft :: (CMC.MonadCatch m) => D.Handle m -> WithAuthor CreateDraft -> m APIResult
-createDraft h x@(WithAuthor a CreateDraft{..}) =
+createDraft h x@(WithAuthor _ CreateDraft{..}) =
   Ex.withHandler (draftModifyHandler $ D.log h) $ D.withTransaction h $ do
     eithDraft <- D.createDraft h (D.log h) x
     draft <- th DModifyError eithDraft
@@ -38,7 +37,7 @@ createDraft h x@(WithAuthor a CreateDraft{..}) =
 
 
 editDraft :: (CMC.MonadCatch m) => D.Handle m -> WithAuthor EditDraft -> m APIResult
-editDraft h x@(WithAuthor a EditDraft{..}) =
+editDraft h x@(WithAuthor _ EditDraft{..}) =
         Ex.withHandler (draftModifyHandler $ D.log h) $
             D.withTransaction h $ do
     eithDraft <- D.editDraft h (D.log h) x
@@ -58,7 +57,7 @@ publishHandler :: CMC.MonadCatch m => L.Handle m -> DraftModifyError -> m APIRes
 publishHandler = draftModifyHandler
 
 publish :: (CMC.MonadCatch m) => D.Handle m -> WithAuthor Publish -> m APIResult
-publish h x@(WithAuthor a Publish{..}) = Ex.withHandler (publishHandler $ D.log h) $
+publish h x@(WithAuthor _ Publish{}) = Ex.withHandler (publishHandler $ D.log h) $
                                        D.withTransaction h $ do
     eithDraft <- D.getDraftRaw h (D.log h) x
 
@@ -94,7 +93,7 @@ publishEdit h post draft = Ex.withHandler (draftModifyHandler $ D.log h) $ D.wit
     ts <- th DTagsError eithTs
     D.logInfo h $ attached "post" ts post
     tsRem <- D.removeAllButGivenTagsPost h (D.log h) post $ _dr_tagIds draft
-    D.logInfo h $ removed "post" tsRem draft
+    D.logInfo h $ removed "post" tsRem $ _dr_draftId draft
     return $ REdited EPost post_
 
 
@@ -118,7 +117,8 @@ func post DraftRaw{..} =
 showText :: (Show a) => a -> T.Text
 showText = T.pack . show
 
-attached ent ids id = "Attached tags with id in " <> showText ids <> " to " <> ent <> " with id = " <> showText id
-removed ent ids id = "Removed tags with id in " <> showText ids <> " to " <> ent <> " with id = " <> showText id
+attached, removed :: T.Text -> [Int] -> Int -> T.Text
+attached ent ids eid = "Attached tags with id in " <> showText ids <> " to " <> ent <> " with id = " <> showText eid
+removed ent ids eid = "Removed tags with id in " <> showText ids <> " to " <> ent <> " with id = " <> showText eid
 
 

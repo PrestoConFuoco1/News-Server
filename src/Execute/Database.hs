@@ -1,7 +1,7 @@
 module Execute.Database where
 
 import Execute.Utils
-import qualified Control.Monad.Catch as CMC (catches, Handler(..), MonadCatch, throwM)
+import qualified Control.Monad.Catch as CMC (MonadCatch)
 import Types
 
 --getThis1 :: (CMC.MonadCatch m, Ae.ToJSON b)=> (a -> m [b]) -> a -> m APIResult

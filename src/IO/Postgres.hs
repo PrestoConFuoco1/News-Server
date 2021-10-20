@@ -10,7 +10,6 @@ import qualified Exceptions as Ex
 import Types
 import qualified Utils as U
 import qualified App.Logger as L
-import GenericPretty
 
 generateToken1 :: Int -> IO String
 generateToken1 = U.randomString'
@@ -51,13 +50,13 @@ getUserByLogin1 con logger login = do
 
 
 addToken1 :: PS.Connection -> L.Handle IO -> UserId -> T.Text -> IO T.Text
-addToken1 con logger id token = do
+addToken1 con logger uid token = do
     let str = "INSERT INTO news.token (user_id, token) VALUES (?, ?) ON CONFLICT (user_id) DO UPDATE SET token = ?"
-        token' = (T.pack $ show id) <> token
-        params = [SqlValue id, SqlValue token', SqlValue token']
+        token' = (T.pack $ show uid) <> token
+        params = [SqlValue uid, SqlValue token', SqlValue token']
 
     Ex.withExceptionHandlers (Ex.sqlHandlers logger str params) $ do
-        PS.execute con str params
+        _ <- PS.execute con str params
         return token'
 
 
@@ -128,7 +127,7 @@ deleteThis con s logger del = do
         ids <- fmap (map PSTy.fromOnly) $ PS.query con str params
         case ids of
             [] -> return $ Left DNoAction
-            [id] -> return $ Right id
+            [eid] -> return $ Right eid
             _ -> Ex.throwInvalidUnique (dName s) ids
 
 
@@ -171,7 +170,7 @@ removeAllButGivenTags :: (HasTags s) => PS.Connection -> s -> L.Handle IO -> HId
 -- remove all but given tags
 removeAllButGivenTags con s logger hasTagsId tags = do
     let inClause [] = ""
-        inClause ts = " AND NOT tag_id IN ? "
+        inClause _  = " AND NOT tag_id IN ? "
         inParams [] = []
         inParams ts = [SqlValue $ PS.In ts]
         strChunks = ["DELETE FROM news.", "_tag WHERE ", "_id = ? " <> inClause tags <> "RETURNING tag_id"]

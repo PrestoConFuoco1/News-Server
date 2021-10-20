@@ -9,8 +9,7 @@ module Lib
 import Data.IORef
 import qualified Network.Wai.Handler.Warp as Warp (run)
 import qualified Network.Wai as W (Request(..), Response, Application, responseLBS)
-import qualified Data.Text as T (pack)
-import qualified GenericPretty as GP (defaultPretty, textPretty)
+import qualified GenericPretty as GP (textPretty)
 import Action.RequestToAction (requestToAction)
 import Execute (executeAction, handleError)
 import Types
@@ -101,7 +100,7 @@ mainServer req logger resources = do
         Left err -> f $ fmap coerceResponse $ handleError h err
         Right whowhat -> do
             D.logDebug h "Action type is"
-            D.logDebug h $ T.pack $ GP.defaultPretty $ _ww_action whowhat
+            D.logDebug h $ GP.textPretty $ _ww_action whowhat
 
             let withLog res = do
                     r <- res
@@ -131,7 +130,7 @@ toResponse (REdited ent int) = ok (editedMsg ent) (Ae.toJSON int)
 toResponse (RDeleted ent int) = ok (deletedMsg ent) (Ae.toJSON int)
 toResponse (RNotFound ent) = bad (entityNotFoundMsg ent)
 toResponse (RAlreadyInUse ent field value) = bad (alreadyInUseMsg ent field value)
-toResponse (RInvalidForeign ent field value) = bad (invalidForeignMsg field value)
+toResponse (RInvalidForeign _ field value) = bad (invalidForeignMsg field value)
 toResponse (RInvalidTag value) = bad (tagNotFoundMsg value)
 
 

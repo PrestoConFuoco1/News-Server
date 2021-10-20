@@ -2,17 +2,18 @@ module Action.Utils where
 
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as E (decodeUtf8, encodeUtf8)
-import qualified Data.Aeson as Ae (decode, Value, FromJSON)
-import qualified Data.ByteString.Lazy as BSL (fromStrict, unpack, ByteString)
+import qualified Data.Aeson as Ae (decode, FromJSON)
+import qualified Data.ByteString.Lazy as BSL (fromStrict)
 import qualified Data.ByteString as BS
 import qualified Data.Time as Time
-import qualified Data.HashMap.Strict as HS (HashMap, fromList, lookup)
+import qualified Data.HashMap.Strict as HS (lookup)
 import Action.Common
 import Types
 
 notEmpty :: T.Text -> Bool
 notEmpty = (/= "")
 
+validateNotEmpty :: BS.ByteString -> Maybe T.Text
 validateNotEmpty = validator notEmpty . readText
 
 validator :: (a -> Bool) -> a -> Maybe a
@@ -80,6 +81,7 @@ data Paginated a = Paginated {
 
 -}
 
+defaultPage, defaultSize :: Int
 defaultPage = 0
 defaultSize = 10000
 

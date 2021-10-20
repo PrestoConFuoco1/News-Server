@@ -7,7 +7,6 @@ import qualified GenericPretty as GP
 import qualified Data.Text as T
 import qualified Database.PostgreSQL.Simple as PS
 import Types.Common
-import Data.Void
 
 
 type CategoryId = Int

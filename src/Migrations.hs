@@ -57,12 +57,12 @@ runMigrations1 con =
                             })
                         | (k, v) <- sortedMigrations
                     ]
-    forM_ migrations $ \(migrDescr, migr) -> do
+    forM_ migrations $ \(_, migr) -> do
  --       putStrLn migrDescr >> BS.putStrLn migr
         res <- runMigration migr
         case res of
           MigrationSuccess -> return ()
-          MigrationError reason -> exitFailure
+          MigrationError _ -> exitFailure
 
 
 

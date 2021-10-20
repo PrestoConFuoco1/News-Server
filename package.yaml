@@ -45,7 +45,7 @@ dependencies:
 
 library:
   source-dirs: src
-
+ 
 executables:
   warpt3:
     main:                Main.hs
@@ -54,6 +54,8 @@ executables:
     - -threaded
     - -rtsopts
     - -with-rtsopts=-N
+    - -Wall
+    - -Werror
     dependencies:
     - warpt3
     

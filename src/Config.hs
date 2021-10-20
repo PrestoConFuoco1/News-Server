@@ -6,8 +6,7 @@ module Config where
 
 
 import qualified Data.ByteString as B
-import qualified Control.Exception as E
-    (catches, Handler (..), SomeException, IOException)
+import qualified Control.Exception as E (SomeException, IOException)
 import qualified Control.Monad.Catch as C
 import qualified System.IO.Error as E
     (isDoesNotExistError, isPermissionError, isAlreadyInUseError)
@@ -30,6 +29,7 @@ data Config = Config {
 
 instance PrettyShow Config
 
+defaultPort :: Int
 defaultPort = 5555
 
 loadConfig :: L.Handle IO -> FilePath -> IO Config
@@ -78,7 +78,7 @@ handleIOError logger exc
         L.logError logger $ T.pack $ C.displayException exc
 
 handleConfigError :: L.Handle IO -> CT.ConfigError -> IO ()
-handleConfigError logger (CT.ParseError path s) =
+handleConfigError logger (CT.ParseError _ _) =
     L.logError logger $ "Failed to parse configuration file."
 
 handleKeyError :: L.Handle IO -> CT.KeyError -> IO ()

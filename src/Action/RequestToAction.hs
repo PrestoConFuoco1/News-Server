@@ -2,9 +2,9 @@ module Action.RequestToAction where
 
 import qualified Network.Wai as W (Request, pathInfo, queryString)
 import qualified Data.Text as T
-import qualified Data.Text.Encoding as E (decodeUtf8, encodeUtf8)
+import qualified Data.Text.Encoding as E (decodeUtf8)
 import qualified Data.ByteString as BS
-import qualified Data.HashMap.Strict as HS (HashMap, fromList, lookup)
+import qualified Data.HashMap.Strict as HS (fromList)
 import qualified Data.Maybe as Mb (catMaybes)
 
 import Data.Bifunctor (bimap)
@@ -49,7 +49,7 @@ requestToAction1 ::
 requestToAction1 pathInfo queryString =
   let
     maybeToken = case queryString of
-        ((tokenPar, Just tokenVal):ys) ->
+        ((tokenPar, Just tokenVal):_) ->
                 if tokenPar == "token"
                 then Just $ E.decodeUtf8 tokenVal
                 else Nothing
@@ -92,7 +92,7 @@ requestToActionPosts path hash = case path of
     | x == "get" -> fmap (AP . Read) $ runRouter (renv False hash) $ withPagination getPostsAction
     | otherwise -> Left $ ActionErrorPerms False EInvalidEndpoint
   (x:xs) -> case readIntText x of
-        (Just id) -> fmap GC $ actionWithPost id xs hash
+        (Just pid) -> fmap GC $ actionWithPost pid xs hash
         Nothing -> Left pathNotFound
   [] -> Left pathNotFound
 

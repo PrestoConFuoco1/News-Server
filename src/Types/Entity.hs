@@ -4,22 +4,18 @@ module Types.Entity where
 
 import GHC.Generics
 import qualified Database.PostgreSQL.Simple as PS
-import qualified Database.PostgreSQL.Simple.FromField as PSF
 import qualified Database.PostgreSQL.Simple.FromRow as PSR
-import qualified Database.PostgreSQL.Simple.Types as PST
 import qualified Data.Text as T
 import qualified Data.Time as Time
 import qualified GenericPretty as GP
 import qualified Data.Aeson as Ae
 import Types.Authors
 import Types.Category
-import Types.Common
 import Types.Draft
 import Types.Posts
 import Types.Tags
 import Types.Users
 import Utils
-import qualified Data.Text.Encoding as E
 
 data Entity =
     EUser | EAuthor | ECategory | ETag | EComment | EDraft | EPost
@@ -84,7 +80,8 @@ instance Ae.ToJSON Category where
 instance PSR.FromRow Category where
     fromRow = fmap listToCategory $ zip <$> PSR.field <*> PSR.field
 
-defaultCategoryId = 1 :: CategoryId
+defaultCategoryId :: CategoryId
+defaultCategoryId = 1
 
 
 listToCategory :: [(CategoryId, T.Text)] -> Category
@@ -116,7 +113,7 @@ instance Ae.ToJSON Post where
 instance PSR.FromRow Post where
     --fromRow = Post <$> PSR.field <*> PSR.field <*> PSR.field <*> PSR.fromRow <*> PSR.fromRow <*> PSR.field <*> PSR.field <*> PSR.field
     fromRow = do
-        id <- PSR.field
+        pid <- PSR.field
         title <- PSR.field
         creationDate <- PSR.field
         author <- PSR.fromRow
@@ -129,7 +126,7 @@ instance PSR.FromRow Post where
         extraPhotos <- PSR.field
         let category = listToCategory $ zip catIds catNames
             tags = zipWith Tag tagIds tagNames
-        return $ Post id title creationDate author tags category content photo extraPhotos
+        return $ Post pid title creationDate author tags category content photo extraPhotos
 
 data Tag = Tag {
     _t_tagId :: TagId,
@@ -155,10 +152,10 @@ instance Ae.ToJSON Comment where
 
 instance PSR.FromRow Comment where
     fromRow = do
-        id <- PSR.field
+        cid <- PSR.field
         content <- PSR.field
         user <- PSR.fromRow
-        return $ Comment id content user
+        return $ Comment cid content user
 
 
 data Draft = Draft {
@@ -181,7 +178,7 @@ instance Ae.ToJSON Draft where
 
 instance PSR.FromRow Draft where
     fromRow = do
-        id <- PSR.field
+        did <- PSR.field
         title <- PSR.field
         creationDate <- PSR.field
         author <- PSR.fromRow
@@ -195,7 +192,7 @@ instance PSR.FromRow Draft where
         postId <- PSR.field
         let category = listToCategory $ zip catIds catNames
             tags = zipWith Tag tagIds tagNames
-        return $ Draft id title creationDate author tags category content photo extraPhotos postId
+        return $ Draft did title creationDate author tags category content photo extraPhotos postId
 
 
 data DraftRaw = DraftRaw {
@@ -219,7 +216,7 @@ instance Ae.ToJSON DraftRaw where
 
 instance PSR.FromRow DraftRaw where
     fromRow = do
-        id <- PSR.field
+        did <- PSR.field
         title <- PSR.field
         creationDate <- PSR.field
         author <- PSR.field
@@ -229,6 +226,6 @@ instance PSR.FromRow DraftRaw where
         photo <- PSR.field
         extraPhotos <- PSR.field
         postId <- PSR.field
-        return $ DraftRaw id title creationDate author categoryId tagIds content photo extraPhotos postId
+        return $ DraftRaw did title creationDate author categoryId tagIds content photo extraPhotos postId
 
 

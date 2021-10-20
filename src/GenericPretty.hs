@@ -9,7 +9,7 @@ module GenericPretty where
 
 import GHC.Generics
 import qualified Data.Text as T (Text, pack)
-import qualified Data.Text.Lazy as TL (Text, pack, unpack)
+import qualified Data.Text.Lazy as TL (Text, unpack)
 import Data.Void
 import Data.Aeson.Types
 import Data.Aeson (encode)
@@ -19,6 +19,7 @@ import qualified Data.ByteString as B
 import qualified Data.Time as Time
 import qualified Utils as S
 
+enclose, encloseSq :: String -> String
 enclose s = '{' : s ++ "}"
 encloseSq s = '[' : s ++ "]"
 ------
@@ -28,19 +29,23 @@ data OptionsL = OptionsL {
         consModifier :: String -> String
     }
 
+defaultOptionsL :: OptionsL
 defaultOptionsL = OptionsL {
     labelModifier = defaultModif,
     consModifier = defaultConsModif
     }
 
+defaultModif :: String -> String
 defaultModif x@('_':ys) =
     case dropWhile (/= '_') ys of
         ('_':zs) -> zs
         _ -> x
 defaultModif x = x
 
+defaultConsModif :: String -> String
 defaultConsModif = id
 
+defaultConsModif' :: String -> String
 defaultConsModif' (x:xs)
     | isUpper x = case dropWhile (not . isUpper) xs of
         [] -> (x:xs)
@@ -63,11 +68,15 @@ newtype Layout = Layout [LayoutUnit]
 lconcat :: Layout -> Layout -> Layout
 lconcat (Layout l) (Layout r) = Layout $ l ++ r
 
+defaultIndent :: Int
 defaultIndent = 4
+
 numToIndent :: Int -> String
 numToIndent ind = replicate (ind * defaultIndent) ' '
 
+defaultWidth :: Int
 defaultWidth = 80
+
 splitToFixedWidth :: Int -> String -> [String]
 splitToFixedWidth ind s =
     let width = defaultWidth - ind * defaultIndent
@@ -75,8 +84,8 @@ splitToFixedWidth ind s =
     in  res
 
 splitToFixedWidth' :: Int -> String -> [String]
-splitToFixedWidth' wid [] = []
-splitToFixedWidth' wid s =
+splitToFixedWidth' _   [] = []
+splitToFixedWidth' wid s  =
     let splitted = splitAt wid s
     in  case splitted of
             (pref, suf) -> pref : splitToFixedWidth' wid suf
@@ -85,22 +94,21 @@ withIndent :: Int -> String -> String
 withIndent ind str = numToIndent ind ++ str
 
 defaultPretty :: (PrettyShow a) => a -> String
---defaultPretty title x = prettyUnit 0 (LayoutUnit title $ prettyShow x)
 defaultPretty x = prettyValue 0 (prettyShow x)
 
 textPretty :: (PrettyShow a) => a -> T.Text
 textPretty = T.pack . defaultPretty
 
 prettyUnit :: Int -> LayoutUnit -> String
-prettyUnit _ (LayoutUnit s (LEmpty)) = ""
+prettyUnit _ (LayoutUnit _ (LEmpty)) = ""
 prettyUnit ind (LayoutUnit s val) =
     withIndent ind $ s ++ ": " ++ prettyValue ind val
 
 prettyValue :: Int -> LayoutValue -> String
-prettyValue ind (LStr s) = s ++ "\n"
+prettyValue _   (LStr s) = s ++ "\n"
 prettyValue ind (LLay typ ls) = typ ++ "\n" ++ prettyLayout (ind + 1) ls
 prettyValue ind (LJSON s) = ('\n' :) $ unlines $ map (withIndent $ ind + 1) $ splitToFixedWidth ind s
-prettyValue ind LEmpty    = "empty\n"
+prettyValue _   LEmpty    = "empty\n"
 
 prettyLayout :: Int -> Layout -> String
 prettyLayout ind (Layout ls) = concat $ map (prettyUnit ind) ls
@@ -161,7 +169,7 @@ instance (PrettyShow a) => PrettyShow (Maybe a) where
 
 instance (PrettyShow a) => PrettyShow [a] where
     prettyShow [] = LEmpty
-    prettyShow xs = LLay "{Array}" $ Layout $ foldr f [] $ zip [0..] xs
+    prettyShow xs = LLay "{Array}" $ Layout $ foldr f [] $ zip [0::Integer ..] xs
       where f (n, x) acc = LayoutUnit (encloseSq $ show n) (prettyShow x) : acc
 
 
@@ -190,8 +198,7 @@ instance (GPrettyShowIgnoreConstr f, GPrettyShowIgnoreConstr g) => GPrettyShowIg
     gprettyShowIgnoreConstr opts (R1 x) = gprettyShowIgnoreConstr opts x
 
 instance (GPrettyShowIgnoreConstr f, Constructor c) => GPrettyShowIgnoreConstr (C1 c f) where
-    --gprettyShowIgnoreConstr opts m@(M1 x) = if isEmpty x then LStr $ conName m else gprettyShowIgnoreConstr opts x
-    gprettyShowIgnoreConstr opts m@(M1 x) = gprettyShowIgnoreConstr opts x
+    gprettyShowIgnoreConstr opts (M1 x) = gprettyShowIgnoreConstr opts x
 
 instance (GPrettyShow f) => GPrettyShowIgnoreConstr (S1 c f) where
     gprettyShowIgnoreConstr opts (M1 x) = gprettyShow opts x

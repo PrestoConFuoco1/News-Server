@@ -14,14 +14,14 @@ createCatsToAction = do
 
 editCatsToAction :: Router EditCategory
 editCatsToAction = do
-    id <- requireField readInt "category_id"
+    cid <- requireField readInt "category_id"
     parentId <- optional readInt "parent_id"
     name <- optional (validator notEmpty . readText) "name"
-    return $ EditCategory id name parentId
+    return $ EditCategory cid name parentId
 
 deleteCatsToAction :: Router DeleteCategory
 deleteCatsToAction = do
-    id <- requireField readInt "category_id"
-    return $ DeleteCategory id
+    cid <- requireField readInt "category_id"
+    return $ DeleteCategory cid
 
 
