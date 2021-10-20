@@ -1,5 +1,3 @@
-{-# LANGUAGE RecordWildCards #-}
-
 module Execute where
 
 
@@ -107,13 +105,13 @@ executePublish h (WhoWhat y x) =
     withAuthor h y >>=
         \a -> publish h $ WithAuthor (Ty._a_authorId a) x
 
-handleError :: CMC.MonadCatch m => D.Handle m -> (WhoWhat ActionErrorPerms) -> m Response
+handleError :: CMC.MonadCatch m => D.Handle m -> WhoWhat ActionErrorPerms -> m Response
 handleError h (WhoWhat _ (ActionErrorPerms False (ERequiredFieldMissing x))) =
     handleFieldMissing h x
 handleError h (WhoWhat _ (ActionErrorPerms False (EInvalidFieldValue x))) =
     handleInvalidValue h x
 handleError h (WhoWhat _ (ActionErrorPerms False EInvalidEndpoint)) = do
-    D.logError h $ "Invalid endpoint"
+    D.logError h "Invalid endpoint"
     return $ notFound "Invalid endpoint"
 handleError h (WhoWhat y (ActionErrorPerms True x)) =
     (withAuthAdmin h y >> handleError h (WhoWhat y (ActionErrorPerms False x)))

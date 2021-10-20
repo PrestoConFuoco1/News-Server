@@ -7,7 +7,7 @@ module Database.Delete where
 import qualified Database.PostgreSQL.Simple as PS
 import Database.SqlValue
 import Types
-
+import Data.Maybe (fromMaybe)
 
 class DeleteSQL s where
     type Del s :: *
@@ -59,7 +59,8 @@ dummyDComment = DComment ()
 
 
 isAdmin :: User -> Bool
-isAdmin u = maybe False id $ _u_admin u
+--isAdmin u = maybe False id $ _u_admin u
+isAdmin u = fromMaybe False $ _u_admin u
 
 
 

@@ -53,7 +53,7 @@ data Handle m = Handle
 
     -- drafts, posts, publish,
 
-    withTransaction :: (forall a. m a -> m a),
+    withTransaction :: forall a. m a -> m a,
 
 
     getDrafts :: Logger.Handle m -> Paginated (WithAuthor GetDrafts) -> m [Draft],

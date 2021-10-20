@@ -41,16 +41,15 @@ connectionString Config {..} =
 --withResources :: 
 
 withPostgresHandle :: Logger.Handle IO -> Config -> (Resources -> IO a) -> IO a
-withPostgresHandle logger conf action =
+withPostgresHandle logger conf =
     C.bracket
         (initResources logger conf)
         closeResources
-        action
 
 initResources :: Logger.Handle IO -> Config -> IO Resources
 initResources _ conf = do
     let conStr = connectionString conf
-    con <- PS.connectPostgreSQL $ conStr
+    con <- PS.connectPostgreSQL conStr
     return Resources {
         postgresConnection = con
         }

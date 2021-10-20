@@ -1,4 +1,3 @@
-{-# LANGUAGE DeriveAnyClass #-}
 module Action.Category where
 
 import Action.Utils

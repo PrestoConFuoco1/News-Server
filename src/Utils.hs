@@ -11,10 +11,10 @@ import qualified Database.PostgreSQL.Simple.FromField as PSF
 import qualified Database.PostgreSQL.Simple.Types as PST
 import Type.Reflection
 import qualified Data.Time as Time
-
+import Control.Monad (replicateM)
 
 instance (Typeable a, PSF.FromField a) => PSF.FromField [a] where
-    fromField f b = fmap PST.fromPGArray $ PSF.fromField f b
+    fromField f b = PST.fromPGArray <$> PSF.fromField f b
 
 defaultModifier :: String -> String
 defaultModifier ('_':xs) = case dropWhile (/= '_') xs of
@@ -49,7 +49,7 @@ randomString' int = do
         let str = "qwertyuiopasdfghjklzxcvbnm"
             len = length str
             arr = array (1, len) $ zip [1..len] str
-        xs <- sequence $ replicate int $ randomRIO (1, len)
+        xs <- replicateM int $ randomRIO (1, len)
         return $ map (arr !) xs
 
 
@@ -61,6 +61,6 @@ showDay = Time.formatTime Time.defaultTimeLocale "%F"
 
 readDay :: String -> Maybe Time.Day
 readDay = 
-     (Time.parseTimeM True Time.defaultTimeLocale "%Y-%-m-%-d")
+     Time.parseTimeM True Time.defaultTimeLocale "%Y-%-m-%-d"
 
 

@@ -41,11 +41,11 @@ mainErrorHandler' _ SqlErrorAlreadyLogged = return $ U.internal U.internalErrorM
 mainErrorHandler' _ Unauthorized = return $ U.unauthorized U.unauthorizedMsg
 mainErrorHandler' _ (InvalidUniqueEntities _ _) = return $ U.internal U.internalErrorMsg
 mainErrorHandler' _ Forbidden = return $ U.bad U.invalidEndpointMsg
-mainErrorHandler' _ InvalidLogin = return $ U.bad $ U.invalidLoginMsg
-mainErrorHandler' _ InvalidUpdate = return $ U.bad $ "invalid data to update"
+mainErrorHandler' _ InvalidLogin = return $ U.bad U.invalidLoginMsg
+mainErrorHandler' _ InvalidUpdate = return $ U.bad "invalid data to update"
 mainErrorHandler' _ InvalidPassword = return $ U.bad U.invalidPasswordMsg
 mainErrorHandler' _ NotAnAuthor = return $ U.bad U.notAnAuthorMsg
-mainErrorHandler' _ (TokenShared xs) = --logError ("Token shared between users with id in " <> T.pack (show xs)) >>
+mainErrorHandler' _ (TokenShared _) = --logError ("Token shared between users with id in " <> T.pack (show xs)) >>
         return (U.internal U.internalErrorMsg)
 
 instance CMC.Exception ServerException
@@ -57,7 +57,7 @@ throwTokenShared lst = CMC.throwM $ TokenShared lst
 throwInvalidUpdate :: (MonadThrow m) => m a
 throwInvalidUpdate = CMC.throwM InvalidUpdate
 throwUnauthorized :: (MonadThrow m) => m a
-throwUnauthorized = CMC.throwM $ Unauthorized
+throwUnauthorized = CMC.throwM Unauthorized
 
 throwInvalidUnique :: (MonadThrow m) => Entity -> [Int] -> m b
 throwInvalidUnique ent xs = do
@@ -66,27 +66,27 @@ throwInvalidUnique ent xs = do
 
 
 throwInvalidLogin :: (MonadThrow m)=> m a
-throwInvalidLogin = CMC.throwM $ InvalidLogin
+throwInvalidLogin = CMC.throwM InvalidLogin
 
 notAnAuthor :: (MonadThrow m) => m a
-notAnAuthor = CMC.throwM $ NotAnAuthor
+notAnAuthor = CMC.throwM NotAnAuthor
 
 
 defaultSqlHandler :: (MonadThrow m) => L.Handle m -> PS.SqlError -> m a
 defaultSqlHandler logger e = do
     L.logError logger "Unexpected SQL exception"
-    L.logError logger $ (T.pack $ displayException e)
+    L.logError logger $ T.pack $ displayException e
     CMC.throwM SqlErrorAlreadyLogged
 
 formatErrorHandler :: (MonadThrow m) => L.Handle m -> PS.FormatError -> m a
 formatErrorHandler logger e = do
     L.logError logger "SQL query format error"
-    L.logError logger $ (T.pack $ displayException e)
+    L.logError logger $ T.pack $ displayException e
     CMC.throwM SqlErrorAlreadyLogged
 
 queryErrorHandler :: (MonadThrow m) => L.Handle m -> PS.QueryError -> m a
 queryErrorHandler logger e = do
-    L.logError logger $ "Query is used to perform an INSERT-like operation, \
+    L.logError logger "Query is used to perform an INSERT-like operation, \
              \or execute is used to perform a SELECT-like operation."
     L.logError logger (T.pack $ displayException e)
     CMC.throwM SqlErrorAlreadyLogged
@@ -105,10 +105,10 @@ sqlHandlers h qu params = map f [
         , Handler $ resultErrorHandler h
     ]
   where f (Handler func) = Handler $ \e -> do
-            L.logError h $ "SQL query caused an exception"
-            L.logError h $ "query is:"
+            L.logError h "SQL query caused an exception"
+            L.logError h "query is:"
             L.logError h $ E.decodeUtf8 $ PSTy.fromQuery qu
-            L.logError h $ "params: "
+            L.logError h "params: "
             --L.logError h $ showText params
             L.logError h $ GP.textPretty params
             func e
@@ -158,17 +158,17 @@ modifyErrorHandler e = maybe (CMC.throwM e) return (toModifyError e)
 
 toModifyError :: PS.SqlError -> Maybe ModifyError
 toModifyError e
-    | uniqueConstraintViolated e = fmap MAlreadyInUse $ getUniqueViolationData e
-    | foreignKeyViolated e = fmap MInvalidForeign $ getForeignViolationData e
+    | uniqueConstraintViolated e = MAlreadyInUse <$> getUniqueViolationData e
+    | foreignKeyViolated e = MInvalidForeign <$> getForeignViolationData e
     | otherwise = Nothing
 
 
 getUniqueViolationData :: PS.SqlError -> Maybe UniqueViolation
-getUniqueViolationData = maybe Nothing (Just . f) . getPair . sqlErrorDetail
+getUniqueViolationData = fmap f . getPair . sqlErrorDetail
   where f (field, value) = UniqueViolation field value
 
 getForeignViolationData :: PS.SqlError -> Maybe ForeignViolation
-getForeignViolationData = maybe Nothing (Just . f) . getPair . sqlErrorDetail
+getForeignViolationData = fmap f . getPair . sqlErrorDetail
   where f (field, value) = ForeignViolation field value
 
 
@@ -177,7 +177,7 @@ getForeignViolationData = maybe Nothing (Just . f) . getPair . sqlErrorDetail
 tagsErrorHandler :: (CMC.MonadCatch m) => PS.SqlError -> m TagsError
 tagsErrorHandler e = maybe (CMC.throwM e) return (toAttachTagsError e)
   where toAttachTagsError err
-            | foreignKeyViolated err = fmap TagsAttachError $ getForeignViolationData err
+            | foreignKeyViolated err = TagsAttachError <$> getForeignViolationData err
             | otherwise = Nothing
 
 

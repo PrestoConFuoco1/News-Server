@@ -5,7 +5,7 @@ import qualified Data.Text as T
 import qualified Data.Text.Encoding as E (decodeUtf8)
 import qualified Data.ByteString as BS
 import qualified Data.HashMap.Strict as HS (fromList)
-import qualified Data.Maybe as Mb (catMaybes)
+import qualified Data.Maybe as Mb (mapMaybe)
 
 import Data.Bifunctor (bimap)
 import GHC.Generics
@@ -55,25 +55,26 @@ requestToAction1 pathInfo queryString =
                 else Nothing
         _ -> Nothing
     hash :: Query
-    hash = HS.fromList . Mb.catMaybes . map f $ queryString
-    f (x, y) = fmap ((,) x) y
+    --hash = HS.fromList . Mb.catMaybes . map f $ queryString
+    hash = HS.fromList . Mb.mapMaybe f $ queryString
+    f (x, y) = fmap (\q -> (x,q)) y
   in  bimap (WhoWhat maybeToken) (WhoWhat maybeToken) $ requestToAction2 pathInfo hash
 
 
 requestToAction2 :: [T.Text] -> Query -> Either ActionErrorPerms Action
 requestToAction2 path hash = case path of 
-    (x:[])
-     | x == "auth"       -> fmap AAuth $ runRouter (renv False hash) requestToActionAuthenticate
-     | x == "publish"    -> fmap APublish $ runRouter (renv False hash) $ publishAction
+    [x]
+     | x == "auth"       -> AAuth <$> runRouter (renv False hash) requestToActionAuthenticate
+     | x == "publish"    -> APublish <$> runRouter (renv False hash) publishAction
      | otherwise         -> Left pathNotFound
     (x:xs)
-     | x == "posts"      -> fmap APosts $ requestToActionPosts xs hash
-     | x == "drafts"     -> fmap ADrafts $ requestToActionDrafts xs hash
-     | x == "categories" -> fmap ACategory $ requestToActionCats xs hash
-     | x == "authors"    -> fmap AAuthors $ requestToActionAuthors xs hash
-     | x == "tags"       -> fmap ATags $ requestToActionTags xs hash
-     | x == "users"      -> fmap AUsers $ requestToActionUsers xs hash
-     | x == "comments"   -> fmap AComments $ requestToActionComments xs hash
+     | x == "posts"      -> APosts <$> requestToActionPosts xs hash
+     | x == "drafts"     -> ADrafts <$> requestToActionDrafts xs hash
+     | x == "categories" -> ACategory <$> requestToActionCats xs hash
+     | x == "authors"    -> AAuthors <$> requestToActionAuthors xs hash
+     | x == "tags"       -> ATags <$> requestToActionTags xs hash
+     | x == "users"      -> AUsers <$> requestToActionUsers xs hash
+     | x == "comments"   -> AComments <$> requestToActionComments xs hash
      | otherwise         -> Left pathNotFound
     []
      | otherwise -> Left pathNotFound
@@ -88,31 +89,31 @@ requestToActionAuthenticate = do
 
 requestToActionPosts :: [T.Text] -> Query -> Either ActionErrorPerms ActionPosts1
 requestToActionPosts path hash = case path of
-  (x:[])
+  [x]
     | x == "get" -> fmap (AP . Read) $ runRouter (renv False hash) $ withPagination getPostsAction
     | otherwise -> Left $ ActionErrorPerms False EInvalidEndpoint
   (x:xs) -> case readIntText x of
-        (Just pid) -> fmap GC $ actionWithPost pid xs hash
+        (Just pid) -> GC <$> actionWithPost pid xs hash
         Nothing -> Left pathNotFound
   [] -> Left pathNotFound
 
 requestToActionDrafts :: [T.Text] -> Query -> Either ActionErrorPerms ActionDrafts
 requestToActionDrafts path hash = case path of
-  (x:[])
+  [x]
     | x == "get" -> fmap Read $ runRouter (renv False hash) $ withPagination (return GetDrafts)
-    | x == "create" -> fmap Create $ runRouter (renv False hash) $ createDraftToAction
-    | x == "edit" -> fmap Update $ runRouter (renv False hash) $ editDraftToAction
-    | x == "delete" -> fmap Delete $ runRouter (renv False hash) $ deleteDraftToAction
+    | x == "create" -> fmap Create $ runRouter (renv False hash) createDraftToAction
+    | x == "edit" -> fmap Update $ runRouter (renv False hash) editDraftToAction
+    | x == "delete" -> fmap Delete $ runRouter (renv False hash) deleteDraftToAction
   _ -> Left  $ ActionErrorPerms False EInvalidEndpoint
 
 
 requestToActionCats :: [T.Text] -> Query -> Either ActionErrorPerms ActionCategory
 requestToActionCats path hash = case path of
-  (x:[])
+  [x]
     | x == "get" -> fmap Read $ runRouter (renv False hash) $ withPagination (return GetCategories)
-    | x == "create" -> fmap Create $ runRouter (renv True hash) $ createCatsToAction
-    | x == "edit" -> fmap Update $ runRouter (renv True hash) $ editCatsToAction
-    | x == "delete" -> fmap Delete $ runRouter (renv True hash) $ deleteCatsToAction
+    | x == "create" -> fmap Create $ runRouter (renv True hash) createCatsToAction
+    | x == "edit" -> fmap Update $ runRouter (renv True hash) editCatsToAction
+    | x == "delete" -> fmap Delete $ runRouter (renv True hash) deleteCatsToAction
   _ -> Left  $ ActionErrorPerms False EInvalidEndpoint
 
 
@@ -120,11 +121,11 @@ requestToActionCats path hash = case path of
 
 requestToActionTags :: [T.Text] -> Query -> Either ActionErrorPerms ActionTags
 requestToActionTags path hash = case path of
-  (x:[])
+  [x]
     | x == "get" -> fmap Read $ runRouter (renv False hash) $ withPagination (return GetTags)
-    | x == "create" -> fmap Create $ runRouter (renv True hash) $ createTagToAction
-    | x == "edit" -> fmap Update $ runRouter (renv True hash) $ editTagToAction
-    | x == "delete" -> fmap Delete $ runRouter (renv True hash) $ deleteTagToAction
+    | x == "create" -> fmap Create $ runRouter (renv True hash) createTagToAction
+    | x == "edit" -> fmap Update $ runRouter (renv True hash) editTagToAction
+    | x == "delete" -> fmap Delete $ runRouter (renv True hash) deleteTagToAction
   _ -> Left  $ ActionErrorPerms False EInvalidEndpoint
 
 
@@ -132,29 +133,29 @@ requestToActionTags path hash = case path of
 
 requestToActionUsers :: [T.Text] -> Query -> Either ActionErrorPerms ActionUsers
 requestToActionUsers path hash = case path of
-  (x:[])
+  [x]
     | x == "profile" -> return $ Read GetProfile
-    | x == "create" -> fmap Create $ runRouter (renv False hash) $ createUserToAction
-    | x == "delete" -> fmap Delete $ runRouter (renv True hash) $ deleteUserToAction
+    | x == "create" -> fmap Create $ runRouter (renv False hash) createUserToAction
+    | x == "delete" -> fmap Delete $ runRouter (renv True hash) deleteUserToAction
   _ -> Left  $ ActionErrorPerms False EInvalidEndpoint
 
 requestToActionAuthors :: [T.Text] -> Query -> Either ActionErrorPerms ActionAuthors
 requestToActionAuthors path hash = case path of
-  (x:[])
+  [x]
     | x == "get" -> fmap Read $ runRouter (renv False hash) $ withPagination (return $ GetAuthors Nothing)
-    | x == "create" -> fmap Create $ runRouter (renv True hash) $ createAuthorToAction
-    | x == "delete" -> fmap Delete $ runRouter (renv True hash) $ deleteAuthorToAction
-    | x == "edit" -> fmap Update $ runRouter (renv True hash) $ editAuthorToAction
+    | x == "create" -> fmap Create $ runRouter (renv True hash) createAuthorToAction
+    | x == "delete" -> fmap Delete $ runRouter (renv True hash) deleteAuthorToAction
+    | x == "edit" -> fmap Update $ runRouter (renv True hash) editAuthorToAction
   _ -> Left  $ ActionErrorPerms False EInvalidEndpoint
 
 
 
 requestToActionComments :: [T.Text] -> Query -> Either ActionErrorPerms ActionComments
 requestToActionComments path hash = case path of
-    (x:[])
+    [x]
       | x == "get" -> fmap Read $ runRouter (renv False hash) $ withPagination $ getCommentsToAction
-      | x == "create" -> fmap Create $ runRouter (renv False hash) $ createCommentsToAction
-      | x == "delete" -> fmap Delete $ runRouter (renv False hash) $ deleteCommentsToAction
+      | x == "create" -> fmap Create $ runRouter (renv False hash) createCommentsToAction
+      | x == "delete" -> fmap Delete $ runRouter (renv False hash) deleteCommentsToAction
     _ -> Left $ ActionErrorPerms False EInvalidEndpoint
 
 

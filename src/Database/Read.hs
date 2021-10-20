@@ -140,7 +140,7 @@ catDummy = CatD ()
 instance Read CatD where
     type MType CatD = Category
     type Get CatD = GetCategories
-    selectQuery _ (GetCategories) =
+    selectQuery _ GetCategories =
         let selectClause = "SELECT catids, catnames FROM news.get_categories"
             args = []
         in  (selectClause, args)
@@ -174,7 +174,7 @@ tagDummy = TagD ()
 instance Read TagD where
     type MType TagD = Tag
     type Get TagD = GetTags
-    selectQuery _ (GetTags) =
+    selectQuery _ GetTags =
         let selectClause = "SELECT tag_id, name \
                            \ FROM news.get_tags"
             args = []

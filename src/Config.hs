@@ -49,7 +49,7 @@ loadConfig handle path = do
         , dbAdminPassword = adminPasswd
         , dbPort = port
         }
-    L.logInfo handle $ "successfully got server configuration"
+    L.logInfo handle "successfully got server configuration"
     L.logDebug handle $ textPretty config
     return config
     
@@ -79,7 +79,7 @@ handleIOError logger exc
 
 handleConfigError :: L.Handle IO -> CT.ConfigError -> IO ()
 handleConfigError logger (CT.ParseError _ _) =
-    L.logError logger $ "Failed to parse configuration file."
+    L.logError logger "Failed to parse configuration file."
 
 handleKeyError :: L.Handle IO -> CT.KeyError -> IO ()
 handleKeyError logger (CT.KeyError name) = do

@@ -43,10 +43,10 @@ newtype Router a = Router { unR :: ReaderT RoutingEnv (Either ActionErrorPerms) 
     deriving (Functor, Applicative, Monad, MonadReader RoutingEnv)
 
 askAdmin :: Router Bool
-askAdmin = fmap _re_admin ask
+askAdmin = asks _re_admin
 
 askHash :: Router Query
-askHash = fmap _re_hash ask
+askHash = asks _re_hash
 
 routerError :: ActionError -> Router a
 routerError err = askAdmin >>= \admin ->
@@ -62,6 +62,6 @@ errorOnNothing :: ActionError -> Maybe a -> Router a
 errorOnNothing e = maybe (routerError e) return
 
 renv :: Bool -> Query -> RoutingEnv
-renv b hash = RoutingEnv b hash
+renv = RoutingEnv
 
 

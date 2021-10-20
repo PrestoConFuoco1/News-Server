@@ -12,7 +12,7 @@ defaultSortOptions = SortOptions SEDate SODescending -- newer posts first
 
 actionWithPost :: Int -> [T.Text] -> Query -> Either ActionErrorPerms (Paginated GetComments)
 actionWithPost pid path hash = case path of
-  (x:[])
+  [x]
     | x == "comments" -> runRouter (renv False hash) $ withPagination $ return $ GetComments pid
   _ -> Left $ ActionErrorPerms False EInvalidEndpoint
 

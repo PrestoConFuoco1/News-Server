@@ -59,7 +59,7 @@ data LoggerConfig = LoggerConfig {
     , lcPath :: FilePath
     }
 
-data LoggerResources = LoggerResources {
+newtype LoggerResources = LoggerResources {
     flHandle :: S.Handle
     }
 
@@ -70,7 +70,7 @@ pathToHandle path = do
 
 initializeErrorHandler :: IOE.IOError -> IO a
 initializeErrorHandler e = do
-    logFatal stdHandle $ "failed to initialize logger"
+    logFatal stdHandle "failed to initialize logger"
     func e
     Q.exitWith (Q.ExitFailure 1)
   where
@@ -84,7 +84,7 @@ lockedmsg = "target log file is locked"
 
 initializeDefaultHandler :: C.SomeException -> IO a
 initializeDefaultHandler e = do
-    logFatal stdHandle $ "failed to initialize logger"
+    logFatal stdHandle "failed to initialize logger"
     logFatal stdHandle $ T.pack $ C.displayException e
     Q.exitWith (Q.ExitFailure 1)
 
@@ -104,7 +104,7 @@ initializeSelfSufficientLoggerResources conf = do
          C.Handler initializeDefaultHandler]
     lockAcquired <- Lk.hTryLock h Lk.ExclusiveLock
     when (not lockAcquired) $ do
-        logFatal stdHandle $ "failed to initialize logger"
+        logFatal stdHandle "failed to initialize logger"
         logFatal stdHandle lockedmsg
         Q.exitWith (Q.ExitFailure 1)
         
@@ -128,7 +128,7 @@ selfSufficientLogger resourcesRef predicate pri s = do
     let action = when (predicate pri) $
                 T.hPutStrLn (flHandle resources) (logString pri s)
                  >> T.hPutStrLn S.stderr (logString pri s)
-        errHandler = \e -> loggerHandler resources e >>= writeIORef resourcesRef
+        errHandler e = loggerHandler resources e >>= writeIORef resourcesRef
     action `C.catch` errHandler
 
 loggerHandler :: LoggerResources -> C.SomeException -> IO LoggerResources

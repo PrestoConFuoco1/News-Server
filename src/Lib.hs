@@ -41,7 +41,7 @@ runWithConf :: RunOptions -> FilePath -> IO ()
 runWithConf opts path = do
     let configLogger = L.stdHandle
     conf <- C.loadConfig configLogger path `CMC.catches` C.configHandlers configLogger
-    when (testConfig opts) $ Q.exitWith (Q.ExitSuccess)
+    when (testConfig opts) $ exitSuccess
     if migrations opts
         then M.migrationMain $ configToMigrationsConfig conf
         else let loggerSettings = runOptsToLoggerSettings opts
@@ -97,14 +97,14 @@ mainServer req logger resources = do
     let eithWhoWhat = requestToAction req
 
     case eithWhoWhat of
-        Left err -> f $ fmap coerceResponse $ handleError h err
+        Left err -> f $ coerceResponse <$> handleError h err
         Right whowhat -> do
             D.logDebug h "Action type is"
             D.logDebug h $ GP.textPretty $ _ww_action whowhat
 
             let withLog res = do
                     r <- res
-                    D.logDebug h $ "Result is"
+                    D.logDebug h "Result is"
                     D.logDebug h $ logResult r
                     return $ toResponse r
                 action = withLog (executeAction h whowhat)

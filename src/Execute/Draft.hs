@@ -16,11 +16,11 @@ import qualified Utils as S
 
 draftModifyErrorToApiResult :: DraftModifyError -> APIResult
 draftModifyErrorToApiResult (DModifyError x) = modifyErrorToApiResult EDraft x
-draftModifyErrorToApiResult (DTagsError (TagsAttachError (ForeignViolation field value))) = RInvalidTag value
+draftModifyErrorToApiResult (DTagsError (TagsAttachError (ForeignViolation _ value))) = RInvalidTag value
 
 draftModifyHandler :: (CMC.MonadCatch m) => L.Handle m -> DraftModifyError -> m APIResult
 draftModifyHandler logger err = do
-    L.logError logger $ "Error occured, all changes are discarded"
+    L.logError logger "Error occured, all changes are discarded"
     L.logError logger $ T.pack $ CMC.displayException err
     return $ draftModifyErrorToApiResult err
 
@@ -29,7 +29,7 @@ createDraft h x@(WithAuthor _ CreateDraft{..}) =
   Ex.withHandler (draftModifyHandler $ D.log h) $ D.withTransaction h $ do
     eithDraft <- D.createDraft h (D.log h) x
     draft <- th DModifyError eithDraft
-    D.logInfo h $ "Created draft with id = " <> (T.pack $ show draft)
+    D.logInfo h $ "Created draft with id = " <> T.pack (show draft)
     eithTags <- D.attachTagsToDraft h (D.log h) draft _cd_tags
     tags <- th DTagsError eithTags
     D.logInfo h $ attached "draft" tags draft
@@ -98,7 +98,7 @@ publishEdit h post draft = Ex.withHandler (draftModifyHandler $ D.log h) $ D.wit
 
 
 th :: (CMC.MonadCatch m) => (e -> DraftModifyError) -> Either e a -> m a
-th f x = either (CMC.throwM . f) return x
+th f = either (CMC.throwM . f) return
 
 func :: Int -> DraftRaw -> PublishEditPost
 func post DraftRaw{..} =

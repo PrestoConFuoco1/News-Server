@@ -44,7 +44,7 @@ checkAdmin h muser = do
     Just user -> do
         D.logDebug h $ fname <> "found user"
         D.logDebug h $ GP.textPretty user
-        if ((_u_admin user) /= Just True)
+        if _u_admin user /= Just True
           then do
             D.logDebug h $ fname <> "user is not admin, throwing forbidden"
             Ex.throwForbidden
@@ -90,7 +90,7 @@ authenticate h auth = do
     user <- maybe Ex.throwInvalidLogin return muser
     when (_u_passHash user /= _au_passHash auth) $
         CMC.throwM Ex.InvalidPassword
-    token <- fmap (T.pack) $ D.generateToken h 10
+    token <- T.pack <$> D.generateToken h 10
     token' <- D.addToken h (D.log h) (_u_id user) token
     return $ RGetToken token'
 
@@ -99,6 +99,6 @@ authenticate h auth = do
 modifyErrorToApiResult :: Entity -> ModifyError -> APIResult
 modifyErrorToApiResult ent (MAlreadyInUse (UniqueViolation field value)) = RAlreadyInUse ent field value
 modifyErrorToApiResult ent (MInvalidForeign (ForeignViolation field value)) = RInvalidForeign ent field value
-modifyErrorToApiResult ent (MNoAction) = RNotFound ent
+modifyErrorToApiResult ent MNoAction = RNotFound ent
 
 

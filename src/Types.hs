@@ -1,4 +1,3 @@
-{-# LANGUAGE DeriveAnyClass #-}
 module Types (
     module Types, module TypesInternal
 ) where

@@ -39,5 +39,5 @@ getOpts = foldr f defaultRunOpts
 
 
 getLoggerSettings :: String -> Maybe (L.Priority -> Bool)
-getLoggerSettings str = fmap (\x -> (>= x)) $ readMaybe str
+getLoggerSettings str = (\x -> (>= x)) <$> readMaybe str
 

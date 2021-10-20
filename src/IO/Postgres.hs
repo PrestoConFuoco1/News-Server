@@ -10,6 +10,7 @@ import qualified Exceptions as Ex
 import Types
 import qualified Utils as U
 import qualified App.Logger as L
+import Data.Maybe (fromMaybe)
 
 generateToken1 :: Int -> IO String
 generateToken1 = U.randomString'
@@ -52,7 +53,7 @@ getUserByLogin1 con logger login = do
 addToken1 :: PS.Connection -> L.Handle IO -> UserId -> T.Text -> IO T.Text
 addToken1 con logger uid token = do
     let str = "INSERT INTO news.token (user_id, token) VALUES (?, ?) ON CONFLICT (user_id) DO UPDATE SET token = ?"
-        token' = (T.pack $ show uid) <> token
+        token' = T.pack (show uid) <> token
         params = [SqlValue uid, SqlValue token', SqlValue token']
 
     Ex.withExceptionHandlers (Ex.sqlHandlers logger str params) $ do
@@ -97,7 +98,7 @@ editThis con s logger u = case updateParams s u of
 
     Ex.withExceptionHandlers (Ex.sqlHandlers logger str params) $
         Ex.withHandler modifyHandler $ do
-        ids <- fmap (map PSTy.fromOnly) $ PS.query con str params
+        ids <- map PSTy.fromOnly <$> PS.query con str params
         case ids of
             [] -> return (Left MNoAction)
             [x] -> return (Right x)
@@ -110,7 +111,7 @@ createThis con s logger cres = do
 
     Ex.withExceptionHandlers (Ex.sqlHandlers logger str params) $ 
         Ex.withHandler modifyHandler $ do
-        ints <- fmap (map PSTy.fromOnly) $ PS.query con str params
+        ints <- map PSTy.fromOnly <$> PS.query con str params
         case ints of
             [] -> return $ Left MNoAction
             [x] -> return $ Right x
@@ -124,7 +125,7 @@ deleteThis con s logger del = do
     let (str, params) = deleteQuery s del
     
     Ex.withExceptionHandlers (Ex.sqlHandlers logger str params) $ do
-        ids <- fmap (map PSTy.fromOnly) $ PS.query con str params
+        ids <- map PSTy.fromOnly <$> PS.query con str params
         case ids of
             [] -> return $ Left DNoAction
             [eid] -> return $ Right eid
@@ -141,7 +142,7 @@ checkUnique empty one entity getId xs =
 -------------------------------------------------------------------
 
 attachTags :: (HasTags s) => PS.Connection -> s -> L.Handle IO -> HIdent s -> [Int] -> IO (Either TagsError [Int])
-attachTags con s logger hasTagsId [] = do
+attachTags _   _ _      _         [] = do
     --logInfo $ "No tags attached to " <> hName' s <> " with id = " <> (T.pack $ show hasTagsId)
     return (Right [])
 attachTags con s logger hasTagsId tags = do
@@ -149,11 +150,14 @@ attachTags con s logger hasTagsId tags = do
         returningChunks = ["ON CONFLICT ON CONSTRAINT ", "_tag_", "_id_tag_id_key DO NOTHING RETURNING tag_id"]
         count = length tags
         insertUnit = " ( ?, ? ) "
-        insertUnits = maybe "" id $ intercalateQ $ replicate count insertUnit :: PS.Query
+        --insertUnits = maybe "" id $ intercalateQ $ replicate count insertUnit :: PS.Query
+        insertUnits = fromMaybe "" $ intercalateQ $ replicate count insertUnit :: PS.Query
         insertParams = map SqlValue $ foldr f [] tags :: [SqlValue]
         f x acc = hToInt s hasTagsId : x : acc
-        str = maybe "" id $ intercalateWith (hName s) strChunks
-        returning = maybe "" id $ intercalateWith (hName s) returningChunks
+        --str = maybe "" id $ intercalateWith (hName s) strChunks
+        str = fromMaybe "" $ intercalateWith (hName s) strChunks
+        --returning = maybe "" id $ intercalateWith (hName s) returningChunks
+        returning = fromMaybe "" $ intercalateWith (hName s) returningChunks
         qu = str <> insertUnits <> returning :: PS.Query
         modifyHandler = fmap Left . Ex.tagsErrorHandler
     
@@ -162,7 +166,7 @@ attachTags con s logger hasTagsId tags = do
 
     Ex.withExceptionHandlers (Ex.sqlHandlers logger qu insertParams) $
         Ex.withHandler modifyHandler $ do
-        ids <- fmap (map PSTy.fromOnly) $ PS.query con qu insertParams
+        ids <- map PSTy.fromOnly <$> PS.query con qu insertParams
         return $ Right ids
 
 
@@ -174,13 +178,14 @@ removeAllButGivenTags con s logger hasTagsId tags = do
         inParams [] = []
         inParams ts = [SqlValue $ PS.In ts]
         strChunks = ["DELETE FROM news.", "_tag WHERE ", "_id = ? " <> inClause tags <> "RETURNING tag_id"]
-        params = [SqlValue $ hToInt s hasTagsId] ++ inParams tags
-        str = maybe "" id $ intercalateWith (hName s) strChunks
+        params = SqlValue (hToInt s hasTagsId) : inParams tags
+        --str = maybe "" id $ intercalateWith (hName s) strChunks
+        str = fromMaybe "" $ intercalateWith (hName s) strChunks
 --    debugStr <- PS.formatQuery con str params
 --    logDebug $ T.pack $ show debugStr
 
     Ex.withExceptionHandlers (Ex.sqlHandlers logger str params) $ do
-        tagsDel <- fmap (map PSTy.fromOnly) $ PS.query con str params
+        tagsDel <- map PSTy.fromOnly <$> PS.query con str params
         --logDebug $ "Removed tags with id in " <> (T.pack $ show tagsDel) <> " from " <> hName' s <> " with id = " <> (T.pack $ show hasTagsId)
         return tagsDel
 

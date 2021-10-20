@@ -37,7 +37,7 @@ optional prse fieldname = do
         Just x -> fmap Just $ errorOnNothing (EInvalidFieldValue fieldname) $ prse x
 
 oneOf :: [Router (Maybe a)] -> Router (Maybe a)
-oneOf lst = foldr f (return Nothing) lst
+oneOf = foldr f (return Nothing)
   where f x acc = x >>= maybe acc (return . Just)
 
 requireWithDefault :: (BS.ByteString -> Maybe a) -> a -> BS.ByteString -> Router a
@@ -63,14 +63,14 @@ readInt = Ae.decode . BSL.fromStrict
 
 readDay :: BS.ByteString -> Maybe Time.Day
 readDay = 
-     (Time.parseTimeM True Time.defaultTimeLocale "%Y-%-m-%-d" . T.unpack . E.decodeUtf8)
+     Time.parseTimeM True Time.defaultTimeLocale "%Y-%-m-%-d" . T.unpack . E.decodeUtf8
 
 
 readList :: (Ae.FromJSON a) => BS.ByteString -> Maybe [a]
-readList = (Ae.decode . BSL.fromStrict)
+readList = Ae.decode . BSL.fromStrict
 
 fmap2 :: (Functor f, Functor g) => (a -> b) -> f (g a) -> f (g b)
-fmap2 f x = fmap (fmap f) x
+fmap2 f = fmap (fmap f)
 
 {-
 data Paginated a = Paginated {

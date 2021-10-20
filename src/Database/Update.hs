@@ -9,7 +9,7 @@ module Database.Update where
 
 import qualified Database.PostgreSQL.Simple as PS
 import Database.SqlValue
-import Data.Maybe (catMaybes)
+import Data.Maybe (mapMaybe)
 import qualified Database.PostgreSQL.Simple.Types as PSTy
 import Types
 
@@ -27,7 +27,7 @@ intercalateQ xs = Just $ f xs
         f (y:ys) = y <> ", " <> f ys
 
 intercalateWith :: PS.Query -> [PS.Query] -> Maybe PS.Query
-intercalateWith delim [] = Nothing
+intercalateWith _     [] = Nothing
 intercalateWith delim xs = Just $ f xs
   where f [y] = y
         f (y:ys) = y <> delim <> f ys
@@ -36,7 +36,8 @@ setUnit :: PS.Query -> PS.Query
 setUnit fname = fname <> " = ?"
 
 optionals :: (UpdateSQL s) => s -> Upd s -> [(PS.Query, SqlValue)]
-optionals s = catMaybes . map f . optionalsMaybe s
+--optionals s = catMaybes . map f . optionalsMaybe s
+optionals s = mapMaybe f . optionalsMaybe s
   where
         f (t, x) = fmap (\a -> (t, a)) x
 
@@ -56,7 +57,7 @@ dummyUTag = UTag ()
 
 instance UpdateSQL UTag where
     type Upd UTag = EditTag
-    updateQuery _ = \p -> "UPDATE news.tag SET " <> p <> " WHERE tag_id = ? RETURNING tag_id"
+    updateQuery _ p = "UPDATE news.tag SET " <> p <> " WHERE tag_id = ? RETURNING tag_id"
     uName _ = ETag
     optionalsMaybe _ EditTag{..} =
             [("name", Just $ SqlValue _et_tagName)]
@@ -71,7 +72,7 @@ dummyUCat = UCat ()
 
 instance UpdateSQL UCat where
     type Upd UCat = EditCategory
-    updateQuery _ = \p -> "UPDATE news.category SET " <> p <> " WHERE category_id = ? RETURNING category_id"
+    updateQuery _ p = "UPDATE news.category SET " <> p <> " WHERE category_id = ? RETURNING category_id"
     uName _ = ECategory
     optionalsMaybe _ EditCategory{..} =
             [("name", fmap SqlValue _ec_catName),
@@ -86,7 +87,7 @@ dummyUAuthor = UAuthor ()
 
 instance UpdateSQL UAuthor where
     type Upd UAuthor = EditAuthor
-    updateQuery _ = \p -> "UPDATE news.author SET " <> p <> " WHERE author_id = ? RETURNING author_id"
+    updateQuery _ p = "UPDATE news.author SET " <> p <> " WHERE author_id = ? RETURNING author_id"
     uName _ = EAuthor
     optionalsMaybe _ EditAuthor{..} =
             [("description", fmap SqlValue _ea_description),
@@ -100,7 +101,7 @@ dummyUPost = UPost ()
 
 instance UpdateSQL UPost where
     type Upd UPost = PublishEditPost
-    updateQuery _ = \p -> "UPDATE news.post SET " <> p <> " WHERE post_id = ? RETURNING post_id"
+    updateQuery _ p = "UPDATE news.post SET " <> p <> " WHERE post_id = ? RETURNING post_id"
     uName _ = EPost
     optionalsMaybe _ PublishEditPost{..} =
             [
@@ -120,8 +121,8 @@ draftEditDummy = UDraft ()
 
 instance UpdateSQL UDraft where
     type Upd UDraft = WithAuthor EditDraft
-    updateQuery _ =
-        \p -> "UPDATE news.draft SET " <> p <> " WHERE draft_id = ? AND author_id = ? RETURNING draft_id"
+    updateQuery _ p =
+        "UPDATE news.draft SET " <> p <> " WHERE draft_id = ? AND author_id = ? RETURNING draft_id"
     uName _ = EDraft
     optionalsMaybe _ (WithAuthor _ EditDraft{..}) =
         [("title", fmap SqlValue _ed_title),
@@ -140,8 +141,8 @@ draftEditPublishDummy = UPDraft ()
 
 instance UpdateSQL UPDraft where
     type Upd UPDraft = EditDraftPublish
-    updateQuery _ =
-        \p -> "UPDATE news.draft SET " <> p <> " WHERE draft_id = ? RETURNING draft_id"
+    updateQuery _ p =
+        "UPDATE news.draft SET " <> p <> " WHERE draft_id = ? RETURNING draft_id"
     uName _ = EDraft
     optionalsMaybe _ EditDraftPublish{..} =
         [("post_id", Just $ SqlValue _edp_postId)]
