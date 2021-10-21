@@ -12,8 +12,8 @@ echo "testing categories"
 ./categories.py #| grep False
 echo "testing comments"
 ./comments.py #| grep False
-#echo "testing drafts"
-#./drafts.py   #| grep False
+echo "testing drafts"
+./drafts.py   #| grep False
 echo "testing posts"
 ./posts.py    #| grep False
 echo "testing tags"
