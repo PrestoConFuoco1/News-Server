@@ -26,17 +26,14 @@ data Config =
 data Resources =
    Resources
       { postgresConnection :: PS.Connection
-      } -- deriving (Show)
+      }
 
---withHandle :: Connection -> (Handle -> IO a) -> IO a
---withHandle (Connection conn) func = do
 connectionString :: Config -> B.ByteString
 connectionString Config {..} =
    "dbname=" <>
    databaseName <>
    " user=" <> userName <> " password='" <> password <> "'"
 
---withResources :: 
 withPostgresHandle ::
       Logger.Handle IO
    -> Config
@@ -49,7 +46,7 @@ initResources :: Logger.Handle IO -> Config -> IO Resources
 initResources _ conf = do
    let conStr = connectionString conf
    con <- PS.connectPostgreSQL conStr
-   return Resources {postgresConnection = con}
+   pure Resources {postgresConnection = con}
 
 closeResources :: Resources -> IO ()
 closeResources resources =

@@ -104,7 +104,7 @@ requestToActionAuthenticate :: Router Authenticate
 requestToActionAuthenticate = do
    login <- requireField validateNotEmpty "login"
    passHash <- requireField validateNotEmpty "pass_hash"
-   return $ Authenticate login passHash
+   pure $ Authenticate login passHash
 
 requestToActionPosts ::
       [T.Text]
@@ -135,7 +135,7 @@ requestToActionDrafts path hash =
          | x == "get" ->
             fmap Read $
             runRouter (renv False hash) $
-            withPagination (return GetDrafts)
+            withPagination (pure GetDrafts)
          | x == "create" ->
             fmap Create $
             runRouter (renv False hash) createDraftToAction
@@ -157,7 +157,7 @@ requestToActionCats path hash =
          | x == "get" ->
             fmap Read $
             runRouter (renv False hash) $
-            withPagination (return GetCategories)
+            withPagination (pure GetCategories)
          | x == "create" ->
             fmap Create $
             runRouter (renv True hash) createCatsToAction
@@ -179,7 +179,7 @@ requestToActionTags path hash =
          | x == "get" ->
             fmap Read $
             runRouter (renv False hash) $
-            withPagination (return GetTags)
+            withPagination (pure GetTags)
          | x == "create" ->
             fmap Create $
             runRouter (renv True hash) createTagToAction
@@ -198,7 +198,7 @@ requestToActionUsers ::
 requestToActionUsers path hash =
    case path of
       [x]
-         | x == "profile" -> return $ Read GetProfile
+         | x == "profile" -> pure $ Read GetProfile
          | x == "create" ->
             fmap Create $
             runRouter (renv False hash) createUserToAction
@@ -217,7 +217,7 @@ requestToActionAuthors path hash =
          | x == "get" ->
             fmap Read $
             runRouter (renv False hash) $
-            withPagination (return $ GetAuthors Nothing)
+            withPagination (pure $ GetAuthors Nothing)
          | x == "create" ->
             fmap Create $
             runRouter (renv True hash) createAuthorToAction

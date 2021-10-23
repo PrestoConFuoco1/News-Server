@@ -61,5 +61,5 @@ runMigrations1 con =
        -> do
          res <- runMigration migr
          case res of
-            MigrationSuccess -> return ()
+            MigrationSuccess -> pure ()
             MigrationError _ -> exitFailure

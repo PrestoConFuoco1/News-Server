@@ -27,7 +27,7 @@ draftModifyHandler logger err = do
       logger
       "Error occured, all changes are discarded"
    L.logError logger $ T.pack $ CMC.displayException err
-   return $ draftModifyErrorToApiResult err
+   pure $ draftModifyErrorToApiResult err
 
 createDraft ::
       (CMC.MonadCatch m)
@@ -45,7 +45,7 @@ createDraft h x@(WithAuthor _ CreateDraft {..}) =
          D.attachTagsToDraft h (D.log h) draft _cd_tags
       tags <- th DTagsError eithTags
       D.logInfo h $ attached "draft" tags draft
-      return $ RCreated EDraft draft
+      pure $ RCreated EDraft draft
 
 editDraft ::
       (CMC.MonadCatch m)
@@ -57,7 +57,7 @@ editDraft h x@(WithAuthor _ EditDraft {..}) =
    D.withTransaction h $ do
       eithDraft <- D.editDraft h (D.log h) x
       draft <- th DModifyError eithDraft
-      S.withMaybe _ed_tags (return $ REdited EDraft draft) $ \tags -> do
+      S.withMaybe _ed_tags (pure $ REdited EDraft draft) $ \tags -> do
          eithTs <-
             D.attachTagsToDraft h (D.log h) draft tags
          ts <- th DTagsError eithTs
@@ -69,7 +69,7 @@ editDraft h x@(WithAuthor _ EditDraft {..}) =
                draft
                tags
          D.logInfo h $ removed "draft" tsRem draft
-         return $ REdited EDraft draft
+         pure $ REdited EDraft draft
 
 publishHandler ::
       CMC.MonadCatch m
@@ -88,7 +88,7 @@ publish h x@(WithAuthor _ Publish {}) =
    D.withTransaction h $ do
       eithDraft <- D.getDraftRaw h (D.log h) x
       case eithDraft of
-         Nothing -> return $ RNotFound EDraft
+         Nothing -> pure $ RNotFound EDraft
          Just draft ->
             case _dr_postId draft of
                Nothing -> publishCreate h draft
@@ -115,7 +115,7 @@ publishCreate h x = do
       D.attachTagsToPost h (D.log h) post (_dr_tagIds x)
    tags_ <- th DTagsError eithTags_
    D.logInfo h $ attached "post" tags_ post
-   return $ RCreated EPost post
+   pure $ RCreated EPost post
 
 publishEdit ::
       (CMC.MonadCatch m)
@@ -138,13 +138,13 @@ publishEdit h post draft =
          D.removeAllButGivenTagsPost h (D.log h) post $
          _dr_tagIds draft
       D.logInfo h $ removed "post" tsRem $ _dr_draftId draft
-      return $ REdited EPost post_
+      pure $ REdited EPost post_
 
 th :: (CMC.MonadCatch m)
    => (e -> DraftModifyError)
    -> Either e a
    -> m a
-th f = either (CMC.throwM . f) return
+th f = either (CMC.throwM . f) pure
 
 func :: Int -> DraftRaw -> PublishEditPost
 func post DraftRaw {..} =

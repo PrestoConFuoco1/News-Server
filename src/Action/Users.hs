@@ -10,9 +10,9 @@ createUserToAction = do
    passHash <- requireField validateNotEmpty "pass_hash"
    firstName <- requireField validateNotEmpty "firstname"
    lastName <- requireField validateNotEmpty "lastname"
-   return $ CreateUser login passHash firstName lastName
+   pure $ CreateUser login passHash firstName lastName
 
 deleteUserToAction :: Router DeleteUser
 deleteUserToAction = do
    uid <- requireField readInt "user_id"
-   return $ DeleteUser uid
+   pure $ DeleteUser uid

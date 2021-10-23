@@ -13,7 +13,7 @@ createDraftToAction = do
    content <- requireField validateNotEmpty "content"
    mainPhoto <- optional validateNotEmpty "main_photo"
    extraPhotos <- optional readList "extra_photos"
-   return $
+   pure $
       CreateDraft
          title
          tags
@@ -31,7 +31,7 @@ editDraftToAction = do
    content <- optional validateNotEmpty "content"
    mainPhoto <- optional validateNotEmpty "main_photo"
    extraPhotos <- optional readList "extra_photos"
-   return $
+   pure $
       EditDraft
          draftId
          title
@@ -44,9 +44,9 @@ editDraftToAction = do
 deleteDraftToAction :: Router DeleteDraft
 deleteDraftToAction = do
    draftId <- requireField readInt "draft_id"
-   return $ DeleteDraft draftId
+   pure $ DeleteDraft draftId
 
 publishAction :: Router Publish
 publishAction = do
    draftId <- requireField readInt "draft_id"
-   return $ Publish draftId
+   pure $ Publish draftId

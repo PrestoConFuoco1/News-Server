@@ -51,7 +51,7 @@ randomString' int = do
        len = length str
        arr = array (1, len) $ zip [1 .. len] str
    xs <- replicateM int $ randomRIO (1, len)
-   return $ map (arr !) xs
+   pure $ map (arr !) xs
 
 withMaybe :: Maybe a -> b -> (a -> b) -> b
 withMaybe x nothing just = maybe nothing just x

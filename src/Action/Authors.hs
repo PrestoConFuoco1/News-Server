@@ -11,12 +11,12 @@ createAuthorToAction = do
       requireField
          (validator notEmpty . readText)
          "description"
-   return $ CreateAuthor userId description
+   pure $ CreateAuthor userId description
 
 deleteAuthorToAction :: Router DeleteAuthor
 deleteAuthorToAction = do
    authorId <- requireField readInt "author_id"
-   return $ DeleteAuthor authorId
+   pure $ DeleteAuthor authorId
 
 editAuthorToAction :: Router EditAuthor
 editAuthorToAction = do
@@ -24,6 +24,6 @@ editAuthorToAction = do
    userId <- optional readInt "user_id"
    description <-
       optional (validator notEmpty . readText) "description"
-   return $ EditAuthor authorId description userId
+   pure $ EditAuthor authorId description userId
 {-
 -}

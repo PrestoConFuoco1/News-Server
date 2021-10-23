@@ -19,7 +19,7 @@ actionWithPost pid path hash =
       [x]
          | x == "comments" ->
             runRouter (renv False hash) $
-            withPagination $ return $ GetComments pid
+            withPagination $ pure $ GetComments pid
       _ -> Left $ ActionErrorPerms False EInvalidEndpoint
 
 getPostsAction :: Router GetPosts
@@ -42,14 +42,14 @@ getPostsAction = do
       optional validateNotEmpty "sort" :: Router (Maybe T.Text)
    sortopts <-
       case sortoptsRaw of
-         Nothing -> return defaultSortOptions
+         Nothing -> pure defaultSortOptions
          Just s ->
             errorOnNothing (EInvalidFieldValue "sort") $
             sortOptions s
    searchopts <-
       fmap2 SearchOptions $
       optional validateNotEmpty "search"
-   return $
+   pure $
       GetPosts creationopts tagopts searchopts sortopts
 
 sortOptions :: T.Text -> Maybe SortOptions

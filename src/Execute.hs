@@ -52,11 +52,11 @@ executePosts h (WhoWhat _ (GC x)) =
 executePosts h (WhoWhat _ (AP (Read x))) = do
    getThis1 (D.getPosts h (D.log h)) x
 executePosts _ (WhoWhat _ (AP (Create x))) =
-   return $ absurd x
+   pure $ absurd x
 executePosts _ (WhoWhat _ (AP (Update x))) =
-   return $ absurd x
+   pure $ absurd x
 executePosts _ (WhoWhat _ (AP (Delete x))) =
-   return $ absurd x
+   pure $ absurd x
 
 executeAuthor ::
       CMC.MonadCatch m
@@ -124,7 +124,7 @@ executeUsers h (WhoWhat y (Delete x)) =
    deleteThis1 EUser (D.deleteUser h (D.log h)) x
 executeUsers h (WhoWhat y (Read GetProfile)) =
    withAuth h y >>= getUser h
-executeUsers _ (WhoWhat _ (Update x)) = return $ absurd x
+executeUsers _ (WhoWhat _ (Update x)) = pure $ absurd x
 
 executeComments ::
       CMC.MonadCatch m
@@ -141,7 +141,7 @@ executeComments h (WhoWhat y (Delete x)) =
    withAuth h y >>= maybeUserToUser h >>= \u ->
       deleteThis1 EComment (D.deleteComment h (D.log h)) $
       WithUser u x
-executeComments _ (WhoWhat _ (Update x)) = return $ absurd x
+executeComments _ (WhoWhat _ (Update x)) = pure $ absurd x
 
 executeDraft ::
       (CMC.MonadCatch m)
@@ -183,7 +183,7 @@ handleError h (WhoWhat _ (ActionErrorPerms False (EInvalidFieldValue x))) =
    handleInvalidValue h x
 handleError h (WhoWhat _ (ActionErrorPerms False EInvalidEndpoint)) = do
    D.logError h "Invalid endpoint"
-   return $ notFound "Invalid endpoint"
+   pure $ notFound "Invalid endpoint"
 handleError h (WhoWhat y (ActionErrorPerms True x)) =
    (withAuthAdmin h y >>
     handleError h (WhoWhat y (ActionErrorPerms False x))) `CMC.catch`
@@ -199,17 +199,17 @@ handleForbidden ::
       (CMC.MonadCatch m) => D.Handle m -> m Response
 handleForbidden h =
    D.logError h forbidden >>
-   return (notFound "Invalid endpoint")
+   pure (notFound "Invalid endpoint")
 
 handleFieldMissing ::
       (Monad m) => D.Handle m -> BS.ByteString -> m Response
 handleFieldMissing h x = do
    let str = "Required field missing (" <> x <> ")"
    D.logError h $ E.decodeUtf8 str
-   return $ bad $ E.decodeUtf8 str
+   pure $ bad $ E.decodeUtf8 str
 
 handleInvalidValue ::
       (Monad m) => D.Handle m -> BS.ByteString -> m Response
 handleInvalidValue _ x = do
    let str = "Invalid value of the field " <> x
-   return $ bad $ E.decodeUtf8 str
+   pure $ bad $ E.decodeUtf8 str

@@ -57,17 +57,17 @@ loadConfig handle path = do
              }
    L.logInfo handle "successfully got server configuration"
    L.logDebug handle $ textPretty config
-   return config
+   pure config
 
 configHandlers :: L.Handle IO -> [C.Handler IO a]
 configHandlers h =
    let f (C.Handler g) =
           C.Handler
-             (\e ->
-                 g e >>
+             (\e -> do
+                 g e
                  L.logFatal
                     h
-                    "Failed to get required data from configuration files, terminating..." >>
+                    "Failed to get required data from configuration files, terminating..."
                  Q.exitWith (Q.ExitFailure 1))
     in map
           f

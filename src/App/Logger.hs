@@ -40,26 +40,28 @@ logError = (`log` Error)
 
 logFatal = (`log` Fatal)
 
-fileHandleToLogger :: S.Handle -> Handle IO
-fileHandleToLogger h = Handle $ fileLogger h
 
-simpleLog :: Handle IO
---simpleLog = Handle $ \p s -> S.hPutStrLn S.stderr $ '[' : show p ++ "]: " ++ T.unpack s
-simpleLog = Handle $ fileLogger S.stderr
-
-stdHandle :: Handle IO
-stdHandle = Handle $ fileLogger S.stderr
-
-fileLogger :: S.Handle -> Priority -> T.Text -> IO ()
-fileLogger _ p s =
-   S.hPutStrLn S.stderr $
-   '[' : show p ++ "]: " ++ T.unpack s
 
 emptyLogger :: Handle IO
-emptyLogger = Handle $ \_ _ -> return ()
+emptyLogger = Handle $ \_ _ -> pure ()
 
 logString :: Priority -> T.Text -> T.Text
 logString pri s = "[" <> S.showText pri <> "]: " <> s
+
+
+stdHandle :: Handle IO
+stdHandle = stdCondHandle $ const True
+
+stdCondHandle :: (Priority -> Bool) -> Handle IO
+stdCondHandle predicate = Handle $ \p s ->
+    let h | p >= Warning = S.stderr
+          | otherwise    = S.stdout
+    in  when (predicate p) $ handleLogger h p s
+
+handleLogger :: S.Handle -> Priority -> T.Text -> IO ()
+handleLogger h p s = T.hPutStrLn h $ logString p s
+
+
 
 data LoggerConfig =
    LoggerConfig
@@ -75,7 +77,7 @@ newtype LoggerResources =
 pathToHandle :: FilePath -> IO S.Handle
 pathToHandle path = do
    h <- S.openFile path S.AppendMode
-   return h
+   pure h
 
 initializeErrorHandler :: IOE.IOError -> IO a
 initializeErrorHandler e = do
@@ -126,9 +128,7 @@ initializeSelfSufficientLoggerResources conf = do
       logFatal stdHandle "failed to initialize logger"
       logFatal stdHandle lockedmsg
       Q.exitWith (Q.ExitFailure 1)
-   let resources = LoggerResources {flHandle = h}
-   resourcesRef <- newIORef resources
-   return resourcesRef
+   newIORef $ LoggerResources {flHandle = h}
 
 closeSelfSufficientLogger :: IORef LoggerResources -> IO ()
 closeSelfSufficientLogger resourcesRef = do
@@ -146,8 +146,8 @@ selfSufficientLogger ::
 selfSufficientLogger resourcesRef predicate pri s = do
    resources <- readIORef resourcesRef
    let action =
-          when (predicate pri) $
-          T.hPutStrLn (flHandle resources) (logString pri s) >>
+          when (predicate pri) $ do
+          T.hPutStrLn (flHandle resources) (logString pri s)
           T.hPutStrLn S.stderr (logString pri s)
        errHandler e =
           loggerHandler resources e >>=
@@ -162,5 +162,4 @@ loggerHandler resources e = do
    logError stdHandle "failed to use log file, error is:"
    logError stdHandle $ T.pack $ C.displayException e
    logError stdHandle "using standard error handle"
-    --error "logger fail"
-   return $ resources {flHandle = S.stderr}
+   pure $ resources {flHandle = S.stderr}

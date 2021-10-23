@@ -158,7 +158,7 @@ instance PSR.FromRow Post
       extraPhotos <- PSR.field
       let category = listToCategory $ zip catIds catNames
           tags = zipWith Tag tagIds tagNames
-      return $
+      pure $
          Post
             pid
             title
@@ -202,7 +202,7 @@ instance PSR.FromRow Comment where
       cid <- PSR.field
       content <- PSR.field
       user <- PSR.fromRow
-      return $ Comment cid content user
+      pure $ Comment cid content user
 
 data Draft =
    Draft
@@ -241,7 +241,7 @@ instance PSR.FromRow Draft where
       postId <- PSR.field
       let category = listToCategory $ zip catIds catNames
           tags = zipWith Tag tagIds tagNames
-      return $
+      pure $
          Draft
             did
             title
@@ -287,7 +287,7 @@ instance PSR.FromRow DraftRaw where
       photo <- PSR.field
       extraPhotos <- PSR.field
       postId <- PSR.field
-      return $
+      pure $
          DraftRaw
             did
             title

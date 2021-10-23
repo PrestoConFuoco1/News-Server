@@ -108,7 +108,7 @@ mainServer req logger resources
  --       logger = L.stdHandle
  = do
    let h = DP.resourcesToHandle resources logger
-       f x = x >>= \q -> return (q, resources)
+       f x = x >>= \q -> pure (q, resources)
    D.logDebug h ""
    D.logDebug h "Got request"
    D.logDebug h $
@@ -125,7 +125,7 @@ mainServer req logger resources
                 r <- res
                 D.logDebug h "Result is"
                 D.logDebug h $ logResult r
-                return $ toResponse r
+                pure $ toResponse r
              action =
                 withLog (executeAction h whowhat) `CMC.catches`
                 [ CMC.Handler $ Ex.mainErrorHandler logger

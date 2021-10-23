@@ -36,7 +36,7 @@ requireField prse fieldname = do
    x <-
       errorOnNothing (EInvalidFieldValue fieldname) $
       prse bs
-   return x
+   pure x
 
 optional ::
       (BS.ByteString -> Maybe a)
@@ -46,16 +46,16 @@ optional prse fieldname = do
    hash <- askHash
    let bs = getBs hash fieldname
    case bs of
-      Nothing -> return Nothing
+      Nothing -> pure Nothing
       Just x ->
          fmap Just $
          errorOnNothing (EInvalidFieldValue fieldname) $
          prse x
 
 oneOf :: [Router (Maybe a)] -> Router (Maybe a)
-oneOf = foldr f (return Nothing)
+oneOf = foldr f (pure Nothing)
   where
-    f x acc = x >>= maybe acc (return . Just)
+    f x acc = x >>= maybe acc (pure . Just)
 
 requireWithDefault ::
       (BS.ByteString -> Maybe a)
@@ -66,7 +66,7 @@ requireWithDefault prse deflt fieldname = do
    hash <- askHash
    let bs = getBs hash fieldname
    case bs of
-      Nothing -> return deflt
+      Nothing -> pure deflt
       Just x ->
          errorOnNothing (EInvalidFieldValue fieldname) $
          prse x
@@ -116,7 +116,7 @@ withPagination m = do
    x <- m
    page <- requireWithDefault readInt defaultPage "page"
    size <- requireWithDefault readInt defaultSize "size"
-   return $ Paginated page size x
+   pure $ Paginated page size x
 {-
 require :: (BS.ByteString -> Maybe a) -> Query -> BS.ByteString -> Maybe a
 require prse qu arg = HS.lookup arg qu >>= prse

@@ -68,10 +68,10 @@ runRouter ::
 runRouter e rt = runReaderT (unR rt) e
 
 withMaybe :: Router a -> Maybe a -> Router a
-withMaybe r = maybe r return
+withMaybe r = maybe r pure
 
 errorOnNothing :: ActionError -> Maybe a -> Router a
-errorOnNothing e = maybe (routerError e) return
+errorOnNothing e = maybe (routerError e) pure
 
 renv :: Bool -> Query -> RoutingEnv
 renv = RoutingEnv

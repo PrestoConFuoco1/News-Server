@@ -31,8 +31,8 @@ userAuthor1 con logger u = do
          logger
          (GetAuthors $ Just $ _u_id u)
    case as of
-      [] -> return Nothing
-      [a] -> return $ Just a
+      [] -> pure Nothing
+      [a] -> pure $ Just a
       _ ->
          Ex.throwInvalidUnique EAuthor (map _a_authorId as)
 
@@ -44,8 +44,8 @@ getUserByToken1 ::
 getUserByToken1 con logger token = do
    users <- getThis con userTokenDummy logger token
    case users of
-      [] -> return Nothing
-      [u] -> return $ Just u
+      [] -> pure Nothing
+      [u] -> pure $ Just u
       _ -> Ex.throwTokenShared $ map _u_id users
 
 getUserByLogin1 ::
@@ -63,8 +63,8 @@ getUserByLogin1 con logger login = do
       (Ex.sqlHandlers logger str params) $ do
       users <- PS.query con str params
       case users of
-         [] -> return Nothing
-         [x] -> return $ Just x
+         [] -> pure Nothing
+         [x] -> pure $ Just x
          _ -> Ex.throwInvalidUnique EUser $ map _u_id users
 
 addToken1 ::
@@ -82,7 +82,7 @@ addToken1 con logger uid token = do
    Ex.withExceptionHandlers
       (Ex.sqlHandlers logger str params) $ do
       _ <- PS.execute con str params
-      return token'
+      pure token'
 
 getThisPaginated ::
       (Read s)
@@ -96,13 +96,10 @@ getThisPaginated con s logger (Paginated page size g) = do
        (qupag, parspag) = pageingClause page size
        qu' = qu <> qupag
        totalPars = pars ++ parspag
-    --debugStr <- PS.formatQuery con qu' totalpars
-    --logDebug $ T.pack $ show debugStr
    Ex.withExceptionHandlers
       (Ex.sqlHandlers logger qu' totalPars) $ do
       res <- PS.query con qu' totalPars
-        --logInfo $ "Fetched " <> showText (length res) <> " entities"
-      return res
+      pure res
 
 getThis ::
       (Read s)
@@ -113,12 +110,9 @@ getThis ::
    -> IO [MType s]
 getThis con s logger g = do
    let (qu, pars) = selectQuery s g
-    --debugStr <- PS.formatQuery con qu pars
-    --logDebug $ T.pack $ show debugStr
    Ex.withExceptionHandlers (Ex.sqlHandlers logger qu pars) $ do
       res <- PS.query con qu pars
-        --logInfo $ "Fetched " <> showText (length res) <> " entities"
-      return res
+      pure res
 
 editThis ::
       (UpdateSQL s)
@@ -142,8 +136,8 @@ editThis con s logger u =
                   map PSTy.fromOnly <$>
                   PS.query con str params
                case ids of
-                  [] -> return (Left MNoAction)
-                  [x] -> return (Right x)
+                  [] -> pure (Left MNoAction)
+                  [x] -> pure (Right x)
                   _ -> Ex.throwInvalidUnique (uName s) ids
 
 createThis ::
@@ -162,8 +156,8 @@ createThis con s logger cres = do
          ints <-
             map PSTy.fromOnly <$> PS.query con str params
          case ints of
-            [] -> return $ Left MNoAction
-            [x] -> return $ Right x
+            [] -> pure $ Left MNoAction
+            [x] -> pure $ Right x
             _ -> Ex.throwInvalidUnique (cName s) ints
 
 deleteThis ::
@@ -179,19 +173,18 @@ deleteThis con s logger del = do
       (Ex.sqlHandlers logger str params) $ do
       ids <- map PSTy.fromOnly <$> PS.query con str params
       case ids of
-         [] -> return $ Left DNoAction
-         [eid] -> return $ Right eid
+         [] -> pure $ Left DNoAction
+         [eid] -> pure $ Right eid
          _ -> Ex.throwInvalidUnique (dName s) ids
 
 checkUnique ::
       a -> (b -> a) -> Entity -> (b -> Int) -> [b] -> IO a
 checkUnique empty one entity getId xs =
    case xs of
-      [] -> return empty
-      [x] -> return $ one x
+      [] -> pure empty
+      [x] -> pure $ one x
       _ -> Ex.throwInvalidUnique entity (map getId xs)
 
--------------------------------------------------------------------
 attachTags ::
       (HasTags s)
    => PS.Connection
@@ -201,9 +194,8 @@ attachTags ::
    -> [Int]
    -> IO (Either TagsError [Int])
 attachTags _ _ _ _ []
-    --logInfo $ "No tags attached to " <> hName' s <> " with id = " <> (T.pack $ show hasTagsId)
  = do
-   return (Right [])
+   pure (Right [])
 attachTags con s logger hasTagsId tags = do
    let strChunks =
           [ "INSERT INTO news."
@@ -217,31 +209,26 @@ attachTags con s logger hasTagsId tags = do
           ]
        count = length tags
        insertUnit = " ( ?, ? ) "
-        --insertUnits = maybe "" id $ intercalateQ $ replicate count insertUnit :: PS.Query
        insertUnits =
           fromMaybe "" $
           intercalateQ $ replicate count insertUnit :: PS.Query
        insertParams =
           map SqlValue $ foldr f [] tags :: [SqlValue]
        f x acc = hToInt s hasTagsId : x : acc
-        --str = maybe "" id $ intercalateWith (hName s) strChunks
        str =
           fromMaybe "" $ intercalateWith (hName s) strChunks
-        --returning = maybe "" id $ intercalateWith (hName s) returningChunks
        returning =
           fromMaybe "" $
           intercalateWith (hName s) returningChunks
        qu = str <> insertUnits <> returning :: PS.Query
        modifyHandler = fmap Left . Ex.tagsErrorHandler
-    --debugStr <- formatQuery qu insertParams
-    --logDebug $ T.pack $ show debugStr
    Ex.withExceptionHandlers
       (Ex.sqlHandlers logger qu insertParams) $
       Ex.withHandler modifyHandler $ do
          ids <-
             map PSTy.fromOnly <$>
             PS.query con qu insertParams
-         return $ Right ids
+         pure $ Right ids
 
 removeAllButGivenTags ::
       (HasTags s)
@@ -251,7 +238,6 @@ removeAllButGivenTags ::
    -> HIdent s
    -> [Int]
    -> IO [Int]
--- remove all but given tags
 removeAllButGivenTags con s logger hasTagsId tags = do
    let inClause [] = ""
        inClause _ = " AND NOT tag_id IN ? "
@@ -265,14 +251,10 @@ removeAllButGivenTags con s logger hasTagsId tags = do
           ]
        params =
           SqlValue (hToInt s hasTagsId) : inParams tags
-        --str = maybe "" id $ intercalateWith (hName s) strChunks
        str =
           fromMaybe "" $ intercalateWith (hName s) strChunks
---    debugStr <- PS.formatQuery con str params
---    logDebug $ T.pack $ show debugStr
    Ex.withExceptionHandlers
       (Ex.sqlHandlers logger str params) $ do
       tagsDel <-
          map PSTy.fromOnly <$> PS.query con str params
-        --logDebug $ "Removed tags with id in " <> (T.pack $ show tagsDel) <> " from " <> hName' s <> " with id = " <> (T.pack $ show hasTagsId)
-      return tagsDel
+      pure tagsDel

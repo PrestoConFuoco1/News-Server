@@ -26,7 +26,7 @@ withAuthor h y = do
    muser <- withAuth h y
    user <- maybeUserToUser h muser
    mauthor <- D.userAuthor h (D.log h) user
-   maybe Ex.notAnAuthor return mauthor
+   maybe Ex.notAnAuthor pure mauthor
 
 withAuth ::
       (Monad m)
@@ -40,13 +40,13 @@ withAuth h mtoken = do
       case mtoken of
          Nothing -> do
             D.logDebug h $ fname <> "no token supplied"
-            return Nothing
+            pure Nothing
          Just token -> do
             D.logDebug h $
                fname <>
                "searching for user with token = " <> token
             D.getUserByToken h (D.log h) token
-   return muser
+   pure muser
 
 checkAdmin ::
       (CMC.MonadThrow m) => D.Handle m -> Maybe User -> m ()
@@ -68,10 +68,8 @@ checkAdmin h muser = do
                Ex.throwForbidden
             else do
                D.logDebug h $ fname <> "ok, user is admin"
-               return ()
+               pure ()
 
-{-
--}
 maybeUserToUser ::
       (CMC.MonadThrow m)
    => D.Handle m
@@ -86,7 +84,7 @@ maybeUserToUser h (Just u) = do
    let fname = "maybeUserToUser: "
    D.logDebug h $ fname <> "found user"
    D.logDebug h $ GP.textPretty u
-   return u
+   pure u
 
 getUser ::
       (CMC.MonadThrow m)
@@ -95,17 +93,8 @@ getUser ::
    -> m APIResult
 getUser h muser = do
    user <- maybeUserToUser h muser
-   return $ RGetUser user
+   pure $ RGetUser user
 
-{-
-getUser h Nothing = do
-    D.logDebug h $ getUserFname <> "no user found, throwing unauthorized"
-    Ex.throwUnauthorized
-getUser h (Just u) = do
-    D.logDebug h $ getUserFname <> "found user"
-    D.logDebug h $ GP.textPretty u
-    return $ RGetUser u
--}
 getUserFname :: String
 getUserFname = "getUser: "
 
@@ -116,12 +105,12 @@ authenticate ::
    -> m APIResult
 authenticate h auth = do
    muser <- D.getUserByLogin h (D.log h) $ _au_login auth
-   user <- maybe Ex.throwInvalidLogin return muser
+   user <- maybe Ex.throwInvalidLogin pure muser
    when (_u_passHash user /= _au_passHash auth) $
       CMC.throwM Ex.InvalidPassword
    token <- T.pack <$> D.generateToken h 10
    token' <- D.addToken h (D.log h) (_u_id user) token
-   return $ RGetToken token'
+   pure $ RGetToken token'
 
 modifyErrorToApiResult :: Entity -> ModifyError -> APIResult
 modifyErrorToApiResult ent (MAlreadyInUse (UniqueViolation field value)) =

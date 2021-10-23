@@ -63,25 +63,25 @@ mainErrorHandler' ::
    -> ServerException
    -> m U.Response
 mainErrorHandler' _ Default =
-   return $ U.internal U.internalErrorMsg
+   pure $ U.internal U.internalErrorMsg
 mainErrorHandler' _ SqlErrorAlreadyLogged =
-   return $ U.internal U.internalErrorMsg
+   pure $ U.internal U.internalErrorMsg
 mainErrorHandler' _ Unauthorized =
-   return $ U.unauthorized U.unauthorizedMsg
+   pure $ U.unauthorized U.unauthorizedMsg
 mainErrorHandler' _ (InvalidUniqueEntities _ _) =
-   return $ U.internal U.internalErrorMsg
+   pure $ U.internal U.internalErrorMsg
 mainErrorHandler' _ Forbidden =
-   return $ U.bad U.invalidEndpointMsg
+   pure $ U.bad U.invalidEndpointMsg
 mainErrorHandler' _ InvalidLogin =
-   return $ U.bad U.invalidLoginMsg
+   pure $ U.bad U.invalidLoginMsg
 mainErrorHandler' _ InvalidUpdate =
-   return $ U.bad "invalid data to update"
+   pure $ U.bad "invalid data to update"
 mainErrorHandler' _ InvalidPassword =
-   return $ U.bad U.invalidPasswordMsg
+   pure $ U.bad U.invalidPasswordMsg
 mainErrorHandler' _ NotAnAuthor =
-   return $ U.bad U.notAnAuthorMsg
+   pure $ U.bad U.notAnAuthorMsg
 mainErrorHandler' _ (TokenShared _) --logError ("Token shared between users with id in " <> T.pack (show xs)) >>
- = return (U.internal U.internalErrorMsg)
+ = pure (U.internal U.internalErrorMsg)
 
 instance CMC.Exception ServerException
 
@@ -186,7 +186,7 @@ defaultMainHandler ::
    -> m U.Response
 defaultMainHandler logger e = do
    L.logError logger $ T.pack $ displayException e
-   return $ U.internal U.internalErrorMsg
+   pure $ U.internal U.internalErrorMsg
 
 uniqueConstraintViolated, foreignKeyViolated, constraintViolated ::
       PS.SqlError -> Bool
@@ -212,7 +212,7 @@ constraintViolated e = PS.sqlState e == "23514"
 modifyErrorHandler ::
       (CMC.MonadCatch m) => PS.SqlError -> m ModifyError
 modifyErrorHandler e =
-   maybe (CMC.throwM e) return (toModifyError e)
+   maybe (CMC.throwM e) pure (toModifyError e)
 
 toModifyError :: PS.SqlError -> Maybe ModifyError
 toModifyError e
@@ -237,7 +237,7 @@ getForeignViolationData = fmap f . getPair . sqlErrorDetail
 tagsErrorHandler ::
       (CMC.MonadCatch m) => PS.SqlError -> m TagsError
 tagsErrorHandler e =
-   maybe (CMC.throwM e) return (toAttachTagsError e)
+   maybe (CMC.throwM e) pure (toAttachTagsError e)
   where
     toAttachTagsError err
        | foreignKeyViolated err =
