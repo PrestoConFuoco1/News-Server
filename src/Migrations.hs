@@ -57,7 +57,6 @@ runMigrations1 con =
              | (k, v) <- sortedMigrations
              ]
       forM_ migrations $ \(_, migr)
- --       putStrLn migrDescr >> BS.putStrLn migr
        -> do
          res <- runMigration migr
          case res of

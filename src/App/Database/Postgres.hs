@@ -51,7 +51,7 @@ initResources _ conf = do
 closeResources :: Resources -> IO ()
 closeResources resources =
    let conn = postgresConnection resources
-    in PS.close conn -- close connection
+    in PS.close conn
 
 resourcesToHandle ::
       Resources -> Logger.Handle IO -> Handle IO

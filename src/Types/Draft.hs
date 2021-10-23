@@ -20,8 +20,6 @@ type ActionDrafts
 data CreateDraft =
    CreateDraft
       { _cd_title :: T.Text
-    --_p_creationDate :: Time.Day,
-    --_p_author :: Author,
       , _cd_tags :: [TagId]
       , _cd_categoryId :: CategoryId
       , _cd_content :: T.Text
@@ -41,8 +39,8 @@ data EditDraft =
    EditDraft
       { _ed_draftId :: DraftId
       , _ed_title :: Maybe T.Text
-      , _ed_tags :: Maybe [TagId] --[TagId],
-      , _ed_categoryId :: Maybe CategoryId --CategoryId,
+      , _ed_tags :: Maybe [TagId]
+      , _ed_categoryId :: Maybe CategoryId
       , _ed_content :: Maybe T.Text
       , _ed_mainPhoto :: Maybe T.Text
       , _ed_extraPhotos :: Maybe [T.Text]

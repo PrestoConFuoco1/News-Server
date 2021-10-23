@@ -8,7 +8,7 @@ import Types
 createDraftToAction :: Router CreateDraft
 createDraftToAction = do
    title <- requireField validateNotEmpty "title"
-   tags <- requireField readList "tags" -- допустим ли пустой список?
+   tags <- requireField readList "tags"
    category <- requireField readInt "category_id"
    content <- requireField validateNotEmpty "content"
    mainPhoto <- optional validateNotEmpty "main_photo"

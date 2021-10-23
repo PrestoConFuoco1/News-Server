@@ -22,7 +22,7 @@ class ( Ae.ToJSON (MType s)
       ) =>
       Read s
    where
-   type MType s :: * -- main type of this type family
+   type MType s :: *
    type Get s :: *
    selectQuery :: s -> Get s -> (PS.Query, [SqlValue])
 
@@ -64,7 +64,7 @@ instance Read PostD where
                \ catids, \
                \ catnames, \
                \ content, photo, extra_photos \
-               \ FROM news.get_posts " -- ORDER BY post_creation_date DESC "
+               \ FROM news.get_posts "
           (whereClause, args) =
              queryIntercalate " AND " $
              catMaybes
@@ -126,7 +126,6 @@ postsWhereSearch (SearchOptions text) =
           "title ILIKE ? OR content ILIKE ?\
               \ OR array_to_string(tagnames, ',') ILIKE ?\
               \ OR catnames[1] ILIKE ?"
-             -- \ OR array_to_string(catnames, ',') ILIKE ?"
     in ( str
        , replicate 4 $
          SqlValue $ TL.fromStrict $ enclose "%" text)
@@ -151,11 +150,9 @@ notEmptyDo func qu
 enclosePar :: PS.Query -> PS.Query
 enclosePar qu = "(" <> qu <> ")"
 
---enclose :: PS.Query -> PS.Query -> PS.Query
 enclose :: T.Text -> T.Text -> T.Text
 enclose p qu = p <> qu <> p
 
------------------------------------------------------------------
 newtype CatD =
    CatD ()
 
@@ -192,14 +189,12 @@ instance Read AuthorD where
                 ( selectClause <> whereClause
                 , [SqlValue user])
 
---------- other instances for getting
 newtype TagD =
    TagD ()
 
 tagDummy :: TagD
 tagDummy = TagD ()
 
---class (Ae.ToJSON (MType s), GP.PrettyShow (MType s), PS.FromRow (MType s), Show (Get s), Show (MType s))
 instance Read TagD where
    type MType TagD = Tag
    type Get TagD = GetTags

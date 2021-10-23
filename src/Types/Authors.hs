@@ -27,13 +27,13 @@ data CreateAuthor =
       { _ca_userId :: UserId
       , _ca_description :: T.Text
       }
-   deriving (Show, Eq, Generic, GP.PrettyShow) --, PS.ToRow)
+   deriving (Show, Eq, Generic, GP.PrettyShow)
 
 data DeleteAuthor =
    DeleteAuthor
       { _da_authorId :: AuthorId
       }
-   deriving (Show, Eq, Generic, GP.PrettyShow) --, PS.ToRow)
+   deriving (Show, Eq, Generic, GP.PrettyShow)
 
 data EditAuthor =
    EditAuthor
@@ -41,4 +41,4 @@ data EditAuthor =
       , _ea_description :: Maybe T.Text
       , _ea_userId :: Maybe UserId
       }
-   deriving (Show, Eq, Generic, GP.PrettyShow) --, PS.ToRow)
+   deriving (Show, Eq, Generic, GP.PrettyShow)

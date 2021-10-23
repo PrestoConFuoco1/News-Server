@@ -80,7 +80,7 @@ mainErrorHandler' _ InvalidPassword =
    pure $ U.bad U.invalidPasswordMsg
 mainErrorHandler' _ NotAnAuthor =
    pure $ U.bad U.notAnAuthorMsg
-mainErrorHandler' _ (TokenShared _) --logError ("Token shared between users with id in " <> T.pack (show xs)) >>
+mainErrorHandler' _ (TokenShared _)
  = pure (U.internal U.internalErrorMsg)
 
 instance CMC.Exception ServerException
@@ -97,7 +97,6 @@ throwUnauthorized = CMC.throwM Unauthorized
 throwInvalidUnique ::
       (MonadThrow m) => Entity -> [Int] -> m b
 throwInvalidUnique ent xs
-    --logError $ T.pack $ GP.defaultPretty xs
  = do
    CMC.throwM $ InvalidUniqueEntities ent xs
 
@@ -161,7 +160,6 @@ sqlHandlers h qu params =
           L.logError h "query is:"
           L.logError h $ E.decodeUtf8 $ PSTy.fromQuery qu
           L.logError h "params: "
-            --L.logError h $ showText params
           L.logError h $ GP.textPretty params
           func e
 
@@ -209,6 +207,7 @@ constraintViolated e = PS.sqlState e == "23514"
 -- *** Exception: SqlError {sqlState = "23503", sqlExecStatus = FatalError, sqlErrorMsg =
 -- "insert or update on table \"draft_tag\" violates foreign key constraint \"draft_tag_tag_id_fkey\"",
 -- sqlErrorDetail = "Key (tag_id)=(167) is not present in table \"tag\".", sqlErrorHint = ""}
+
 modifyErrorHandler ::
       (CMC.MonadCatch m) => PS.SqlError -> m ModifyError
 modifyErrorHandler e =

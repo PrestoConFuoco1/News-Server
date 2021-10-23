@@ -61,7 +61,6 @@ requestToAction1 pathInfo queryString =
                    else Nothing
              _ -> Nothing
        hash :: Query
-    --hash = HS.fromList . Mb.catMaybes . map f $ queryString
        hash = HS.fromList . Mb.mapMaybe f $ queryString
        f (x, y) = fmap (\q -> (x, q)) y
     in bimap (WhoWhat maybeToken) (WhoWhat maybeToken) $

@@ -142,7 +142,6 @@ instance Ae.ToJSON Post where
             {Ae.fieldLabelModifier = defaultModifier}
 
 instance PSR.FromRow Post
-    --fromRow = Post <$> PSR.field <*> PSR.field <*> PSR.field <*> PSR.fromRow <*> PSR.fromRow <*> PSR.field <*> PSR.field <*> PSR.field
                                                                                                                                          where
    fromRow = do
       pid <- PSR.field

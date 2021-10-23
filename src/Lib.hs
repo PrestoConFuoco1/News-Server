@@ -105,7 +105,6 @@ mainServer ::
    -> DP.Resources
    -> IO (W.Response, DP.Resources)
 mainServer req logger resources
- --       logger = L.stdHandle
  = do
    let h = DP.resourcesToHandle resources logger
        f x = x >>= \q -> pure (q, resources)
@@ -132,7 +131,6 @@ mainServer req logger resources
                 , CMC.Handler $ Ex.defaultMainHandler logger
                 ]
              action' = fmap coerceResponse action
-            --action' >>= \x -> (x, resources)
          f action'
 
 coerceResponse :: Response -> W.Response

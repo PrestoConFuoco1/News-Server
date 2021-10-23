@@ -117,34 +117,4 @@ withPagination m = do
    page <- requireWithDefault readInt defaultPage "page"
    size <- requireWithDefault readInt defaultSize "size"
    pure $ Paginated page size x
-{-
-require :: (BS.ByteString -> Maybe a) -> Query -> BS.ByteString -> Maybe a
-require prse qu arg = HS.lookup arg qu >>= prse
 
-requireText :: Query -> BS.ByteString -> Maybe T.Text
-requireText = require (pure . E.decodeUtf8)
-requireByteString :: Query -> BS.ByteString -> Maybe BS.ByteString
-requireByteString = require pure
--}
-{-
-requireInt :: Query -> BS.ByteString -> Maybe Int
-requireInt = require readInt
--}
-{-
-requireDay :: Query -> BS.ByteString -> Maybe Time.Day
-requireDay = require readDay
--}
-{-
-requireIntList :: Query -> BS.ByteString -> Maybe [Int]
---requireIntList = require (Ae.decode . BSL.fromStrict)
-requireIntList = requireList
-
-
-requireTextList :: Query -> BS.ByteString -> Maybe [T.Text]
---requireTextList = require (Ae.decode . BSL.fromStrict)
-requireTextList = requireList
--}
-  {-
-requireList :: (Ae.FromJSON a) => Query -> BS.ByteString -> Maybe [a]
-requireList = require (Ae.decode . BSL.fromStrict)
--}

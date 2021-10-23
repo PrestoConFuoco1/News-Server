@@ -7,7 +7,7 @@ import Prelude hiding (readList)
 import Types
 
 defaultSortOptions :: SortOptions
-defaultSortOptions = SortOptions SEDate SODescending -- newer posts first
+defaultSortOptions = SortOptions SEDate SODescending
 
 actionWithPost ::
       Int

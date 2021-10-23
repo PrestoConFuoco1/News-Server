@@ -39,7 +39,6 @@ setUnit fname = fname <> " = ?"
 
 optionals ::
       (UpdateSQL s) => s -> Upd s -> [(PS.Query, SqlValue)]
---optionals s = catMaybes . map f . optionalsMaybe s
 optionals s = mapMaybe f . optionalsMaybe s
   where
     f (t, x) = fmap (\a -> (t, a)) x

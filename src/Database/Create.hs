@@ -66,8 +66,6 @@ instance CreateSQL CAuthor where
    type Create CAuthor = CreateAuthor
    createQuery _ CreateAuthor {..} =
       ( "INSERT INTO news.author (user_id, description) VALUES (?, ?) RETURNING author_id"
-        --("INSERT INTO author (user_id, description) VALUES (?, ?) RETURNING author_id",
-        -- this is bad query
       , [SqlValue _ca_userId, SqlValue _ca_description])
    cName _ = Ty.EAuthor
 

@@ -31,14 +31,12 @@ data CreateComment =
    CreateComment
       { _ccom_postId :: PostId
       , _ccom_content :: T.Text
-    -- user id will be known from auth token
       }
    deriving (Show, Eq, Generic, GP.PrettyShow, PS.ToRow)
 
 data DeleteComment =
    DeleteComment
       { _dc_commentId :: CommentId
-    -- user id will be known from auth token
       }
    deriving (Show, Eq, Generic, GP.PrettyShow, PS.ToRow)
 
@@ -46,8 +44,6 @@ data PublishEditPost =
    PublishEditPost
       { _pep_postId :: PostId
       , _pep_title :: T.Text
-    --_pep_creationDate :: Time.Day,
-    --_pep_authorId :: AuthorId,
       , _pep_categoryId :: CategoryId
       , _pep_content :: T.Text
       , _pep_mainPhoto :: Maybe T.Text
@@ -109,15 +105,12 @@ data SortOptions =
 instance GP.PrettyShow CreationDateOptions where
    prettyShow = GP.LStr . show
 
---    prettyShow = GP.LStr . GP.gprettyShowSum . from
 instance GP.PrettyShow TagsOptions where
    prettyShow = GP.LStr . show
 
---    prettyShow = GP.LStr . GP.gprettyShowSum . from
 instance GP.PrettyShow SearchOptions where
    prettyShow = GP.LStr . show
 
---    prettyShow = GP.LStr . GP.gprettyShowSum . from
 instance GP.PrettyShow GetPosts
 
 instance GP.PrettyShow SortEntity where

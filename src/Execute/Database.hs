@@ -4,7 +4,6 @@ import qualified Control.Monad.Catch as CMC (MonadCatch)
 import Execute.Utils
 import Types
 
---getThis1 :: (CMC.MonadCatch m, Ae.ToJSON b)=> (a -> m [b]) -> a -> m APIResult
 getThis1 ::
       (CMC.MonadCatch m, Gettable b)
    => (a -> m [b])
