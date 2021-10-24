@@ -16,7 +16,7 @@ type ActionAuthors
 instance GP.PrettyShow GetAuthors where
    prettyShow = GP.LStr . show
 
-data GetAuthors =
+newtype GetAuthors =
    GetAuthors
       { _ga_userId :: Maybe UserId
       }
@@ -29,7 +29,7 @@ data CreateAuthor =
       }
    deriving (Show, Eq, Generic, GP.PrettyShow)
 
-data DeleteAuthor =
+newtype DeleteAuthor =
    DeleteAuthor
       { _da_authorId :: AuthorId
       }

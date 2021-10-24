@@ -36,17 +36,15 @@ withAuth ::
 withAuth h mtoken = do
    let fname = "withAuth: "
    D.logDebug h $ fname <> "trying to get user by token"
-   muser <-
-      case mtoken of
+   case mtoken of
          Nothing -> do
             D.logDebug h $ fname <> "no token supplied"
             pure Nothing
          Just token -> do
             D.logDebug h $
                fname <>
-               "searching for user with token = " <> token
+               "searching for user with token = " <> _t_token token
             D.getUserByToken h (D.log h) token
-   pure muser
 
 checkAdmin ::
       (CMC.MonadThrow m) => D.Handle m -> Maybe User -> m ()

@@ -14,7 +14,7 @@ import Types
 import qualified Utils as U
 
 generateToken :: Int -> IO String
-generateToken = U.randomString'
+generateToken = U.randomString
 
 withTransaction :: PS.Connection -> IO a -> IO a
 withTransaction = PS.withTransaction
@@ -97,9 +97,8 @@ getThisPaginated con logger (Paginated page size g) = do
        qu' = qu <> qupag
        totalPars = pars ++ parspag
    Ex.withExceptionHandlers
-      (Ex.sqlHandlers logger qu' totalPars) $ do
-      res <- PS.query con qu' totalPars
-      pure res
+      (Ex.sqlHandlers logger qu' totalPars)
+      (PS.query con qu' totalPars)
 
 getThis ::
       (Read a)
@@ -109,9 +108,9 @@ getThis ::
    -> IO [MType a]
 getThis con logger g = do
    let (qu, pars) = selectQuery g
-   Ex.withExceptionHandlers (Ex.sqlHandlers logger qu pars) $ do
-      res <- PS.query con qu pars
-      pure res
+   Ex.withExceptionHandlers
+      (Ex.sqlHandlers logger qu pars)
+      (PS.query con qu pars)
 
 editThis ::
       forall a. (UpdateSQL a)
@@ -250,7 +249,5 @@ removeAllButGivenTags con s logger hasTagsId tags = do
        str =
           fromMaybe "" $ intercalateWith (hName s) strChunks
    Ex.withExceptionHandlers
-      (Ex.sqlHandlers logger str params) $ do
-      tagsDel <-
-         map PSTy.fromOnly <$> PS.query con str params
-      pure tagsDel
+      (Ex.sqlHandlers logger str params)
+      (map PSTy.fromOnly <$> PS.query con str params)

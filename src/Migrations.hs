@@ -30,15 +30,15 @@ migrationMain :: Config -> IO ()
 migrationMain conf = do
    let conStr = adminConnectionString conf
    con <- PS.connectPostgreSQL conStr
-   runMigrations1 con
+   runMigrations con
 
 sortedMigrations :: [(FilePath, BS.ByteString)]
 sortedMigrations =
    let unsorted = $(embedDir "migrations")
     in L.sortBy (compare `on` fst) unsorted
 
-runMigrations1 :: PS.Connection -> IO ()
-runMigrations1 con =
+runMigrations :: PS.Connection -> IO ()
+runMigrations con =
    PS.withTransaction con $ do
       let defaultContext =
              MigrationContext

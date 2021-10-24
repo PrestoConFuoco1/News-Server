@@ -35,7 +35,7 @@ data EditCategory =
       }
    deriving (Show, Eq, Generic, GP.PrettyShow, PS.ToRow)
 
-data DeleteCategory =
+newtype DeleteCategory =
    DeleteCategory
       { _dc_catId :: CategoryId
       }

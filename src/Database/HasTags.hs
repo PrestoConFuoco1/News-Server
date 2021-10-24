@@ -1,5 +1,4 @@
 {-# LANGUAGE TypeFamilies, FlexibleContexts #-}
-
 module Database.HasTags where
 
 import qualified Data.Text as T (Text)
@@ -13,18 +12,14 @@ class (Show (HIdent s)) =>
    hName :: s -> PS.Query
    hName' :: s -> T.Text
 
-
 data HDraft = HDraft
-
 instance HasTags HDraft where
    type HIdent HDraft = Int
    hToInt _ = id
    hName _ = "draft"
    hName' _ = "draft"
 
-
 data HPost = HPost
-
 instance HasTags HPost where
    type HIdent HPost = Int
    hToInt _ = id

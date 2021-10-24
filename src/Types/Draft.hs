@@ -54,13 +54,13 @@ data EditDraftPublish =
       }
    deriving (Show, Eq, Generic, GP.PrettyShow)
 
-data DeleteDraft =
+newtype DeleteDraft =
    DeleteDraft
       { _dd_draft_id :: DraftId
       }
    deriving (Show, Eq, Generic, GP.PrettyShow, PS.ToRow)
 
-data Publish =
+newtype Publish =
    Publish
       { _p_draftId :: DraftId
       }

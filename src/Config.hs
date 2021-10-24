@@ -1,4 +1,4 @@
-{-# LANGUAGE RecordWildCards, DeriveGeneric #-}
+{-# LANGUAGE DeriveGeneric #-}
 
 module Config where
 

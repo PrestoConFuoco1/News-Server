@@ -1,5 +1,6 @@
+{-# LANGUAGE TupleSections #-}
 module Action.RequestToAction (
-    Action(..), requestToAction, requestToAction1
+    Action(..), requestToActionHTTP, requestToAction
 ) where
 
 import qualified Data.ByteString as BS
@@ -42,20 +43,20 @@ data Action
    | APublish Publish
    deriving (Generic, Show, Eq)
 
-requestToAction ::
+requestToActionHTTP ::
       W.Request
    -> Either (WhoWhat ActionErrorPerms) (WhoWhat Action)
-requestToAction req =
+requestToActionHTTP req =
    let queryString = W.queryString req
        pathInfo = W.pathInfo req
-    in requestToAction1 pathInfo queryString
+    in requestToAction pathInfo queryString
 
-requestToAction1 ::
+requestToAction ::
       [T.Text]
    -> [(BS.ByteString, Maybe BS.ByteString)]
    -> Either (WhoWhat ActionErrorPerms) (WhoWhat Action)
-requestToAction1 pathInfo queryString =
-   let maybeToken =
+requestToAction pathInfo queryString =
+   let maybeToken = Token <$>
           case queryString of
              ((tokenPar, Just tokenVal):_) ->
                 if tokenPar == "token"
@@ -64,7 +65,7 @@ requestToAction1 pathInfo queryString =
              _ -> Nothing
        hash :: Query
        hash = HS.fromList . Mb.mapMaybe f $ queryString
-       f (x, y) = fmap (\q -> (x, q)) y
+       f (x, y) = (x,) <$> y
     in bimap (WhoWhat maybeToken) (WhoWhat maybeToken) $
        requestToAction2 pathInfo hash
 
@@ -138,13 +139,13 @@ requestToActionDrafts path hash =
             runRouter (renv False hash) $
             withPagination (pure GetDrafts)
          | x == "create" ->
-            fmap Create $
+            Create <$>
             runRouter (renv False hash) createDraftToAction
          | x == "edit" ->
-            fmap Update $
+            Update <$>
             runRouter (renv False hash) editDraftToAction
          | x == "delete" ->
-            fmap Delete $
+            Delete <$>
             runRouter (renv False hash) deleteDraftToAction
       _ -> Left $ ActionErrorPerms False EInvalidEndpoint
 
@@ -160,13 +161,13 @@ requestToActionCats path hash =
             runRouter (renv False hash) $
             withPagination (pure GetCategories)
          | x == "create" ->
-            fmap Create $
+            Create <$>
             runRouter (renv True hash) createCatsToAction
          | x == "edit" ->
-            fmap Update $
+            Update <$>
             runRouter (renv True hash) editCatsToAction
          | x == "delete" ->
-            fmap Delete $
+            Delete <$>
             runRouter (renv True hash) deleteCatsToAction
       _ -> Left $ ActionErrorPerms False EInvalidEndpoint
 
@@ -182,13 +183,13 @@ requestToActionTags path hash =
             runRouter (renv False hash) $
             withPagination (pure GetTags)
          | x == "create" ->
-            fmap Create $
+            Create <$>
             runRouter (renv True hash) createTagToAction
          | x == "edit" ->
-            fmap Update $
+            Update <$>
             runRouter (renv True hash) editTagToAction
          | x == "delete" ->
-            fmap Delete $
+            Delete <$>
             runRouter (renv True hash) deleteTagToAction
       _ -> Left $ ActionErrorPerms False EInvalidEndpoint
 
@@ -201,10 +202,10 @@ requestToActionUsers path hash =
       [x]
          | x == "profile" -> pure $ Read GetProfile
          | x == "create" ->
-            fmap Create $
+            Create <$>
             runRouter (renv False hash) createUserToAction
          | x == "delete" ->
-            fmap Delete $
+            Delete <$>
             runRouter (renv True hash) deleteUserToAction
       _ -> Left $ ActionErrorPerms False EInvalidEndpoint
 
@@ -220,13 +221,13 @@ requestToActionAuthors path hash =
             runRouter (renv False hash) $
             withPagination (pure $ GetAuthors Nothing)
          | x == "create" ->
-            fmap Create $
+            Create <$>
             runRouter (renv True hash) createAuthorToAction
          | x == "delete" ->
-            fmap Delete $
+            Delete <$>
             runRouter (renv True hash) deleteAuthorToAction
          | x == "edit" ->
-            fmap Update $
+            Update <$>
             runRouter (renv True hash) editAuthorToAction
       _ -> Left $ ActionErrorPerms False EInvalidEndpoint
 
@@ -240,14 +241,14 @@ requestToActionComments path hash =
          | x == "get" ->
             fmap Read $
             runRouter (renv False hash) $
-            withPagination $ getCommentsToAction
+            withPagination getCommentsToAction
          | x == "create" ->
-            fmap Create $
+            Create <$>
             runRouter
                (renv False hash)
                createCommentsToAction
          | x == "delete" ->
-            fmap Delete $
+            Delete <$>
             runRouter
                (renv False hash)
                deleteCommentsToAction

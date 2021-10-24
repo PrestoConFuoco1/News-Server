@@ -21,7 +21,7 @@ data DeleteError =
    DNoAction
    deriving (Show)
 
-data TagsError =
+newtype TagsError =
    TagsAttachError ForeignViolation
    deriving (Show)
 

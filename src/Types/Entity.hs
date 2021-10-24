@@ -201,7 +201,11 @@ instance PSR.FromRow Comment where
       cid <- PSR.field
       content <- PSR.field
       user <- PSR.fromRow
-      pure $ Comment cid content user
+      pure Comment {
+        _com_commentId = cid
+        , _com_content = content
+        , _com_user = user
+        }
 
 data Draft =
    Draft
@@ -286,15 +290,15 @@ instance PSR.FromRow DraftRaw where
       photo <- PSR.field
       extraPhotos <- PSR.field
       postId <- PSR.field
-      pure $
-         DraftRaw
-            did
-            title
-            creationDate
-            author
-            categoryId
-            tagIds
-            content
-            photo
-            extraPhotos
-            postId
+      pure DraftRaw {
+            _dr_draftId = did
+            , _dr_title = title
+            , _dr_creationDate = creationDate
+            , _dr_authorId = author
+            , _dr_categoryId = categoryId
+            , _dr_tagIds = tagIds
+            , _dr_content = content
+            , _dr_mainPhoto = photo
+            , _dr_extraPhotos = extraPhotos
+            , _dr_postId = postId
+            }

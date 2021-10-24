@@ -5,7 +5,7 @@ import qualified Data.Text as T (Text, pack, unpack)
 import qualified Data.Text.IO as T (hPutStrLn)
 import Prelude hiding (log)
 
-import Control.Monad (when)
+import Control.Monad (when, unless)
 import qualified Control.Monad.Catch as C
 import qualified GHC.IO.Handle.Lock as Lk
 import qualified System.Exit as Q (ExitCode(..), exitWith)
@@ -75,9 +75,7 @@ newtype LoggerResources =
       }
 
 pathToHandle :: FilePath -> IO I.Handle
-pathToHandle path = do
-   h <- I.openFile path I.AppendMode
-   pure h
+pathToHandle path = I.openFile path I.AppendMode
 
 initializeErrorHandler :: IOE.IOError -> IO a
 initializeErrorHandler e = do
@@ -124,7 +122,7 @@ initializeSelfSufficientLoggerResources conf = do
       , C.Handler initializeDefaultHandler
       ]
    lockAcquired <- Lk.hTryLock h Lk.ExclusiveLock
-   when (not lockAcquired) $ do
+   unless lockAcquired $ do
       logFatal stdHandle "failed to initialize logger"
       logFatal stdHandle lockedmsg
       Q.exitWith (Q.ExitFailure 1)

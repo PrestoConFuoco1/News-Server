@@ -1,10 +1,13 @@
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 module Types
    ( module Types
    , module TypesInternal
    ) where
 
+import qualified Database.PostgreSQL.Simple.ToField as PST
 import qualified Data.Text as T
 import GHC.Generics
+import qualified GenericPretty as GP
 import Types.APIErrors as TypesInternal
 import Types.APIResult as TypesInternal
 import Types.Authors as TypesInternal
@@ -30,7 +33,11 @@ data WithAuthor a =
       }
    deriving (Show, Generic)
 
-type Token = T.Text
+newtype Token = Token {
+    _t_token :: T.Text
+    } deriving (Show, Eq, PST.ToField)
+instance GP.PrettyShow Token where
+    prettyShow (Token tok) = GP.LStr $ T.unpack tok
 
 data WhoWhat a =
    WhoWhat

@@ -17,7 +17,7 @@ data GetTags =
    GetTags
    deriving (Show, Eq, Generic)
 
-data CreateTag =
+newtype CreateTag =
    CreateTag
       { _ct_tagName :: T.Text
       }
@@ -30,7 +30,7 @@ data EditTag =
       }
    deriving (Show, Eq, Generic, GP.PrettyShow, PS.ToRow)
 
-data DeleteTag =
+newtype DeleteTag =
    DeleteTag
       { _dt_tagId :: TagId
       }

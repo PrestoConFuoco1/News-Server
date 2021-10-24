@@ -45,8 +45,8 @@ unCap :: String -> String
 unCap (x:xs) = toLower x : xs
 unCap ys = ys
 
-randomString' :: Int -> IO String
-randomString' int = do
+randomString :: Int -> IO String
+randomString int = do
    let str = "qwertyuiopasdfghjklzxcvbnm"
        len = length str
        arr = array (1, len) $ zip [1 .. len] str

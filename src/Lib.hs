@@ -4,7 +4,7 @@ module Lib
    ( main
    ) where
 
-import Action.RequestToAction (requestToAction)
+import Action.RequestToAction (requestToActionHTTP, requestToAction)
 import qualified App.Database as D
 import qualified App.Database.Postgres as DP
 import qualified App.Logger as L
@@ -30,7 +30,7 @@ import qualified Network.Wai.Handler.Warp as Warp (run)
 import qualified Result as R
 import qualified RunOptions as Opt
 import System.Environment (getArgs)
-import System.Exit as Q
+import qualified System.Exit as Q
 import System.IO (hPutStrLn, stderr)
 import qualified Types as T
 import qualified Utils as S
@@ -50,12 +50,12 @@ runWithOpts opts = do
    conf <-
       C.loadConfig configLogger (T.unpack $ Opt.confPath opts) `CMC.catches`
       C.configHandlers configLogger
-   when (Opt.testConfig opts) $ exitSuccess
+   when (Opt.testConfig opts) Q.exitSuccess
    if Opt.migrations opts
       then M.migrationMain $ configToMigrationsConfig conf
-      else let loggerSettings = runOptsToLoggerSettings opts
-            in someFunc1 loggerSettings $
-               configToAppConfig conf
+      else runWithResources
+                (runOptsToLoggerSettings opts)
+                (configToAppConfig conf)
 
 runOptsToLoggerSettings :: Opt.RunOptions -> L.LoggerConfig
 runOptsToLoggerSettings opts =
@@ -81,17 +81,17 @@ configToMigrationsConfig C.Config {..} =
       , M.adminPassword = dbAdminPassword
       }
 
-someFunc1 :: L.LoggerConfig -> DP.Config -> IO ()
-someFunc1 loggerConfig conf1 = do
+runWithResources :: L.LoggerConfig -> DP.Config -> IO ()
+runWithResources loggerConfig conf = do
    L.withSelfSufficientLogger loggerConfig $ \logger ->
-      DP.withPostgresHandle L.stdHandle conf1 $ \resources -> do
+      DP.withPostgresHandle L.stdHandle conf $ \resources -> do
          resourcesRef <- newIORef resources
-         Warp.run (DP.port conf1) $
-            mainFunc1 logger resourcesRef
+         Warp.run (DP.port conf) $
+            mainFunc logger resourcesRef
 
-mainFunc1 ::
+mainFunc ::
       L.Handle IO -> IORef DP.Resources -> W.Application
-mainFunc1 logger resourcesRef req respond = do
+mainFunc logger resourcesRef req respond = do
    resources <- readIORef resourcesRef
    (response, resources') <- mainServer req logger resources
    writeIORef resourcesRef resources'
@@ -105,16 +105,16 @@ mainServer ::
 mainServer req logger resources
  = do
    let h = DP.resourcesToHandle resources logger
-       f x = x >>= \q -> pure (q, resources)
+       resourcesUnchanged x = x >>= \q -> pure (q, resources)
    D.logDebug h ""
    D.logDebug h "Got request"
    D.logDebug h $
       ("Path: " <>) $ S.showText $ W.pathInfo req
    D.logDebug h $
       ("Args: " <>) $ S.showText $ W.queryString req
-   let eithWhoWhat = requestToAction req
+   let eithWhoWhat = requestToActionHTTP req
    case eithWhoWhat of
-      Left err -> f $ coerceResponse <$> handleError h err
+      Left err -> resourcesUnchanged $ coerceResponse <$> handleError h err
       Right whowhat -> do
          D.logDebug h "Action type is"
          D.logDebug h $ GP.textPretty $ T._ww_action whowhat
@@ -123,13 +123,12 @@ mainServer req logger resources
                 D.logDebug h "Result is"
                 D.logDebug h $ T.logResult r
                 pure $ toResponse r
-             action =
+             action = fmap coerceResponse (
                 withLog (executeAction h whowhat) `CMC.catches`
                 [ CMC.Handler $ Ex.mainErrorHandler logger
                 , CMC.Handler $ Ex.defaultMainHandler logger
-                ]
-             action' = fmap coerceResponse action
-         f action'
+                ])
+         resourcesUnchanged action
 
 coerceResponse :: R.Response -> W.Response
 coerceResponse (R.Response status msg) =

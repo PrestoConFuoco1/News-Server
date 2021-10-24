@@ -33,10 +33,8 @@ requireField prse fieldname = do
    bs <-
       errorOnNothing (ERequiredFieldMissing fieldname) $
       getBs hash fieldname
-   x <-
-      errorOnNothing (EInvalidFieldValue fieldname) $
+   errorOnNothing (EInvalidFieldValue fieldname) $
       prse bs
-   pure x
 
 optional ::
       (BS.ByteString -> Maybe a)

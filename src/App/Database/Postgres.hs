@@ -23,7 +23,7 @@ data Config =
       }
    deriving (Show, GP.PrettyShow, Generic)
 
-data Resources =
+newtype Resources =
    Resources
       { postgresConnection :: PS.Connection
       }

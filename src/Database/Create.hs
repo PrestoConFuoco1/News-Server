@@ -11,26 +11,17 @@ class CreateSQL a where
    createQuery :: a -> (PS.Query, [SqlValue])
    cName :: Entity
 
-
-
-
 instance CreateSQL CreateTag where
    createQuery CreateTag {..} =
       ( "INSERT INTO news.tag (name) VALUES (?) RETURNING tag_id"
       , [SqlValue _ct_tagName])
    cName = ETag
 
-
-
-
 instance CreateSQL CreateCategory where
    createQuery CreateCategory {..} =
       ( "INSERT INTO news.category (name, parent_category_Id) VALUES (?, ?) RETURNING category_id"
       , [SqlValue _cc_catName, SqlValue _cc_parentCat])
    cName = ECategory
-
-
-
 
 instance CreateSQL CreateUser where
    createQuery CreateUser {..} =
@@ -42,17 +33,11 @@ instance CreateSQL CreateUser where
         ])
    cName = EUser
 
-
-
-
 instance CreateSQL CreateAuthor where
    createQuery CreateAuthor {..} =
       ( "INSERT INTO news.author (user_id, description) VALUES (?, ?) RETURNING author_id"
       , [SqlValue _ca_userId, SqlValue _ca_description])
    cName = EAuthor
-
-
-
 
 instance CreateSQL (WithUser CreateComment) where
    createQuery (WithUser u CreateComment {..}) =
@@ -62,9 +47,6 @@ instance CreateSQL (WithUser CreateComment) where
         , SqlValue _ccom_content
         ])
    cName = EComment
-
-
-
 
 instance CreateSQL DraftRaw where
    createQuery DraftRaw {..} =
@@ -83,9 +65,6 @@ instance CreateSQL DraftRaw where
         , SqlValue $ fmap PSTy.PGArray _dr_extraPhotos
         ])
    cName = EPost
-
-
-
 
 instance CreateSQL (WithAuthor CreateDraft) where
    createQuery (WithAuthor a CreateDraft {..}) =

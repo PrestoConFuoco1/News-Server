@@ -1,4 +1,4 @@
-{-# LANGUAGE TypeFamilies, FlexibleContexts, TypeSynonymInstances, FlexibleInstances #-}
+{-# LANGUAGE TypeFamilies, FlexibleContexts, FlexibleInstances #-}
 
 module Database.Read where
 
@@ -24,8 +24,6 @@ class ( Ae.ToJSON (MType a)
    where
    type MType a :: *
    selectQuery :: a -> (PS.Query, [SqlValue])
-
-
 
 toOffset :: Int -> Int -> Int
 toOffset page size = page * size
@@ -142,8 +140,6 @@ enclosePar qu = "(" <> qu <> ")"
 enclose :: T.Text -> T.Text -> T.Text
 enclose p qu = p <> qu <> p
 
-
-
 instance Read GetCategories where
    type MType GetCategories = Category
    selectQuery GetCategories =
@@ -151,8 +147,6 @@ instance Read GetCategories where
              "SELECT catids, catnames FROM news.get_categories"
           args = []
        in (selectClause, args)
-
-
 
 instance Read GetAuthors where
    type MType GetAuthors = Author
@@ -168,7 +162,6 @@ instance Read GetAuthors where
                 ( selectClause <> whereClause
                 , [SqlValue user])
 
-
 instance Read GetTags where
    type MType GetTags = Tag
    selectQuery GetTags =
@@ -177,7 +170,6 @@ instance Read GetTags where
                            \ FROM news.get_tags"
           args = []
        in (selectClause, args)
-
 
 instance Read GetComments where
    type MType GetComments = Comment
@@ -189,7 +181,6 @@ instance Read GetComments where
                             \ FROM news.get_comments WHERE post_id = ?"
           args = [SqlValue pid]
        in (selectClause, args)
-
 
 instance Read (WithAuthor GetDrafts) where
    type MType (WithAuthor GetDrafts) = Draft
@@ -218,7 +209,6 @@ instance Read (WithAuthor GetDrafts) where
                \ FROM news.get_drafts WHERE author_id = ?"
        in (selectClause, [SqlValue a])
 
-
 instance Read (WithAuthor Publish) where
    type MType (WithAuthor Publish) = DraftRaw
    selectQuery (WithAuthor a (Publish draft)) =
@@ -234,7 +224,6 @@ instance Read (WithAuthor Publish) where
                \ post_id \
                \ FROM news.draft_tag_total WHERE author_id = ? AND draft_id = ?"
        in (selectClause, [SqlValue a, SqlValue draft])
-
 
 instance Read Token where
    type MType Token = User

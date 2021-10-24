@@ -21,7 +21,7 @@ type CommentId = Int
 type ActionComments
     = CRUD CreateComment (Paginated GetComments) Void DeleteComment
 
-data GetComments =
+newtype GetComments =
    GetComments
       { _gc_postId :: PostId
       }
@@ -34,7 +34,7 @@ data CreateComment =
       }
    deriving (Show, Eq, Generic, GP.PrettyShow, PS.ToRow)
 
-data DeleteComment =
+newtype DeleteComment =
    DeleteComment
       { _dc_commentId :: CommentId
       }
@@ -79,7 +79,7 @@ data TagsOptions
    | TagsAll [TagId]
    deriving (Show, Eq, Generic)
 
-data SearchOptions =
+newtype SearchOptions =
    SearchOptions T.Text
    deriving (Show, Eq, Generic)
 

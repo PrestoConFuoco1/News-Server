@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleContexts, RecordWildCards, FlexibleInstances, AllowAmbiguousTypes #-}
+{-# LANGUAGE FlexibleContexts, RecordWildCards, FlexibleInstances, AllowAmbiguousTypes, TupleSections #-}
 
 module Database.Update where
 
@@ -40,7 +40,7 @@ optionals ::
       (UpdateSQL a) => a -> [(PS.Query, SqlValue)]
 optionals = mapMaybe f . optionalsMaybe
   where
-    f (t, x) = fmap (\a -> (t, a)) x
+    f (t, x) = fmap (t,) x
 
 class UpdateSQL a where
    updateQuery :: PS.Query -> PS.Query

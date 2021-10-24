@@ -1,5 +1,3 @@
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-
 module Types.Common
    ( CRUD(..)
    , Paginated(..)

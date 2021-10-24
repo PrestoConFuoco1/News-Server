@@ -9,7 +9,7 @@ getThis ::
    => (a -> m [b])
    -> a
    -> m APIResult
-getThis f x = (RGet . RGettable) <$> f x
+getThis f x = RGet . RGettable <$> f x
 
 createThis ::
       (CMC.MonadCatch m)

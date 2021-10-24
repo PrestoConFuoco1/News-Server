@@ -30,7 +30,7 @@ data GetProfile =
 instance GP.PrettyShow GetProfile where
    prettyShow = GP.LStr . show
 
-data DeleteUser =
+newtype DeleteUser =
    DeleteUser
       { _du_userId :: UserId
       }
