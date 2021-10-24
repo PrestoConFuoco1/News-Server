@@ -26,11 +26,8 @@ class ( Ae.ToJSON (MType s)
    type Get s :: *
    selectQuery :: s -> Get s -> (PS.Query, [SqlValue])
 
-newtype PostD =
-   PostD ()
 
-postDummy :: PostD
-postDummy = PostD ()
+data PostD = PostD
 
 toOffset :: Int -> Int -> Int
 toOffset page size = page * size
@@ -94,11 +91,6 @@ ascDescQ :: SortOrder -> PS.Query
 ascDescQ SOAscending = " ASC "
 ascDescQ SODescending = " DESC "
 
-{-
-fromJust (Just x) = x
-w :: Time.Day
-w = fromJust $ Time.parseTimeM True Time.defaultTimeLocale "%Y-%-m-%-d" "2010-3-04"
--}
 postsWhereDate ::
       CreationDateOptions -> (PS.Query, [SqlValue])
 postsWhereDate (Created day) = postsWhereDate' "=" day
@@ -153,11 +145,8 @@ enclosePar qu = "(" <> qu <> ")"
 enclose :: T.Text -> T.Text -> T.Text
 enclose p qu = p <> qu <> p
 
-newtype CatD =
-   CatD ()
 
-catDummy :: CatD
-catDummy = CatD ()
+data CatD = CatD
 
 instance Read CatD where
    type MType CatD = Category
@@ -168,11 +157,8 @@ instance Read CatD where
           args = []
        in (selectClause, args)
 
-newtype AuthorD =
-   AuthorD ()
 
-authorDummy :: AuthorD
-authorDummy = AuthorD ()
+data AuthorD = AuthorD
 
 instance Read AuthorD where
    type MType AuthorD = Author
@@ -189,11 +175,8 @@ instance Read AuthorD where
                 ( selectClause <> whereClause
                 , [SqlValue user])
 
-newtype TagD =
-   TagD ()
 
-tagDummy :: TagD
-tagDummy = TagD ()
+data TagD = TagD
 
 instance Read TagD where
    type MType TagD = Tag
@@ -205,11 +188,8 @@ instance Read TagD where
           args = []
        in (selectClause, args)
 
-newtype CommentD =
-   CommentD ()
 
-commentDummy :: CommentD
-commentDummy = CommentD ()
+data CommentD = CommentD
 
 instance Read CommentD where
    type MType CommentD = Comment
@@ -223,11 +203,8 @@ instance Read CommentD where
           args = [SqlValue pid]
        in (selectClause, args)
 
-newtype DraftD =
-   DraftD ()
 
-draftDummy :: DraftD
-draftDummy = DraftD ()
+data DraftD = DraftD
 
 instance Read DraftD where
    type MType DraftD = Draft
@@ -257,11 +234,8 @@ instance Read DraftD where
                \ FROM news.get_drafts WHERE author_id = ?"
        in (selectClause, [SqlValue a])
 
-newtype DraftR =
-   DraftR ()
 
-draftRawDummy :: DraftR
-draftRawDummy = DraftR ()
+data DraftR = DraftR
 
 instance Read DraftR where
    type MType DraftR = DraftRaw
@@ -280,11 +254,8 @@ instance Read DraftR where
                \ FROM news.draft_tag_total WHERE author_id = ? AND draft_id = ?"
        in (selectClause, [SqlValue a, SqlValue draft])
 
-newtype UserTokenR =
-   UserTokenR ()
 
-userTokenDummy :: UserTokenR
-userTokenDummy = UserTokenR ()
+data UserTokenR = UserTokenR
 
 instance Read UserTokenR where
    type MType UserTokenR = User

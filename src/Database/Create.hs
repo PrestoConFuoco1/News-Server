@@ -4,46 +4,36 @@ module Database.Create where
 
 import qualified Database.PostgreSQL.Simple as PS
 import qualified Database.PostgreSQL.Simple.Types as PSTy
-import Database.SqlValue
-import qualified Types as Ty
+import Database.SqlValue (SqlValue(..))
 import Types
 
 class CreateSQL s where
    type Create s :: *
    createQuery :: s -> Create s -> (PS.Query, [SqlValue])
-   cName :: s -> Ty.Entity
+   cName :: s -> Entity
 
-newtype CTag =
-   CTag ()
 
-dummyCTag :: CTag
-dummyCTag = CTag ()
+data CTag = CTag
 
 instance CreateSQL CTag where
    type Create CTag = CreateTag
    createQuery _ CreateTag {..} =
       ( "INSERT INTO news.tag (name) VALUES (?) RETURNING tag_id"
       , [SqlValue _ct_tagName])
-   cName _ = Ty.ETag
+   cName _ = ETag
 
-newtype CCat =
-   CCat ()
 
-dummyCCat :: CCat
-dummyCCat = CCat ()
+data CCat = CCat
 
 instance CreateSQL CCat where
    type Create CCat = CreateCategory
    createQuery _ CreateCategory {..} =
       ( "INSERT INTO news.category (name, parent_category_Id) VALUES (?, ?) RETURNING category_id"
       , [SqlValue _cc_catName, SqlValue _cc_parentCat])
-   cName _ = Ty.ECategory
+   cName _ = ECategory
 
-newtype CUser =
-   CUser ()
 
-dummyCUser :: CUser
-dummyCUser = CUser ()
+data CUser = CUser
 
 instance CreateSQL CUser where
    type Create CUser = CreateUser
@@ -54,26 +44,20 @@ instance CreateSQL CUser where
         , SqlValue _cu_firstName
         , SqlValue _cu_lastName
         ])
-   cName _ = Ty.EUser
+   cName _ = EUser
 
-newtype CAuthor =
-   CAuthor ()
 
-dummyCAuthor :: CAuthor
-dummyCAuthor = CAuthor ()
+data CAuthor = CAuthor
 
 instance CreateSQL CAuthor where
    type Create CAuthor = CreateAuthor
    createQuery _ CreateAuthor {..} =
       ( "INSERT INTO news.author (user_id, description) VALUES (?, ?) RETURNING author_id"
       , [SqlValue _ca_userId, SqlValue _ca_description])
-   cName _ = Ty.EAuthor
+   cName _ = EAuthor
 
-newtype CComment =
-   CComment ()
 
-dummyCComment :: CComment
-dummyCComment = CComment ()
+data CComment = CComment
 
 instance CreateSQL CComment where
    type Create CComment = WithUser CreateComment
@@ -83,13 +67,10 @@ instance CreateSQL CComment where
         , SqlValue _ccom_postId
         , SqlValue _ccom_content
         ])
-   cName _ = Ty.EComment
+   cName _ = EComment
 
-newtype CPost =
-   CPost ()
 
-dummyCPost :: CPost
-dummyCPost = CPost ()
+data CPost = CPost
 
 instance CreateSQL CPost where
    type Create CPost = DraftRaw
@@ -108,13 +89,10 @@ instance CreateSQL CPost where
         , SqlValue _dr_mainPhoto
         , SqlValue $ fmap PSTy.PGArray _dr_extraPhotos
         ])
-   cName _ = Ty.EPost
+   cName _ = EPost
 
-newtype CDraft =
-   CDraft ()
 
-draftCreateDummy :: CDraft
-draftCreateDummy = CDraft ()
+data CDraft = CDraft
 
 instance CreateSQL CDraft where
    type Create CDraft = WithAuthor CreateDraft
@@ -128,4 +106,4 @@ instance CreateSQL CDraft where
         , SqlValue _cd_mainPhoto
         , SqlValue $ fmap PSTy.PGArray _cd_extraPhotos
         ])
-   cName _ = Ty.EDraft
+   cName _ = EDraft

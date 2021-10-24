@@ -1,22 +1,21 @@
-module Execute where
+module Execute (executeAction, handleError) where
 
-import Action.Common
-import Action.RequestToAction
+import Action.Common (ActionErrorPerms(..), ActionError(..))
+import Action.RequestToAction (Action(..))
 import qualified App.Database as D
-import Control.Exception (SomeException)
 import qualified Control.Monad.Catch as CMC
    ( MonadCatch
    , MonadCatch
    , catch
+   , SomeException
    )
 import qualified Data.ByteString as BS (ByteString)
 import qualified Data.Text.Encoding as E (decodeUtf8)
 import Data.Void (absurd)
-import Execute.Database
-import Execute.Draft
-import Execute.Utils
-import Result
-import qualified Types as Ty
+import Execute.Database (getThis, deleteThis, createThis, editThis)
+import Execute.Draft (publish, editDraft, createDraft)
+import qualified Execute.Utils as U
+import qualified Result as R
 import Types
 
 executeAction ::
@@ -34,7 +33,7 @@ executeAction h (WhoWhat y (ATags x)) =
    executeTags h (WhoWhat y x)
 executeAction h (WhoWhat y (AUsers x)) =
    executeUsers h (WhoWhat y x)
-executeAction h (WhoWhat _ (AAuth x)) = authenticate h x
+executeAction h (WhoWhat _ (AAuth x)) = U.authenticate h x
 executeAction h (WhoWhat y (AComments x)) =
    executeComments h (WhoWhat y x)
 executeAction h (WhoWhat y (ADrafts x)) =
@@ -48,9 +47,9 @@ executePosts ::
    -> WhoWhat ActionPosts1
    -> m APIResult
 executePosts h (WhoWhat _ (GC x)) =
-   getThis1 (D.getComments h (D.log h)) x
+   getThis (D.getComments h (D.log h)) x
 executePosts h (WhoWhat _ (AP (Read x))) = do
-   getThis1 (D.getPosts h (D.log h)) x
+   getThis (D.getPosts h (D.log h)) x
 executePosts _ (WhoWhat _ (AP (Create x))) =
    pure $ absurd x
 executePosts _ (WhoWhat _ (AP (Update x))) =
@@ -64,17 +63,17 @@ executeAuthor ::
    -> WhoWhat ActionAuthors
    -> m APIResult
 executeAuthor h (WhoWhat y (Read x)) =
-   withAuthAdmin h y >>
-   getThis1 (D.getAuthors h (D.log h)) x
+   U.withAuthAdmin h y >>
+   getThis (D.getAuthors h (D.log h)) x
 executeAuthor h (WhoWhat y (Create x)) =
-   withAuthAdmin h y >>
-   createThis1 EAuthor (D.createAuthor h (D.log h)) x
+   U.withAuthAdmin h y >>
+   createThis EAuthor (D.createAuthor h (D.log h)) x
 executeAuthor h (WhoWhat y (Update x)) =
-   withAuthAdmin h y >>
-   editThis1 EAuthor (D.editAuthor h (D.log h)) x
+   U.withAuthAdmin h y >>
+   editThis EAuthor (D.editAuthor h (D.log h)) x
 executeAuthor h (WhoWhat y (Delete x)) =
-   withAuthAdmin h y >>
-   deleteThis1 EAuthor (D.deleteAuthor h (D.log h)) x
+   U.withAuthAdmin h y >>
+   deleteThis EAuthor (D.deleteAuthor h (D.log h)) x
 
 {-
 -}
@@ -84,16 +83,16 @@ executeTags ::
    -> WhoWhat ActionTags
    -> m APIResult
 executeTags h (WhoWhat _ (Read x)) =
-   getThis1 (D.getTags h (D.log h)) x
+   getThis (D.getTags h (D.log h)) x
 executeTags h (WhoWhat y (Create x)) =
-   withAuthAdmin h y >>
-   createThis1 ETag (D.createTag h (D.log h)) x
+   U.withAuthAdmin h y >>
+   createThis ETag (D.createTag h (D.log h)) x
 executeTags h (WhoWhat y (Update x)) =
-   withAuthAdmin h y >>
-   editThis1 ETag (D.editTag h (D.log h)) x
+   U.withAuthAdmin h y >>
+   editThis ETag (D.editTag h (D.log h)) x
 executeTags h (WhoWhat y (Delete x)) =
-   withAuthAdmin h y >>
-   deleteThis1 ETag (D.deleteTag h (D.log h)) x
+   U.withAuthAdmin h y >>
+   deleteThis ETag (D.deleteTag h (D.log h)) x
 
 executeCategory ::
       CMC.MonadCatch m
@@ -101,16 +100,16 @@ executeCategory ::
    -> WhoWhat ActionCategory
    -> m APIResult
 executeCategory h (WhoWhat _ (Read x)) =
-   getThis1 (D.getCategories h (D.log h)) x
+   getThis (D.getCategories h (D.log h)) x
 executeCategory h (WhoWhat y (Create x)) =
-   withAuthAdmin h y >>
-   createThis1 ECategory (D.createCategory h (D.log h)) x
+   U.withAuthAdmin h y >>
+   createThis ECategory (D.createCategory h (D.log h)) x
 executeCategory h (WhoWhat y (Update x)) =
-   withAuthAdmin h y >>
-   editThis1 ECategory (D.editCategory h (D.log h)) x
+   U.withAuthAdmin h y >>
+   editThis ECategory (D.editCategory h (D.log h)) x
 executeCategory h (WhoWhat y (Delete x)) =
-   withAuthAdmin h y >>
-   deleteThis1 ECategory (D.deleteCategory h (D.log h)) x
+   U.withAuthAdmin h y >>
+   deleteThis ECategory (D.deleteCategory h (D.log h)) x
 
 executeUsers ::
       CMC.MonadCatch m
@@ -118,12 +117,12 @@ executeUsers ::
    -> WhoWhat ActionUsers
    -> m APIResult
 executeUsers h (WhoWhat _ (Create x)) =
-   createThis1 EUser (D.createUser h (D.log h)) x
+   createThis EUser (D.createUser h (D.log h)) x
 executeUsers h (WhoWhat y (Delete x)) =
-   withAuthAdmin h y >>
-   deleteThis1 EUser (D.deleteUser h (D.log h)) x
+   U.withAuthAdmin h y >>
+   deleteThis EUser (D.deleteUser h (D.log h)) x
 executeUsers h (WhoWhat y (Read GetProfile)) =
-   withAuth h y >>= getUser h
+   U.withAuth h y >>= U.getUser h
 executeUsers _ (WhoWhat _ (Update x)) = pure $ absurd x
 
 executeComments ::
@@ -132,14 +131,14 @@ executeComments ::
    -> WhoWhat ActionComments
    -> m APIResult
 executeComments h (WhoWhat _ (Read x)) =
-   getThis1 (D.getComments h (D.log h)) x
+   getThis (D.getComments h (D.log h)) x
 executeComments h (WhoWhat y (Create x)) =
-   withAuth h y >>= maybeUserToUser h >>= \u ->
-      createThis1 EComment (D.createComment h (D.log h)) $
+   U.withAuth h y >>= U.maybeUserToUser h >>= \u ->
+      createThis EComment (D.createComment h (D.log h)) $
       WithUser u x
 executeComments h (WhoWhat y (Delete x)) =
-   withAuth h y >>= maybeUserToUser h >>= \u ->
-      deleteThis1 EComment (D.deleteComment h (D.log h)) $
+   U.withAuth h y >>= U.maybeUserToUser h >>= \u ->
+      deleteThis EComment (D.deleteComment h (D.log h)) $
       WithUser u x
 executeComments _ (WhoWhat _ (Update x)) = pure $ absurd x
 
@@ -149,19 +148,19 @@ executeDraft ::
    -> WhoWhat ActionDrafts
    -> m APIResult
 executeDraft h (WhoWhat y (Create x)) =
-   withAuthor h y >>= \a ->
-      createDraft h $ WithAuthor (Ty._a_authorId a) x
+   U.withAuthor h y >>= \a ->
+      createDraft h $ WithAuthor (_a_authorId a) x
 executeDraft h (WhoWhat y (Read (Paginated p s x))) =
-   withAuthor h y >>= \a ->
-      getThis1 (D.getDrafts h (D.log h)) $
-      Paginated p s (WithAuthor (Ty._a_authorId a) x)
+   U.withAuthor h y >>= \a ->
+      getThis (D.getDrafts h (D.log h)) $
+      Paginated p s (WithAuthor (_a_authorId a) x)
 executeDraft h (WhoWhat y (Delete x)) =
-   withAuthor h y >>= \a ->
-      deleteThis1 EDraft (D.deleteDraft h (D.log h)) $
-      WithAuthor (Ty._a_authorId a) x
+   U.withAuthor h y >>= \a ->
+      deleteThis EDraft (D.deleteDraft h (D.log h)) $
+      WithAuthor (_a_authorId a) x
 executeDraft h (WhoWhat y (Update x)) =
-   withAuthor h y >>= \a ->
-      editDraft h $ WithAuthor (Ty._a_authorId a) x
+   U.withAuthor h y >>= \a ->
+      editDraft h $ WithAuthor (_a_authorId a) x
 
 executePublish ::
       (CMC.MonadCatch m)
@@ -169,47 +168,47 @@ executePublish ::
    -> WhoWhat Publish
    -> m APIResult
 executePublish h (WhoWhat y x) =
-   withAuthor h y >>= \a ->
-      publish h $ WithAuthor (Ty._a_authorId a) x
+   U.withAuthor h y >>= \a ->
+      publish h $ WithAuthor (_a_authorId a) x
 
 handleError ::
       CMC.MonadCatch m
    => D.Handle m
    -> WhoWhat ActionErrorPerms
-   -> m Response
+   -> m R.Response
 handleError h (WhoWhat _ (ActionErrorPerms False (ERequiredFieldMissing x))) =
    handleFieldMissing h x
 handleError h (WhoWhat _ (ActionErrorPerms False (EInvalidFieldValue x))) =
    handleInvalidValue h x
 handleError h (WhoWhat _ (ActionErrorPerms False EInvalidEndpoint)) = do
    D.logError h "Invalid endpoint"
-   pure $ notFound "Invalid endpoint"
+   pure $ R.notFound "Invalid endpoint"
 handleError h (WhoWhat y (ActionErrorPerms True x)) =
-   (withAuthAdmin h y >>
+   (U.withAuthAdmin h y >>
     handleError h (WhoWhat y (ActionErrorPerms False x))) `CMC.catch`
    f h
   where
     f :: (CMC.MonadCatch m)
       => D.Handle m
-      -> SomeException
-      -> m Response
+      -> CMC.SomeException
+      -> m R.Response
     f h' _ = handleForbidden h'
 
 handleForbidden ::
-      (CMC.MonadCatch m) => D.Handle m -> m Response
+      (CMC.MonadCatch m) => D.Handle m -> m R.Response
 handleForbidden h =
-   D.logError h forbidden >>
-   pure (notFound "Invalid endpoint")
+   D.logError h R.forbidden >>
+   pure (R.notFound "Invalid endpoint")
 
 handleFieldMissing ::
-      (Monad m) => D.Handle m -> BS.ByteString -> m Response
+      (Monad m) => D.Handle m -> BS.ByteString -> m R.Response
 handleFieldMissing h x = do
    let str = "Required field missing (" <> x <> ")"
    D.logError h $ E.decodeUtf8 str
-   pure $ bad $ E.decodeUtf8 str
+   pure $ R.bad $ E.decodeUtf8 str
 
 handleInvalidValue ::
-      (Monad m) => D.Handle m -> BS.ByteString -> m Response
+      (Monad m) => D.Handle m -> BS.ByteString -> m R.Response
 handleInvalidValue _ x = do
    let str = "Invalid value of the field " <> x
-   pure $ bad $ E.decodeUtf8 str
+   pure $ R.bad $ E.decodeUtf8 str

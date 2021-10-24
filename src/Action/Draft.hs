@@ -1,6 +1,6 @@
 module Action.Draft where
 
-import Action.Common
+import Action.Common (Router)
 import Action.Utils
 import Prelude hiding (readList)
 import Types

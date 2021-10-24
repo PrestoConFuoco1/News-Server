@@ -1,6 +1,6 @@
 module App.Logger where
 
-import Data.IORef
+import Data.IORef (IORef, newIORef, readIORef, writeIORef)
 import qualified Data.Text as T (Text, pack, unpack)
 import qualified Data.Text.IO as T (hPutStrLn)
 import Prelude hiding (log)
@@ -9,7 +9,7 @@ import Control.Monad (when)
 import qualified Control.Monad.Catch as C
 import qualified GHC.IO.Handle.Lock as Lk
 import qualified System.Exit as Q (ExitCode(..), exitWith)
-import qualified System.IO as S
+import qualified System.IO as I
 import qualified System.IO.Error as IOE
 import qualified Utils as S
 
@@ -54,11 +54,11 @@ stdHandle = stdCondHandle $ const True
 
 stdCondHandle :: (Priority -> Bool) -> Handle IO
 stdCondHandle predicate = Handle $ \p s ->
-    let h | p >= Warning = S.stderr
-          | otherwise    = S.stdout
+    let h | p >= Warning = I.stderr
+          | otherwise    = I.stdout
     in  when (predicate p) $ handleLogger h p s
 
-handleLogger :: S.Handle -> Priority -> T.Text -> IO ()
+handleLogger :: I.Handle -> Priority -> T.Text -> IO ()
 handleLogger h p s = T.hPutStrLn h $ logString p s
 
 
@@ -71,12 +71,12 @@ data LoggerConfig =
 
 newtype LoggerResources =
    LoggerResources
-      { flHandle :: S.Handle
+      { flHandle :: I.Handle
       }
 
-pathToHandle :: FilePath -> IO S.Handle
+pathToHandle :: FilePath -> IO I.Handle
 pathToHandle path = do
-   h <- S.openFile path S.AppendMode
+   h <- I.openFile path I.AppendMode
    pure h
 
 initializeErrorHandler :: IOE.IOError -> IO a
@@ -135,7 +135,7 @@ closeSelfSufficientLogger resourcesRef = do
    resources <- readIORef resourcesRef
    let h = flHandle resources
    Lk.hUnlock h
-   S.hClose h
+   I.hClose h
 
 selfSufficientLogger ::
       IORef LoggerResources
@@ -148,7 +148,7 @@ selfSufficientLogger resourcesRef predicate pri s = do
    let action =
           when (predicate pri) $ do
           T.hPutStrLn (flHandle resources) (logString pri s)
-          T.hPutStrLn S.stderr (logString pri s)
+          T.hPutStrLn I.stderr (logString pri s)
        errHandler e =
           loggerHandler resources e >>=
           writeIORef resourcesRef
@@ -162,4 +162,4 @@ loggerHandler resources e = do
    logError stdHandle "failed to use log file, error is:"
    logError stdHandle $ T.pack $ C.displayException e
    logError stdHandle "using standard error handle"
-   pure $ resources {flHandle = S.stderr}
+   pure $ resources {flHandle = I.stderr}

@@ -4,14 +4,14 @@
 module GenericPretty where
 
 import Data.Aeson (encode)
-import Data.Aeson.Types
+import Data.Aeson.Types (Value(..))
 import qualified Data.ByteString as B
-import Data.Char
+import Data.Char (isUpper)
 import qualified Data.Text as T (Text, pack)
 import qualified Data.Text.Lazy as TL (Text, unpack)
 import Data.Text.Lazy.Encoding (decodeUtf8)
 import qualified Data.Time as Time
-import Data.Void
+import Data.Void (Void)
 import GHC.Generics
 import qualified Utils as S
 

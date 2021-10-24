@@ -6,28 +6,28 @@ import qualified Data.Text as T
 import Database
 import qualified Database.PostgreSQL.Simple as PS
 import qualified Database.PostgreSQL.Simple.Types as PSTy
-import Database.SqlValue
+import Database.SqlValue (SqlValue(..))
 import qualified Exceptions as Ex
 import Prelude hiding (Read)
 import Types
 import qualified Utils as U
 
-generateToken1 :: Int -> IO String
-generateToken1 = U.randomString'
+generateToken :: Int -> IO String
+generateToken = U.randomString'
 
-withTransaction1 :: PS.Connection -> IO a -> IO a
-withTransaction1 = PS.withTransaction
+withTransaction :: PS.Connection -> IO a -> IO a
+withTransaction = PS.withTransaction
 
-userAuthor1 ::
+userAuthor ::
       PS.Connection
    -> L.Handle IO
    -> User
    -> IO (Maybe Author)
-userAuthor1 con logger u = do
+userAuthor con logger u = do
    as <-
       getThis
          con
-         authorDummy
+         AuthorD
          logger
          (GetAuthors $ Just $ _u_id u)
    case as of
@@ -36,24 +36,24 @@ userAuthor1 con logger u = do
       _ ->
          Ex.throwInvalidUnique EAuthor (map _a_authorId as)
 
-getUserByToken1 ::
+getUserByToken ::
       PS.Connection
    -> L.Handle IO
    -> Token
    -> IO (Maybe User)
-getUserByToken1 con logger token = do
-   users <- getThis con userTokenDummy logger token
+getUserByToken con logger token = do
+   users <- getThis con UserTokenR logger token
    case users of
       [] -> pure Nothing
       [u] -> pure $ Just u
       _ -> Ex.throwTokenShared $ map _u_id users
 
-getUserByLogin1 ::
+getUserByLogin ::
       PS.Connection
    -> L.Handle IO
    -> T.Text
    -> IO (Maybe User)
-getUserByLogin1 con logger login = do
+getUserByLogin con logger login = do
    let str =
           "SELECT user_id, firstname, lastname, \
               \image, login, pass_hash, creation_date, is_admin \
@@ -67,13 +67,13 @@ getUserByLogin1 con logger login = do
          [x] -> pure $ Just x
          _ -> Ex.throwInvalidUnique EUser $ map _u_id users
 
-addToken1 ::
+addToken ::
       PS.Connection
    -> L.Handle IO
    -> UserId
    -> T.Text
    -> IO T.Text
-addToken1 con logger uid token = do
+addToken con logger uid token = do
    let str =
           "INSERT INTO news.token (user_id, token) VALUES (?, ?) ON CONFLICT (user_id) DO UPDATE SET token = ?"
        token' = T.pack (show uid) <> token

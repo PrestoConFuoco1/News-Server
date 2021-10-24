@@ -11,7 +11,7 @@ import qualified Database.PostgreSQL.Simple.Types as PST
 import GHC.Arr
 import System.Random (randomRIO)
 import Text.Regex.PCRE ((=~))
-import Type.Reflection
+import Type.Reflection (Typeable)
 
 instance (Typeable a, PSF.FromField a) =>
          PSF.FromField [a] where
@@ -62,3 +62,5 @@ showDay = Time.formatTime Time.defaultTimeLocale "%F"
 readDay :: String -> Maybe Time.Day
 readDay =
    Time.parseTimeM True Time.defaultTimeLocale "%Y-%-m-%-d"
+
+

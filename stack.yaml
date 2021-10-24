@@ -170,6 +170,8 @@ extra-deps:
 
 - configurator-0.3.0.0@sha256:a96d4c52b93a4a7d5909421853964a26f1153f32f8c4f11f9e04b249653e4034,2653
 
+- optparse-applicative-0.16.1.0@sha256:16ebd7054b2265c1aad16c1d19dc503695fbfc67b35203d9952fd577d08c0110,4982
+- ansi-wl-pprint-0.6.9@sha256:20d30674f137d43aa0279c2c2cc5e45a5f1c3c57e301852494906158b6313bf7,2388
 
 
 # Override default flag values for local packages and extra-deps

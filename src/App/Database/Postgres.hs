@@ -2,7 +2,7 @@
 
 module App.Database.Postgres where
 
-import App.Database
+import App.Database (Handle(..))
 import qualified App.Logger as Logger
 import Control.Monad ((>=>))
 import qualified Control.Monad.Catch as C (bracket)
@@ -10,8 +10,8 @@ import qualified Data.ByteString as B
 import Database
 import qualified Database.PostgreSQL.Simple as PS
 import GHC.Generics
-import GenericPretty
-import IO.Postgres as IOP
+import qualified GenericPretty as GP
+import qualified IO.Postgres as IOP
 import Types
 
 data Config =
@@ -21,7 +21,7 @@ data Config =
       , password :: B.ByteString
       , port :: Int
       }
-   deriving (Show, PrettyShow, Generic)
+   deriving (Show, GP.PrettyShow, Generic)
 
 data Resources =
    Resources
@@ -58,46 +58,46 @@ resourcesToHandle ::
 resourcesToHandle (Resources con) logger =
    Handle
       { log = logger
-      , userAuthor = userAuthor1 con
-      , createUser = createThis con dummyCUser
-      , deleteUser = deleteThis con dummyDUser
-      , getUserByToken = getUserByToken1 con
-      , getUserByLogin = getUserByLogin1 con
-      , addToken = addToken1 con
-      , generateToken = generateToken1
-      , getAuthors = getThisPaginated con authorDummy
-      , createAuthor = createThis con dummyCAuthor
-      , editAuthor = editThis con dummyUAuthor
-      , deleteAuthor = deleteThis con dummyDAuthor
-      , getTags = getThisPaginated con tagDummy
-      , createTag = createThis con dummyCTag
-      , editTag = editThis con dummyUTag
-      , deleteTag = deleteThis con dummyDTag
-      , getCategories = getThisPaginated con catDummy
-      , createCategory = createThis con dummyCCat
-      , editCategory = editThis con dummyUCat
-      , deleteCategory = deleteThis con dummyDCat
-      , getPosts = getThisPaginated con postDummy
-      , getComments = getThisPaginated con commentDummy
-      , createComment = createThis con dummyCComment
-      , deleteComment = deleteThis con dummyDComment
-      , withTransaction = withTransaction1 con
-      , attachTagsToDraft = IOP.attachTags con dummyHDraft
-      , attachTagsToPost = IOP.attachTags con dummyHPost
-      , editDraft = editThis con draftEditDummy
+      , userAuthor = IOP.userAuthor con
+      , createUser = IOP.createThis con CUser
+      , deleteUser = IOP.deleteThis con DUser
+      , getUserByToken = IOP.getUserByToken con
+      , getUserByLogin = IOP.getUserByLogin con
+      , addToken = IOP.addToken con
+      , generateToken = IOP.generateToken
+      , getAuthors = IOP.getThisPaginated con AuthorD
+      , createAuthor = IOP.createThis con CAuthor
+      , editAuthor = IOP.editThis con UAuthor
+      , deleteAuthor = IOP.deleteThis con DAuthor
+      , getTags = IOP.getThisPaginated con TagD
+      , createTag = IOP.createThis con CTag
+      , editTag = IOP.editThis con UTag
+      , deleteTag = IOP.deleteThis con DTag
+      , getCategories = IOP.getThisPaginated con CatD
+      , createCategory = IOP.createThis con CCat
+      , editCategory = IOP.editThis con UCat
+      , deleteCategory = IOP.deleteThis con DCat
+      , getPosts = IOP.getThisPaginated con PostD
+      , getComments = IOP.getThisPaginated con CommentD
+      , createComment = IOP.createThis con CComment
+      , deleteComment = IOP.deleteThis con DComment
+      , withTransaction = IOP.withTransaction con
+      , attachTagsToDraft = IOP.attachTags con HDraft
+      , attachTagsToPost = IOP.attachTags con HPost
+      , editDraft = IOP.editThis con UDraft
       , removeAllButGivenTagsDraft =
-           IOP.removeAllButGivenTags con dummyHDraft
+           IOP.removeAllButGivenTags con HDraft
       , removeAllButGivenTagsPost =
-           IOP.removeAllButGivenTags con dummyHPost
+           IOP.removeAllButGivenTags con HPost
       , getDraftRaw =
            \l ->
-              getThis con draftRawDummy l >=>
-              checkUnique Nothing Just EDraft _dr_draftId
-      , createDraft = createThis con draftCreateDummy
+              IOP.getThis con DraftR l >=>
+              IOP.checkUnique Nothing Just EDraft _dr_draftId
+      , createDraft = IOP.createThis con CDraft
       , editDraftPublish =
-           editThis con draftEditPublishDummy
-      , editPostPublish = editThis con dummyUPost
-      , createPost = createThis con dummyCPost
-      , getDrafts = getThisPaginated con draftDummy
-      , deleteDraft = deleteThis con dummyDDraft
+           IOP.editThis con UPDraft
+      , editPostPublish = IOP.editThis con UPost
+      , createPost = IOP.createThis con CPost
+      , getDrafts = IOP.getThisPaginated con DraftD
+      , deleteDraft = IOP.deleteThis con DDraft
       }

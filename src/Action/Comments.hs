@@ -1,6 +1,6 @@
 module Action.Comments where
 
-import Action.Common
+import Action.Common (Router)
 import Action.Utils
 import Types
 

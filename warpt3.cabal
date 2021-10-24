@@ -84,6 +84,7 @@ library
     , file-embed
     , http-types
     , mtl
+    , optparse-applicative
     , postgresql-simple
     , postgresql-simple-migration
     , random
@@ -113,6 +114,7 @@ executable warpt3
     , file-embed
     , http-types
     , mtl
+    , optparse-applicative
     , postgresql-simple
     , postgresql-simple-migration
     , random
@@ -148,6 +150,7 @@ test-suite warpt3-test
     , hspec
     , http-types
     , mtl
+    , optparse-applicative
     , postgresql-simple
     , postgresql-simple-migration
     , random

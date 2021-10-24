@@ -6,9 +6,9 @@ import qualified Data.Text as T
 import Types.Entity
 
 import GHC.Generics
-import GenericPretty
+import qualified GenericPretty as GP
 import Prelude as P
-import Utils
+import qualified Utils as S
 
 data APIResult
    = RGet RGettable
@@ -25,9 +25,9 @@ data APIResult
 
 logResult :: APIResult -> T.Text
 logResult (RGet (RGettable xs)) =
-   "fetched " <> showText (length xs) <> " entities"
-logResult (RGetUser u) = textPretty u
-logResult x = showText x
+   "fetched " <> S.showText (length xs) <> " entities"
+logResult (RGetUser u) = GP.textPretty u
+logResult x = S.showText x
 
 data RGettable =
    forall a. (Gettable a, Show a) =>
@@ -36,5 +36,5 @@ data RGettable =
 instance Show RGettable where
    show (RGettable xs) = show xs
 
-instance PrettyShow RGettable where
-   prettyShow (RGettable xs) = prettyShow xs
+instance GP.PrettyShow RGettable where
+   prettyShow (RGettable xs) = GP.prettyShow xs

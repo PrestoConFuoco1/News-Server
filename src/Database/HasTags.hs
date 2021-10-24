@@ -13,11 +13,8 @@ class (Show (HIdent s)) =>
    hName :: s -> PS.Query
    hName' :: s -> T.Text
 
-newtype HDraft =
-   HDraft ()
 
-dummyHDraft :: HDraft
-dummyHDraft = HDraft ()
+data HDraft = HDraft
 
 instance HasTags HDraft where
    type HIdent HDraft = Int
@@ -25,11 +22,8 @@ instance HasTags HDraft where
    hName _ = "draft"
    hName' _ = "draft"
 
-newtype HPost =
-   HPost ()
 
-dummyHPost :: HPost
-dummyHPost = HPost ()
+data HPost = HPost
 
 instance HasTags HPost where
    type HIdent HPost = Int

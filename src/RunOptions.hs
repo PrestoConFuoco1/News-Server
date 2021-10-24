@@ -1,44 +1,68 @@
+{-# LANGUAGE DeriveGeneric #-}
 module RunOptions where
 
-import qualified App.Logger as L (Priority)
-import Data.List (isPrefixOf)
+import GHC.Generics
+import qualified App.Logger as L
+import qualified Utils as S (withMaybe)
 import Text.Read (readMaybe)
-import Utils as S
+import Data.List (isPrefixOf)
+import Options.Applicative
+import Data.Maybe (fromMaybe)
+import qualified GenericPretty as P
+import qualified Data.Text as T
+import Types
+
+data LoggerSettings =
+    LogAll
+    | LogGreaterThan L.Priority
+    deriving (Show, Eq)
+instance P.PrettyShow LoggerSettings where
+    prettyShow = P.LStr . show
+
+toLoggerFilter :: LoggerSettings -> (L.Priority -> Bool)
+toLoggerFilter LogAll = const True
+toLoggerFilter (LogGreaterThan pri) = (>= pri)
 
 data RunOptions =
    RunOptions
-      { loggerSettings :: L.Priority -> Bool
-      , testConfig :: Bool
-      , logPath :: FilePath
+      { confPath :: T.Text
       , migrations :: Bool
-      }
+      , loggerSettings :: LoggerSettings
+      , logPath :: T.Text
+      , testConfig :: Bool
+      } deriving (Show, Eq, Generic)
+instance P.PrettyShow RunOptions
 
-defaultRunOpts :: RunOptions
-defaultRunOpts =
+--for ghci
+ghciRunOpts :: RunOptions
+ghciRunOpts =
    RunOptions
-      { loggerSettings = const True
-      , testConfig = False
-      , logPath = "./log"
+      { confPath = "./server.conf"
       , migrations = False
+      , loggerSettings = LogAll
+      , logPath = "./log"
+      , testConfig = False
       }
 
-getOpts :: [String] -> RunOptions
-getOpts = foldr f defaultRunOpts
-  where
-    logpath = "--logpath=" :: String
-    logPathLength = length logpath
-    f "-m" acc = acc {migrations = True}
-    f "--test-config" acc = acc {testConfig = True}
-    f str acc
-       | logpath `isPrefixOf` str =
-          acc {logPath = drop logPathLength str}
-       | "-l" `isPrefixOf` str =
-          S.withMaybe
-             (getLoggerSettings $ drop 2 str)
-             acc
-             (\x -> acc {loggerSettings = x})
-    f _ acc = acc
+getOpts :: Parser RunOptions
+getOpts = RunOptions
+    <$> argument str (metavar "CONFPATH")
+    <*> switch (short 'm' <> long "migrations" <> help "Whether to run migrations")
+    <*> (
+        (getLoggerSettings <$> option auto ( short 'l' <> metavar "LOGLEVEL" <> help "Log level" ))
+        <|> pure LogAll)
+    <*> ( 
+        strOption ( long "logpath" <> metavar "LOGFILE" <> help "Log path")
+        <|> pure "./log")
+    <*> switch (long "test-config" <> help "Test configuration")
 
---        f "--test-config" acc = acc { testConfig = True }
-getLoggerSettings :: String -> Maybe (L.Priority -> Bool)
-getLoggerSettings str = (\x -> (>= x)) <$> readMaybe str
+serverHeader = "Backend for news server"
+
+getOptsIO :: IO RunOptions
+getOptsIO = execParser $ info (getOpts <**> helper)
+    ( fullDesc
+    <> header   serverHeader )
+
+getLoggerSettings :: L.Priority -> LoggerSettings
+getLoggerSettings = LogGreaterThan
+

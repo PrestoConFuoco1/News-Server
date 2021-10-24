@@ -1,7 +1,7 @@
 {-# LANGUAGE RecordWildCards #-}
 
 module Lib
-   ( someFunc
+   ( main
    ) where
 
 import Action.RequestToAction (requestToAction)
@@ -12,7 +12,7 @@ import qualified Config as C
 import Control.Monad (when)
 import qualified Control.Monad.Catch as CMC
 import qualified Data.Aeson as Ae (ToJSON(..), encode)
-import Data.IORef
+import Data.IORef (IORef, newIORef, readIORef, writeIORef)
 import qualified Exceptions as Ex
    ( defaultMainHandler
    , mainErrorHandler
@@ -27,43 +27,41 @@ import qualified Network.Wai as W
    , responseLBS
    )
 import qualified Network.Wai.Handler.Warp as Warp (run)
-import Result
-import RunOptions
+import qualified Result as R
+import qualified RunOptions as Opt
 import System.Environment (getArgs)
 import System.Exit as Q
 import System.IO (hPutStrLn, stderr)
-import Types
+import qualified Types as T
 import qualified Utils as S
+import qualified Data.Text as T (unpack)
 
-someFunc :: IO ()
-someFunc = do
-   args <- getArgs
-   case args of
-      [] ->
-         hPutStrLn
-            stderr
-            "Expected path to configuration file." >>
-         Q.exitWith (Q.ExitFailure 1)
-      (x:xs) -> runWithConf (getOpts xs) x
+main :: IO ()
+main = do
+    opts <- Opt.getOptsIO
+    L.logDebug L.stdHandle $ GP.textPretty opts
+    runWithOpts opts
 
-runWithConf :: RunOptions -> FilePath -> IO ()
-runWithConf opts path = do
+
+
+runWithOpts :: Opt.RunOptions -> IO ()
+runWithOpts opts = do
    let configLogger = L.stdHandle
    conf <-
-      C.loadConfig configLogger path `CMC.catches`
+      C.loadConfig configLogger (T.unpack $ Opt.confPath opts) `CMC.catches`
       C.configHandlers configLogger
-   when (testConfig opts) $ exitSuccess
-   if migrations opts
+   when (Opt.testConfig opts) $ exitSuccess
+   if Opt.migrations opts
       then M.migrationMain $ configToMigrationsConfig conf
       else let loggerSettings = runOptsToLoggerSettings opts
             in someFunc1 loggerSettings $
                configToAppConfig conf
 
-runOptsToLoggerSettings :: RunOptions -> L.LoggerConfig
+runOptsToLoggerSettings :: Opt.RunOptions -> L.LoggerConfig
 runOptsToLoggerSettings opts =
    L.LoggerConfig
-      { lcFilter = loggerSettings opts
-      , lcPath = logPath opts
+      { lcFilter = Opt.toLoggerFilter $ Opt.loggerSettings opts
+      , lcPath = T.unpack $ Opt.logPath opts
       }
 
 configToAppConfig :: C.Config -> DP.Config
@@ -119,11 +117,11 @@ mainServer req logger resources
       Left err -> f $ coerceResponse <$> handleError h err
       Right whowhat -> do
          D.logDebug h "Action type is"
-         D.logDebug h $ GP.textPretty $ _ww_action whowhat
+         D.logDebug h $ GP.textPretty $ T._ww_action whowhat
          let withLog res = do
                 r <- res
                 D.logDebug h "Result is"
-                D.logDebug h $ logResult r
+                D.logDebug h $ T.logResult r
                 pure $ toResponse r
              action =
                 withLog (executeAction h whowhat) `CMC.catches`
@@ -133,26 +131,26 @@ mainServer req logger resources
              action' = fmap coerceResponse action
          f action'
 
-coerceResponse :: Response -> W.Response
-coerceResponse (Response status msg) =
+coerceResponse :: R.Response -> W.Response
+coerceResponse (R.Response status msg) =
    W.responseLBS status [] $ Ae.encode msg
 
-toResponse :: APIResult -> Response
-toResponse (RGet (RGettable xs)) =
-   ok successGet (Ae.toJSON xs)
-toResponse (RGetUser user) =
-   ok successGetProfile (Ae.toJSON user)
-toResponse (RGetToken tok) =
-   ok successNewToken (Ae.toJSON tok)
-toResponse (RCreated ent int) =
-   ok (createdMsg ent) (Ae.toJSON int)
-toResponse (REdited ent int) =
-   ok (editedMsg ent) (Ae.toJSON int)
-toResponse (RDeleted ent int) =
-   ok (deletedMsg ent) (Ae.toJSON int)
-toResponse (RNotFound ent) = bad (entityNotFoundMsg ent)
-toResponse (RAlreadyInUse ent field value) =
-   bad (alreadyInUseMsg ent field value)
-toResponse (RInvalidForeign _ field value) =
-   bad (invalidForeignMsg field value)
-toResponse (RInvalidTag value) = bad (tagNotFoundMsg value)
+toResponse :: T.APIResult -> R.Response
+toResponse (T.RGet (T.RGettable xs)) =
+   R.ok R.successGet (Ae.toJSON xs)
+toResponse (T.RGetUser user) =
+   R.ok R.successGetProfile (Ae.toJSON user)
+toResponse (T.RGetToken tok) =
+   R.ok R.successNewToken (Ae.toJSON tok)
+toResponse (T.RCreated ent int) =
+   R.ok (R.createdMsg ent) (Ae.toJSON int)
+toResponse (T.REdited ent int) =
+   R.ok (R.editedMsg ent) (Ae.toJSON int)
+toResponse (T.RDeleted ent int) =
+   R.ok (R.deletedMsg ent) (Ae.toJSON int)
+toResponse (T.RNotFound ent) = R.bad (R.entityNotFoundMsg ent)
+toResponse (T.RAlreadyInUse ent field value) =
+   R.bad (R.alreadyInUseMsg ent field value)
+toResponse (T.RInvalidForeign _ field value) =
+   R.bad (R.invalidForeignMsg field value)
+toResponse (T.RInvalidTag value) = R.bad (R.tagNotFoundMsg value)

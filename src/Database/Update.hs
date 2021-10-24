@@ -51,11 +51,8 @@ class UpdateSQL s where
          s -> Upd s -> [(PS.Query, Maybe SqlValue)]
    identifParams :: s -> Upd s -> [SqlValue]
 
-newtype UTag =
-   UTag ()
 
-dummyUTag :: UTag
-dummyUTag = UTag ()
+data UTag = UTag
 
 instance UpdateSQL UTag where
    type Upd UTag = EditTag
@@ -67,11 +64,8 @@ instance UpdateSQL UTag where
       [("name", Just $ SqlValue _et_tagName)]
    identifParams _ et = [SqlValue $ _et_tagId et]
 
-newtype UCat =
-   UCat ()
 
-dummyUCat :: UCat
-dummyUCat = UCat ()
+data UCat = UCat
 
 instance UpdateSQL UCat where
    type Upd UCat = EditCategory
@@ -85,11 +79,8 @@ instance UpdateSQL UCat where
       ]
    identifParams _ ec = [SqlValue $ _ec_catId ec]
 
-newtype UAuthor =
-   UAuthor ()
 
-dummyUAuthor :: UAuthor
-dummyUAuthor = UAuthor ()
+data UAuthor = UAuthor
 
 instance UpdateSQL UAuthor where
    type Upd UAuthor = EditAuthor
@@ -103,11 +94,8 @@ instance UpdateSQL UAuthor where
       ]
    identifParams _ ea = [SqlValue $ _ea_authorId ea]
 
-newtype UPost =
-   UPost ()
 
-dummyUPost :: UPost
-dummyUPost = UPost ()
+data UPost = UPost
 
 instance UpdateSQL UPost where
    type Upd UPost = PublishEditPost
@@ -125,11 +113,8 @@ instance UpdateSQL UPost where
       ]
    identifParams _ pep = [SqlValue $ _pep_postId pep]
 
-newtype UDraft =
-   UDraft ()
 
-draftEditDummy :: UDraft
-draftEditDummy = UDraft ()
+data UDraft = UDraft
 
 instance UpdateSQL UDraft where
    type Upd UDraft = WithAuthor EditDraft
@@ -149,11 +134,8 @@ instance UpdateSQL UDraft where
    identifParams _ (WithAuthor a EditDraft {..}) =
       [SqlValue _ed_draftId, SqlValue a]
 
-newtype UPDraft =
-   UPDraft ()
 
-draftEditPublishDummy :: UPDraft
-draftEditPublishDummy = UPDraft ()
+data UPDraft = UPDraft
 
 instance UpdateSQL UPDraft where
    type Upd UPDraft = EditDraftPublish

@@ -13,7 +13,7 @@ import qualified Data.Configurator as C
 import qualified Data.Configurator.Types as CT
 import qualified Data.Text as T (pack)
 import GHC.Generics
-import GenericPretty
+import qualified GenericPretty as GP
 import qualified System.Exit as Q (ExitCode(..), exitWith)
 import qualified System.IO.Error as E
    ( isAlreadyInUseError
@@ -32,7 +32,7 @@ data Config =
       }
    deriving (Show, Eq, Generic)
 
-instance PrettyShow Config
+instance GP.PrettyShow Config
 
 defaultPort :: Int
 defaultPort = 5555
@@ -56,7 +56,7 @@ loadConfig handle path = do
              , dbPort = port
              }
    L.logInfo handle "successfully got server configuration"
-   L.logDebug handle $ textPretty config
+   L.logDebug handle $ GP.textPretty config
    pure config
 
 configHandlers :: L.Handle IO -> [C.Handler IO a]

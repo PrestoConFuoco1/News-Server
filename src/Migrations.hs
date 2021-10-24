@@ -4,12 +4,12 @@ module Migrations where
 
 import Control.Monad (forM_)
 import qualified Data.ByteString as BS
-import Data.FileEmbed
+import Data.FileEmbed (embedDir)
 import Data.Function (on)
 import qualified Data.List as L (sortBy)
-import Database.PostgreSQL.Simple
-import Database.PostgreSQL.Simple.Migration
-import System.Exit
+import qualified Database.PostgreSQL.Simple as PS
+import Database.PostgreSQL.Simple.Migration (MigrationContext(..), MigrationResult(..), MigrationCommand(..), runMigration)
+import qualified System.Exit as Q 
 
 data Config =
    Config
@@ -29,7 +29,7 @@ adminConnectionString Config {..} =
 migrationMain :: Config -> IO ()
 migrationMain conf = do
    let conStr = adminConnectionString conf
-   con <- connectPostgreSQL conStr
+   con <- PS.connectPostgreSQL conStr
    runMigrations1 con
 
 sortedMigrations :: [(FilePath, BS.ByteString)]
@@ -37,9 +37,9 @@ sortedMigrations =
    let unsorted = $(embedDir "migrations")
     in L.sortBy (compare `on` fst) unsorted
 
-runMigrations1 :: Connection -> IO ()
+runMigrations1 :: PS.Connection -> IO ()
 runMigrations1 con =
-   withTransaction con $ do
+   PS.withTransaction con $ do
       let defaultContext =
              MigrationContext
                 { migrationContextCommand =
@@ -61,4 +61,4 @@ runMigrations1 con =
          res <- runMigration migr
          case res of
             MigrationSuccess -> pure ()
-            MigrationError _ -> exitFailure
+            MigrationError _ -> Q.exitFailure

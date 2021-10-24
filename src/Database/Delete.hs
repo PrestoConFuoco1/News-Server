@@ -12,11 +12,8 @@ class DeleteSQL s where
    deleteQuery :: s -> Del s -> (PS.Query, [SqlValue])
    dName :: s -> Entity
 
-newtype DTag =
-   DTag ()
 
-dummyDTag :: DTag
-dummyDTag = DTag ()
+data DTag = DTag
 
 instance DeleteSQL DTag where
    type Del DTag = DeleteTag
@@ -25,11 +22,8 @@ instance DeleteSQL DTag where
       , [SqlValue $ _dt_tagId dt])
    dName _ = ETag
 
-newtype DCat =
-   DCat ()
 
-dummyDCat :: DCat
-dummyDCat = DCat ()
+data DCat = DCat
 
 instance DeleteSQL DCat where
    type Del DCat = DeleteCategory
@@ -38,11 +32,8 @@ instance DeleteSQL DCat where
       , [SqlValue $ _dc_catId dc])
    dName _ = ECategory
 
-newtype DAuthor =
-   DAuthor ()
 
-dummyDAuthor :: DAuthor
-dummyDAuthor = DAuthor ()
+data DAuthor = DAuthor
 
 instance DeleteSQL DAuthor where
    type Del DAuthor = DeleteAuthor
@@ -51,11 +42,8 @@ instance DeleteSQL DAuthor where
       , [SqlValue $ _da_authorId da])
    dName _ = EAuthor
 
-newtype DUser =
-   DUser ()
 
-dummyDUser :: DUser
-dummyDUser = DUser ()
+data DUser = DUser
 
 instance DeleteSQL DUser where
    type Del DUser = DeleteUser
@@ -64,14 +52,10 @@ instance DeleteSQL DUser where
       , [SqlValue $ _du_userId du])
    dName _ = EUser
 
-newtype DComment =
-   DComment ()
 
-dummyDComment :: DComment
-dummyDComment = DComment ()
+data DComment = DComment
 
 isAdmin :: User -> Bool
---isAdmin u = maybe False id $ _u_admin u
 isAdmin u = fromMaybe False $ _u_admin u
 
 instance DeleteSQL DComment where
@@ -89,11 +73,8 @@ instance DeleteSQL DComment where
                   , [commentParam, userParam])
    dName _ = EComment
 
-newtype DDraft =
-   DDraft ()
 
-dummyDDraft :: DDraft
-dummyDDraft = DDraft ()
+data DDraft = DDraft
 
 instance DeleteSQL DDraft where
    type Del DDraft = WithAuthor DeleteDraft
@@ -103,3 +84,4 @@ instance DeleteSQL DDraft where
 \ WHERE draft_id = ? AND author_id = ? RETURNING draft_id"
       , [SqlValue d, SqlValue a])
    dName _ = EDraft
+

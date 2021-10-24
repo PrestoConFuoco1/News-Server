@@ -2,7 +2,7 @@
 
 module Result where
 
-import qualified Data.Aeson as Ae
+import qualified Data.Aeson as Ae (Value, ToJSON(..))
 import qualified Data.Text as T
 import GHC.Generics
 import qualified Network.HTTP.Types as NHT

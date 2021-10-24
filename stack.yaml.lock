@@ -620,4 +620,18 @@ packages:
       sha256: 39a832225810dbde572ce161e5f76e980e9dec67e9e00f139e1c40db699a0255
   original:
     hackage: configurator-0.3.0.0@sha256:a96d4c52b93a4a7d5909421853964a26f1153f32f8c4f11f9e04b249653e4034,2653
+- completed:
+    hackage: optparse-applicative-0.16.1.0@sha256:16ebd7054b2265c1aad16c1d19dc503695fbfc67b35203d9952fd577d08c0110,4982
+    pantry-tree:
+      size: 2979
+      sha256: 0d4a0d442f7f25d35e88f5f30099763c512e3c8fefe2ebccebd82cead4000021
+  original:
+    hackage: optparse-applicative-0.16.1.0@sha256:16ebd7054b2265c1aad16c1d19dc503695fbfc67b35203d9952fd577d08c0110,4982
+- completed:
+    hackage: ansi-wl-pprint-0.6.9@sha256:20d30674f137d43aa0279c2c2cc5e45a5f1c3c57e301852494906158b6313bf7,2388
+    pantry-tree:
+      size: 472
+      sha256: 66a06439d3d7ab8d15f396aae8e4c3cedd907ade9e35e73bedbbf55bbdc8f59b
+  original:
+    hackage: ansi-wl-pprint-0.6.9@sha256:20d30674f137d43aa0279c2c2cc5e45a5f1c3c57e301852494906158b6313bf7,2388
 snapshots: []

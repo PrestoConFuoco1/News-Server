@@ -2,7 +2,7 @@
 
 module Action.Common where
 
-import Control.Monad.Reader
+import Control.Monad.Reader (MonadReader, ReaderT(..), asks)
 import qualified Data.ByteString as BS
 import qualified Data.HashMap.Strict as HS (HashMap)
 import GHC.Generics

@@ -41,6 +41,7 @@ dependencies:
 - file-embed
 - regex-pcre
 - configurator
+- optparse-applicative
 
 
 library:

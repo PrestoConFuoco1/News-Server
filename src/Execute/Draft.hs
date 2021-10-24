@@ -7,7 +7,7 @@ import qualified App.Logger as L
 import qualified Control.Monad.Catch as CMC
 import qualified Data.Text as T (Text, pack)
 import qualified Exceptions as Ex
-import Execute.Utils
+import Execute.Utils (modifyErrorToApiResult)
 import Types
 import qualified Utils as S
 
