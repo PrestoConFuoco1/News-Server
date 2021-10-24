@@ -1,4 +1,4 @@
-{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE AllowAmbiguousTypes, FlexibleInstances #-}
 
 module Database.Delete where
 
@@ -7,60 +7,54 @@ import qualified Database.PostgreSQL.Simple as PS
 import Database.SqlValue
 import Types
 
-class DeleteSQL s where
-   type Del s :: *
-   deleteQuery :: s -> Del s -> (PS.Query, [SqlValue])
-   dName :: s -> Entity
+class DeleteSQL a where
+   deleteQuery :: a -> (PS.Query, [SqlValue])
+   dName :: Entity
 
 
-data DTag = DTag
 
-instance DeleteSQL DTag where
-   type Del DTag = DeleteTag
-   deleteQuery _ dt =
+
+instance DeleteSQL DeleteTag where
+   deleteQuery dt =
       ( "DELETE FROM news.tag WHERE tag_id = ? RETURNING tag_id"
       , [SqlValue $ _dt_tagId dt])
-   dName _ = ETag
+   dName = ETag
 
 
-data DCat = DCat
 
-instance DeleteSQL DCat where
-   type Del DCat = DeleteCategory
-   deleteQuery _ dc =
+
+instance DeleteSQL DeleteCategory where
+   deleteQuery dc =
       ( "DELETE FROM news.category WHERE category_id = ? RETURNING category_id"
       , [SqlValue $ _dc_catId dc])
-   dName _ = ECategory
+   dName = ECategory
 
 
-data DAuthor = DAuthor
 
-instance DeleteSQL DAuthor where
-   type Del DAuthor = DeleteAuthor
-   deleteQuery _ da =
+
+instance DeleteSQL DeleteAuthor where
+   deleteQuery da =
       ( "DELETE FROM news.author WHERE author_id = ? RETURNING author_id"
       , [SqlValue $ _da_authorId da])
-   dName _ = EAuthor
+   dName = EAuthor
 
 
-data DUser = DUser
 
-instance DeleteSQL DUser where
-   type Del DUser = DeleteUser
-   deleteQuery _ du =
+
+instance DeleteSQL DeleteUser where
+   deleteQuery du =
       ( "DELETE FROM news.users WHERE user_id = ? RETURNING user_id"
       , [SqlValue $ _du_userId du])
-   dName _ = EUser
+   dName = EUser
 
 
-data DComment = DComment
+
 
 isAdmin :: User -> Bool
 isAdmin u = fromMaybe False $ _u_admin u
 
-instance DeleteSQL DComment where
-   type Del DComment = WithUser DeleteComment
-   deleteQuery _ (WithUser u dc) =
+instance DeleteSQL (WithUser DeleteComment ) where
+   deleteQuery (WithUser u dc) =
       let str =
              " DELETE FROM news.comment WHERE comment_id = ? "
           userWhere = " AND user_id = ? "
@@ -71,17 +65,16 @@ instance DeleteSQL DComment where
              then (str <> returning, [commentParam])
              else ( str <> userWhere <> returning
                   , [commentParam, userParam])
-   dName _ = EComment
+   dName = EComment
 
 
-data DDraft = DDraft
 
-instance DeleteSQL DDraft where
-   type Del DDraft = WithAuthor DeleteDraft
-   deleteQuery _ (WithAuthor a (DeleteDraft d)) =
+
+instance DeleteSQL (WithAuthor DeleteDraft) where
+   deleteQuery (WithAuthor a (DeleteDraft d)) =
       ( "\
 \ DELETE FROM news.draft \
 \ WHERE draft_id = ? AND author_id = ? RETURNING draft_id"
       , [SqlValue d, SqlValue a])
-   dName _ = EDraft
+   dName = EDraft
 

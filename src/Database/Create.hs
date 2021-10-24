@@ -1,4 +1,4 @@
-{-# LANGUAGE TypeFamilies, RecordWildCards #-}
+{-# LANGUAGE RecordWildCards, FlexibleInstances, AllowAmbiguousTypes #-}
 
 module Database.Create where
 
@@ -7,74 +7,67 @@ import qualified Database.PostgreSQL.Simple.Types as PSTy
 import Database.SqlValue (SqlValue(..))
 import Types
 
-class CreateSQL s where
-   type Create s :: *
-   createQuery :: s -> Create s -> (PS.Query, [SqlValue])
-   cName :: s -> Entity
+class CreateSQL a where
+   createQuery :: a -> (PS.Query, [SqlValue])
+   cName :: Entity
 
 
-data CTag = CTag
 
-instance CreateSQL CTag where
-   type Create CTag = CreateTag
-   createQuery _ CreateTag {..} =
+
+instance CreateSQL CreateTag where
+   createQuery CreateTag {..} =
       ( "INSERT INTO news.tag (name) VALUES (?) RETURNING tag_id"
       , [SqlValue _ct_tagName])
-   cName _ = ETag
+   cName = ETag
 
 
-data CCat = CCat
 
-instance CreateSQL CCat where
-   type Create CCat = CreateCategory
-   createQuery _ CreateCategory {..} =
+
+instance CreateSQL CreateCategory where
+   createQuery CreateCategory {..} =
       ( "INSERT INTO news.category (name, parent_category_Id) VALUES (?, ?) RETURNING category_id"
       , [SqlValue _cc_catName, SqlValue _cc_parentCat])
-   cName _ = ECategory
+   cName = ECategory
 
 
-data CUser = CUser
 
-instance CreateSQL CUser where
-   type Create CUser = CreateUser
-   createQuery _ CreateUser {..} =
+
+instance CreateSQL CreateUser where
+   createQuery CreateUser {..} =
       ( "INSERT INTO news.users (login, pass_hash, firstname, lastname) VALUES (?, ?, ?, ?) RETURNING user_id"
       , [ SqlValue _cu_login
         , SqlValue _cu_passHash
         , SqlValue _cu_firstName
         , SqlValue _cu_lastName
         ])
-   cName _ = EUser
+   cName = EUser
 
 
-data CAuthor = CAuthor
 
-instance CreateSQL CAuthor where
-   type Create CAuthor = CreateAuthor
-   createQuery _ CreateAuthor {..} =
+
+instance CreateSQL CreateAuthor where
+   createQuery CreateAuthor {..} =
       ( "INSERT INTO news.author (user_id, description) VALUES (?, ?) RETURNING author_id"
       , [SqlValue _ca_userId, SqlValue _ca_description])
-   cName _ = EAuthor
+   cName = EAuthor
 
 
-data CComment = CComment
 
-instance CreateSQL CComment where
-   type Create CComment = WithUser CreateComment
-   createQuery _ (WithUser u CreateComment {..}) =
+
+instance CreateSQL (WithUser CreateComment) where
+   createQuery (WithUser u CreateComment {..}) =
       ( "INSERT INTO news.comment (user_id, post_id, content) values (?, ?, ?) RETURNING comment_id"
       , [ SqlValue $ _u_id u
         , SqlValue _ccom_postId
         , SqlValue _ccom_content
         ])
-   cName _ = EComment
+   cName = EComment
 
 
-data CPost = CPost
 
-instance CreateSQL CPost where
-   type Create CPost = DraftRaw
-   createQuery _ DraftRaw {..} =
+
+instance CreateSQL DraftRaw where
+   createQuery DraftRaw {..} =
       ( "INSERT INTO news.post ( title, \
                                  \ author_id,\
                                  \ category_id,\
@@ -89,14 +82,13 @@ instance CreateSQL CPost where
         , SqlValue _dr_mainPhoto
         , SqlValue $ fmap PSTy.PGArray _dr_extraPhotos
         ])
-   cName _ = EPost
+   cName = EPost
 
 
-data CDraft = CDraft
 
-instance CreateSQL CDraft where
-   type Create CDraft = WithAuthor CreateDraft
-   createQuery _ (WithAuthor a CreateDraft {..}) =
+
+instance CreateSQL (WithAuthor CreateDraft) where
+   createQuery (WithAuthor a CreateDraft {..}) =
       ( "INSERT INTO news.draft (title, author_id, category_id, content, photo, extra_photos) \
          \VALUES (?, ?, ?, ?, ?, ?) RETURNING draft_id"
       , [ SqlValue _cd_title
@@ -106,4 +98,4 @@ instance CreateSQL CDraft where
         , SqlValue _cd_mainPhoto
         , SqlValue $ fmap PSTy.PGArray _cd_extraPhotos
         ])
-   cName _ = EDraft
+   cName = EDraft

@@ -1,4 +1,4 @@
-{-# LANGUAGE TypeFamilies, FlexibleContexts #-}
+{-# LANGUAGE TypeFamilies, FlexibleContexts, TypeSynonymInstances, FlexibleInstances #-}
 
 module Database.Read where
 
@@ -14,20 +14,18 @@ import qualified GenericPretty as GP (PrettyShow(..))
 import Prelude hiding (Read)
 import Types
 
-class ( Ae.ToJSON (MType s)
-      , GP.PrettyShow (MType s)
-      , PS.FromRow (MType s)
-      , Show (Get s)
-      , Show (MType s)
+class ( Ae.ToJSON (MType a)
+      , GP.PrettyShow (MType a)
+      , PS.FromRow (MType a)
+      , Show a
+      , Show (MType a)
       ) =>
-      Read s
+      Read a
    where
-   type MType s :: *
-   type Get s :: *
-   selectQuery :: s -> Get s -> (PS.Query, [SqlValue])
+   type MType a :: *
+   selectQuery :: a -> (PS.Query, [SqlValue])
 
 
-data PostD = PostD
 
 toOffset :: Int -> Int -> Int
 toOffset page size = page * size
@@ -37,10 +35,9 @@ pageingClause page size =
    ( " LIMIT ? OFFSET ? "
    , [SqlValue size, SqlValue $ toOffset page size])
 
-instance Read PostD where
-   type MType PostD = Post
-   type Get PostD = GetPosts
-   selectQuery _ (GetPosts cre tags search sortOpts) =
+instance Read GetPosts where
+   type MType GetPosts = Post
+   selectQuery (GetPosts cre tags search sortOpts) =
       let selectClause =
              "SELECT \
                \ post_id, \
@@ -146,24 +143,20 @@ enclose :: T.Text -> T.Text -> T.Text
 enclose p qu = p <> qu <> p
 
 
-data CatD = CatD
 
-instance Read CatD where
-   type MType CatD = Category
-   type Get CatD = GetCategories
-   selectQuery _ GetCategories =
+instance Read GetCategories where
+   type MType GetCategories = Category
+   selectQuery GetCategories =
       let selectClause =
              "SELECT catids, catnames FROM news.get_categories"
           args = []
        in (selectClause, args)
 
 
-data AuthorD = AuthorD
 
-instance Read AuthorD where
-   type MType AuthorD = Author
-   type Get AuthorD = GetAuthors
-   selectQuery _ (GetAuthors mUser) =
+instance Read GetAuthors where
+   type MType GetAuthors = Author
+   selectQuery (GetAuthors mUser) =
       let selectClause =
              "SELECT author_id, description, user_id, firstname, lastname, \
                            \ image, login, pass, creation_date, NULL as is_admin FROM news.get_authors "
@@ -176,12 +169,9 @@ instance Read AuthorD where
                 , [SqlValue user])
 
 
-data TagD = TagD
-
-instance Read TagD where
-   type MType TagD = Tag
-   type Get TagD = GetTags
-   selectQuery _ GetTags =
+instance Read GetTags where
+   type MType GetTags = Tag
+   selectQuery GetTags =
       let selectClause =
              "SELECT tag_id, name \
                            \ FROM news.get_tags"
@@ -189,12 +179,9 @@ instance Read TagD where
        in (selectClause, args)
 
 
-data CommentD = CommentD
-
-instance Read CommentD where
-   type MType CommentD = Comment
-   type Get CommentD = GetComments
-   selectQuery _ (GetComments pid) =
+instance Read GetComments where
+   type MType GetComments = Comment
+   selectQuery (GetComments pid) =
       let selectClause =
              "SELECT comment_id, content,  \
                             \ user_id, firstname, lastname, image, login, \
@@ -204,12 +191,9 @@ instance Read CommentD where
        in (selectClause, args)
 
 
-data DraftD = DraftD
-
-instance Read DraftD where
-   type MType DraftD = Draft
-   type Get DraftD = WithAuthor GetDrafts
-   selectQuery _ (WithAuthor a _) =
+instance Read (WithAuthor GetDrafts) where
+   type MType (WithAuthor GetDrafts) = Draft
+   selectQuery (WithAuthor a _) =
       let selectClause =
              "SELECT \
                \ draft_id, \
@@ -235,12 +219,9 @@ instance Read DraftD where
        in (selectClause, [SqlValue a])
 
 
-data DraftR = DraftR
-
-instance Read DraftR where
-   type MType DraftR = DraftRaw
-   type Get DraftR = WithAuthor Publish
-   selectQuery _ (WithAuthor a (Publish draft)) =
+instance Read (WithAuthor Publish) where
+   type MType (WithAuthor Publish) = DraftRaw
+   selectQuery (WithAuthor a (Publish draft)) =
       let selectClause =
              "SELECT \
                \ draft_id, \
@@ -255,12 +236,9 @@ instance Read DraftR where
        in (selectClause, [SqlValue a, SqlValue draft])
 
 
-data UserTokenR = UserTokenR
-
-instance Read UserTokenR where
-   type MType UserTokenR = User
-   type Get UserTokenR = Token
-   selectQuery _ y =
+instance Read Token where
+   type MType Token = User
+   selectQuery y =
       let str =
              "SELECT user_id, firstname, lastname, \
               \image, login, pass_hash, creation_date, is_admin \

@@ -1,4 +1,6 @@
-module Action.RequestToAction where
+module Action.RequestToAction (
+    Action(..), requestToAction, requestToAction1
+) where
 
 import qualified Data.ByteString as BS
 import qualified Data.HashMap.Strict as HS (fromList)

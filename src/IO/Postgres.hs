@@ -1,3 +1,4 @@
+{-# LANGUAGE TypeApplications, ScopedTypeVariables #-}
 module IO.Postgres where
 
 import qualified App.Logger as L
@@ -26,8 +27,8 @@ userAuthor ::
 userAuthor con logger u = do
    as <-
       getThis
+         @GetAuthors
          con
-         AuthorD
          logger
          (GetAuthors $ Just $ _u_id u)
    case as of
@@ -42,7 +43,7 @@ getUserByToken ::
    -> Token
    -> IO (Maybe User)
 getUserByToken con logger token = do
-   users <- getThis con UserTokenR logger token
+   users <- getThis @Token con logger token
    case users of
       [] -> pure Nothing
       [u] -> pure $ Just u
@@ -85,14 +86,13 @@ addToken con logger uid token = do
       pure token'
 
 getThisPaginated ::
-      (Read s)
+      (Read a)
    => PS.Connection
-   -> s
    -> L.Handle IO
-   -> Paginated (Get s)
-   -> IO [MType s]
-getThisPaginated con s logger (Paginated page size g) = do
-   let (qu, pars) = selectQuery s g
+   -> Paginated a
+   -> IO [MType a]
+getThisPaginated con logger (Paginated page size g) = do
+   let (qu, pars) = selectQuery g
        (qupag, parspag) = pageingClause page size
        qu' = qu <> qupag
        totalPars = pars ++ parspag
@@ -102,31 +102,29 @@ getThisPaginated con s logger (Paginated page size g) = do
       pure res
 
 getThis ::
-      (Read s)
+      (Read a)
    => PS.Connection
-   -> s
    -> L.Handle IO
-   -> Get s
-   -> IO [MType s]
-getThis con s logger g = do
-   let (qu, pars) = selectQuery s g
+   -> a
+   -> IO [MType a]
+getThis con logger g = do
+   let (qu, pars) = selectQuery g
    Ex.withExceptionHandlers (Ex.sqlHandlers logger qu pars) $ do
       res <- PS.query con qu pars
       pure res
 
 editThis ::
-      (UpdateSQL s)
+      forall a. (UpdateSQL a)
    => PS.Connection
-   -> s
    -> L.Handle IO
-   -> Upd s
+   -> a
    -> IO (Either ModifyError Int)
-editThis con s logger u =
-   case updateParams s u of
+editThis con logger u =
+   case updateParams u of
       Nothing -> Ex.throwInvalidUpdate
       Just (q, vals) -> do
-         let str = updateQuery s q
-             params = vals ++ identifParams s u
+         let str = updateQuery @a q
+             params = vals ++ identifParams u
              modifyHandler =
                 fmap Left . Ex.modifyErrorHandler
          Ex.withExceptionHandlers
@@ -138,17 +136,16 @@ editThis con s logger u =
                case ids of
                   [] -> pure (Left MNoAction)
                   [x] -> pure (Right x)
-                  _ -> Ex.throwInvalidUnique (uName s) ids
+                  _ -> Ex.throwInvalidUnique (uName @a) ids
 
 createThis ::
-      (CreateSQL s)
+      forall a. (CreateSQL a)
    => PS.Connection
-   -> s
    -> L.Handle IO
-   -> Create s
+   -> a
    -> IO (Either ModifyError Int)
-createThis con s logger cres = do
-   let (str, params) = createQuery s cres
+createThis con logger cres = do
+   let (str, params) = createQuery cres
        modifyHandler = fmap Left . Ex.modifyErrorHandler
    Ex.withExceptionHandlers
       (Ex.sqlHandlers logger str params) $
@@ -158,24 +155,23 @@ createThis con s logger cres = do
          case ints of
             [] -> pure $ Left MNoAction
             [x] -> pure $ Right x
-            _ -> Ex.throwInvalidUnique (cName s) ints
+            _ -> Ex.throwInvalidUnique (cName @a) ints
 
 deleteThis ::
-      (DeleteSQL s)
+      forall a. (DeleteSQL a)
    => PS.Connection
-   -> s
    -> L.Handle IO
-   -> Del s
+   -> a
    -> IO (Either DeleteError Int)
-deleteThis con s logger del = do
-   let (str, params) = deleteQuery s del
+deleteThis con logger del = do
+   let (str, params) = deleteQuery del
    Ex.withExceptionHandlers
       (Ex.sqlHandlers logger str params) $ do
       ids <- map PSTy.fromOnly <$> PS.query con str params
       case ids of
          [] -> pure $ Left DNoAction
          [eid] -> pure $ Right eid
-         _ -> Ex.throwInvalidUnique (dName s) ids
+         _ -> Ex.throwInvalidUnique (dName @a) ids
 
 checkUnique ::
       a -> (b -> a) -> Entity -> (b -> Int) -> [b] -> IO a

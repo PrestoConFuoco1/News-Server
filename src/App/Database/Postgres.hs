@@ -1,4 +1,4 @@
-{-# LANGUAGE RecordWildCards, DeriveAnyClass #-}
+{-# LANGUAGE RecordWildCards, DeriveAnyClass, TypeApplications #-}
 
 module App.Database.Postgres where
 
@@ -59,45 +59,46 @@ resourcesToHandle (Resources con) logger =
    Handle
       { log = logger
       , userAuthor = IOP.userAuthor con
-      , createUser = IOP.createThis con CUser
-      , deleteUser = IOP.deleteThis con DUser
+      , createUser = IOP.createThis @CreateUser con
+      , deleteUser = IOP.deleteThis @DeleteUser con
       , getUserByToken = IOP.getUserByToken con
       , getUserByLogin = IOP.getUserByLogin con
       , addToken = IOP.addToken con
       , generateToken = IOP.generateToken
-      , getAuthors = IOP.getThisPaginated con AuthorD
-      , createAuthor = IOP.createThis con CAuthor
-      , editAuthor = IOP.editThis con UAuthor
-      , deleteAuthor = IOP.deleteThis con DAuthor
-      , getTags = IOP.getThisPaginated con TagD
-      , createTag = IOP.createThis con CTag
-      , editTag = IOP.editThis con UTag
-      , deleteTag = IOP.deleteThis con DTag
-      , getCategories = IOP.getThisPaginated con CatD
-      , createCategory = IOP.createThis con CCat
-      , editCategory = IOP.editThis con UCat
-      , deleteCategory = IOP.deleteThis con DCat
-      , getPosts = IOP.getThisPaginated con PostD
-      , getComments = IOP.getThisPaginated con CommentD
-      , createComment = IOP.createThis con CComment
-      , deleteComment = IOP.deleteThis con DComment
+      , getAuthors = IOP.getThisPaginated @GetAuthors con
+      , createAuthor = IOP.createThis @CreateAuthor con
+      , editAuthor = IOP.editThis @EditAuthor con
+      , deleteAuthor = IOP.deleteThis @DeleteAuthor con
+      , getTags = IOP.getThisPaginated @GetTags con
+      , createTag = IOP.createThis @CreateTag con
+      , editTag = IOP.editThis @EditTag con
+      , deleteTag = IOP.deleteThis @DeleteTag con
+      , getCategories = IOP.getThisPaginated @GetCategories con
+      , createCategory = IOP.createThis @CreateCategory con
+      , editCategory = IOP.editThis @EditCategory con
+      , deleteCategory = IOP.deleteThis @DeleteCategory con
+      , getPosts = IOP.getThisPaginated @GetPosts con
+      , getComments = IOP.getThisPaginated @GetComments con
+      , createComment = IOP.createThis @(WithUser CreateComment) con
+      , deleteComment = IOP.deleteThis @(WithUser DeleteComment) con
       , withTransaction = IOP.withTransaction con
       , attachTagsToDraft = IOP.attachTags con HDraft
       , attachTagsToPost = IOP.attachTags con HPost
-      , editDraft = IOP.editThis con UDraft
+      , editDraft = IOP.editThis @(WithAuthor EditDraft) con
       , removeAllButGivenTagsDraft =
            IOP.removeAllButGivenTags con HDraft
       , removeAllButGivenTagsPost =
            IOP.removeAllButGivenTags con HPost
       , getDraftRaw =
            \l ->
-              IOP.getThis con DraftR l >=>
+              IOP.getThis @(WithAuthor Publish) con l >=>
               IOP.checkUnique Nothing Just EDraft _dr_draftId
-      , createDraft = IOP.createThis con CDraft
+      , createDraft = IOP.createThis @(WithAuthor CreateDraft) con
       , editDraftPublish =
-           IOP.editThis con UPDraft
-      , editPostPublish = IOP.editThis con UPost
-      , createPost = IOP.createThis con CPost
-      , getDrafts = IOP.getThisPaginated con DraftD
-      , deleteDraft = IOP.deleteThis con DDraft
+           IOP.editThis @EditDraftPublish con
+      , editPostPublish = IOP.editThis @PublishEditPost con
+      , createPost = IOP.createThis @DraftRaw con
+      , getDrafts = IOP.getThisPaginated @(WithAuthor GetDrafts) con
+      , deleteDraft = IOP.deleteThis @(WithAuthor DeleteDraft) con
       }
+
