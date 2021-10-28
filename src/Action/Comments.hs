@@ -1,22 +1,22 @@
 module Action.Comments where
 
 import Action.Common (Router)
-import Action.Utils
+import qualified Action.Utils as AU
 import Types
 
 getCommentsToAction :: Router GetComments
 getCommentsToAction = do
-   postId <- requireField readInt "post_id"
+   postId <- AU.requireField AU.readInt "post_id"
    pure $ GetComments postId
 
 createCommentsToAction :: Router CreateComment
 createCommentsToAction = do
-   postId <- requireField readInt "post_id"
+   postId <- AU.requireField AU.readInt "post_id"
    content <-
-      requireField (validator notEmpty . readText) "content"
+      AU.requireField (AU.validator AU.notEmpty . AU.readText) "content"
    pure $ CreateComment postId content
 
 deleteCommentsToAction :: Router DeleteComment
 deleteCommentsToAction = do
-   commentId <- requireField readInt "comment_id"
+   commentId <- AU.requireField AU.readInt "comment_id"
    pure $ DeleteComment commentId

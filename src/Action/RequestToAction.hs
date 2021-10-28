@@ -27,7 +27,7 @@ import Action.Tags
 import Action.Users
 
 import Action.Common
-import Action.Utils
+import qualified Action.Utils as AU
 
 import Types
 
@@ -104,8 +104,8 @@ requestToAction2 path hash =
 
 requestToActionAuthenticate :: Router Authenticate
 requestToActionAuthenticate = do
-   login <- requireField validateNotEmpty "login"
-   passHash <- requireField validateNotEmpty "pass_hash"
+   login <- AU.requireField AU.validateNotEmpty "login"
+   passHash <- AU.requireField AU.validateNotEmpty "pass_hash"
    pure $ Authenticate login passHash
 
 requestToActionPosts ::
@@ -118,11 +118,11 @@ requestToActionPosts path hash =
          | x == "get" ->
             fmap (AP . Read) $
             runRouter (renv False hash) $
-            withPagination getPostsAction
+            AU.withPagination getPostsAction
          | otherwise ->
             Left $ ActionErrorPerms False EInvalidEndpoint
       (x:xs) ->
-         case readIntText x of
+         case AU.readIntText x of
             (Just pid) -> GC <$> actionWithPost pid xs hash
             Nothing -> Left pathNotFound
       [] -> Left pathNotFound
@@ -137,7 +137,7 @@ requestToActionDrafts path hash =
          | x == "get" ->
             fmap Read $
             runRouter (renv False hash) $
-            withPagination (pure GetDrafts)
+            AU.withPagination (pure GetDrafts)
          | x == "create" ->
             Create <$>
             runRouter (renv False hash) createDraftToAction
@@ -159,7 +159,7 @@ requestToActionCats path hash =
          | x == "get" ->
             fmap Read $
             runRouter (renv False hash) $
-            withPagination (pure GetCategories)
+            AU.withPagination (pure GetCategories)
          | x == "create" ->
             Create <$>
             runRouter (renv True hash) createCatsToAction
@@ -181,7 +181,7 @@ requestToActionTags path hash =
          | x == "get" ->
             fmap Read $
             runRouter (renv False hash) $
-            withPagination (pure GetTags)
+            AU.withPagination (pure GetTags)
          | x == "create" ->
             Create <$>
             runRouter (renv True hash) createTagToAction
@@ -219,7 +219,7 @@ requestToActionAuthors path hash =
          | x == "get" ->
             fmap Read $
             runRouter (renv False hash) $
-            withPagination (pure $ GetAuthors Nothing)
+            AU.withPagination (pure $ GetAuthors Nothing)
          | x == "create" ->
             Create <$>
             runRouter (renv True hash) createAuthorToAction
@@ -241,7 +241,7 @@ requestToActionComments path hash =
          | x == "get" ->
             fmap Read $
             runRouter (renv False hash) $
-            withPagination getCommentsToAction
+            AU.withPagination getCommentsToAction
          | x == "create" ->
             Create <$>
             runRouter

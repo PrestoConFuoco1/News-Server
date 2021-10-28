@@ -1,18 +1,18 @@
 module Action.Users where
 
 import Action.Common (Router)
-import Action.Utils
+import qualified Action.Utils as AU
 import Types
 
 createUserToAction :: Router CreateUser
 createUserToAction = do
-   login <- requireField validateNotEmpty "login"
-   passHash <- requireField validateNotEmpty "pass_hash"
-   firstName <- requireField validateNotEmpty "firstname"
-   lastName <- requireField validateNotEmpty "lastname"
+   login <- AU.requireField AU.validateNotEmpty "login"
+   passHash <- AU.requireField AU.validateNotEmpty "pass_hash"
+   firstName <- AU.requireField AU.validateNotEmpty "firstname"
+   lastName <- AU.requireField AU.validateNotEmpty "lastname"
    pure $ CreateUser login passHash firstName lastName
 
 deleteUserToAction :: Router DeleteUser
 deleteUserToAction = do
-   uid <- requireField readInt "user_id"
+   uid <- AU.requireField AU.readInt "user_id"
    pure $ DeleteUser uid

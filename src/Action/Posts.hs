@@ -1,7 +1,7 @@
 module Action.Posts where
 
 import Action.Common
-import Action.Utils
+import qualified Action.Utils as AU
 import qualified Data.Text as T
 import Prelude hiding (readList)
 import Types
@@ -19,27 +19,27 @@ actionWithPost pid path hash =
       [x]
          | x == "comments" ->
             runRouter (renv False hash) $
-            withPagination $ pure $ GetComments pid
+            AU.withPagination $ pure $ GetComments pid
       _ -> Left $ ActionErrorPerms False EInvalidEndpoint
 
 getPostsAction :: Router GetPosts
 getPostsAction = do
    tagopts <-
-      oneOf
-         [ fmap2 OneTag $ optional readInt "tag"
-         , fmap2 TagsIn $ optional readList "tags__in"
-         , fmap2 TagsAll $ optional readList "tags__all"
+      AU.oneOf
+         [ AU.fmap2 OneTag $ AU.optional AU.readInt "tag"
+         , AU.fmap2 TagsIn $ AU.optional AU.readList "tags__in"
+         , AU.fmap2 TagsAll $ AU.optional AU.readList "tags__all"
          ]
    creationopts <-
-      oneOf
-         [ fmap2 Created $ optional readDay "created_at"
-         , fmap2 CreatedEarlier $
-           optional readDay "created_at__lt"
-         , fmap2 CreatedLater $
-           optional readDay "created_at__gt"
+      AU.oneOf
+         [ AU.fmap2 Created $ AU.optional AU.readDay "created_at"
+         , AU.fmap2 CreatedEarlier $
+           AU.optional AU.readDay "created_at__lt"
+         , AU.fmap2 CreatedLater $
+           AU.optional AU.readDay "created_at__gt"
          ]
    sortoptsRaw <-
-      optional validateNotEmpty "sort" :: Router (Maybe T.Text)
+      AU.optional AU.validateNotEmpty "sort" :: Router (Maybe T.Text)
    sortopts <-
       case sortoptsRaw of
          Nothing -> pure defaultSortOptions
@@ -47,8 +47,8 @@ getPostsAction = do
             errorOnNothing (EInvalidFieldValue "sort") $
             sortOptions s
    searchopts <-
-      fmap2 SearchOptions $
-      optional validateNotEmpty "search"
+      AU.fmap2 SearchOptions $
+      AU.optional AU.validateNotEmpty "search"
    pure $
       GetPosts creationopts tagopts searchopts sortopts
 

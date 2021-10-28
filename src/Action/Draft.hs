@@ -1,18 +1,18 @@
 module Action.Draft where
 
 import Action.Common (Router)
-import Action.Utils
+import qualified Action.Utils as AU
 import Prelude hiding (readList)
 import Types
 
 createDraftToAction :: Router CreateDraft
 createDraftToAction = do
-   title <- requireField validateNotEmpty "title"
-   tags <- requireField readList "tags"
-   category <- requireField readInt "category_id"
-   content <- requireField validateNotEmpty "content"
-   mainPhoto <- optional validateNotEmpty "main_photo"
-   extraPhotos <- optional readList "extra_photos"
+   title <- AU.requireField AU.validateNotEmpty "title"
+   tags <- AU.requireField AU.readList "tags"
+   category <- AU.requireField AU.readInt "category_id"
+   content <- AU.requireField AU.validateNotEmpty "content"
+   mainPhoto <- AU.optional AU.validateNotEmpty "main_photo"
+   extraPhotos <- AU.optional AU.readList "extra_photos"
    pure $
       CreateDraft
          title
@@ -24,13 +24,13 @@ createDraftToAction = do
 
 editDraftToAction :: Router EditDraft
 editDraftToAction = do
-   draftId <- requireField readInt "draft_id"
-   title <- optional validateNotEmpty "title"
-   tags <- optional readList "tags"
-   category <- optional readInt "category_id"
-   content <- optional validateNotEmpty "content"
-   mainPhoto <- optional validateNotEmpty "main_photo"
-   extraPhotos <- optional readList "extra_photos"
+   draftId <- AU.requireField AU.readInt "draft_id"
+   title <- AU.optional AU.validateNotEmpty "title"
+   tags <- AU.optional AU.readList "tags"
+   category <- AU.optional AU.readInt "category_id"
+   content <- AU.optional AU.validateNotEmpty "content"
+   mainPhoto <- AU.optional AU.validateNotEmpty "main_photo"
+   extraPhotos <- AU.optional AU.readList "extra_photos"
    pure $
       EditDraft
          draftId
@@ -43,10 +43,10 @@ editDraftToAction = do
 
 deleteDraftToAction :: Router DeleteDraft
 deleteDraftToAction = do
-   draftId <- requireField readInt "draft_id"
+   draftId <- AU.requireField AU.readInt "draft_id"
    pure $ DeleteDraft draftId
 
 publishAction :: Router Publish
 publishAction = do
-   draftId <- requireField readInt "draft_id"
+   draftId <- AU.requireField AU.readInt "draft_id"
    pure $ Publish draftId
