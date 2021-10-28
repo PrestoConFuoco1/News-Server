@@ -12,7 +12,7 @@ import qualified Database.PostgreSQL.Simple.Types as PSTy
 import Database.SqlValue
 import qualified GenericPretty as GP (PrettyShow(..))
 import Prelude hiding (Read)
-import Types
+import qualified Types as Y
 
 class ( Ae.ToJSON (MType a)
       , GP.PrettyShow (MType a)
@@ -33,9 +33,9 @@ pageingClause page size =
    ( " LIMIT ? OFFSET ? "
    , [SqlValue size, SqlValue $ toOffset page size])
 
-instance Read GetPosts where
-   type MType GetPosts = Post
-   selectQuery (GetPosts cre tags search sortOpts) =
+instance Read Y.GetPosts where
+   type MType Y.GetPosts = Y.Post
+   selectQuery (Y.GetPosts cre tags search sortOpts) =
       let selectClause =
              "SELECT \
                \ post_id, \
@@ -70,28 +70,28 @@ instance Read GetPosts where
             orderClause
           , args)
 
-postsOrder :: SortOptions -> PS.Query
-postsOrder (SortOptions ent order) =
+postsOrder :: Y.SortOptions -> PS.Query
+postsOrder (Y.SortOptions ent order) =
    " ORDER BY " <>
    getEntity ent <> " " <> ascDescQ order <> " NULLS LAST "
 
-getEntity :: SortEntity -> PS.Query
-getEntity SEDate = " post_creation_date "
-getEntity SEAuthor = " lower(author_description) "
-getEntity SECategory = " lower(catnames[1]) "
-getEntity SEPhotoNumber =
+getEntity :: Y.SortEntity -> PS.Query
+getEntity Y.SEDate = " post_creation_date "
+getEntity Y.SEAuthor = " lower(author_description) "
+getEntity Y.SECategory = " lower(catnames[1]) "
+getEntity Y.SEPhotoNumber =
    " COALESCE(array_length(extra_photos, 1), 0) "
 
-ascDescQ :: SortOrder -> PS.Query
-ascDescQ SOAscending = " ASC "
-ascDescQ SODescending = " DESC "
+ascDescQ :: Y.SortOrder -> PS.Query
+ascDescQ Y.SOAscending = " ASC "
+ascDescQ Y.SODescending = " DESC "
 
 postsWhereDate ::
-      CreationDateOptions -> (PS.Query, [SqlValue])
-postsWhereDate (Created day) = postsWhereDate' "=" day
-postsWhereDate (CreatedEarlier day) =
+      Y.CreationDateOptions -> (PS.Query, [SqlValue])
+postsWhereDate (Y.Created day) = postsWhereDate' "=" day
+postsWhereDate (Y.CreatedEarlier day) =
    postsWhereDate' "<=" day
-postsWhereDate (CreatedLater day) = postsWhereDate' ">=" day
+postsWhereDate (Y.CreatedLater day) = postsWhereDate' ">=" day
 
 postsWhereDate' ::
       PS.Query -> Time.Day -> (PS.Query, [SqlValue])
@@ -99,16 +99,16 @@ postsWhereDate' compareSym day =
    ( " post_creation_date " <> compareSym <> " ? "
    , [SqlValue day])
 
-postsWhereTags :: TagsOptions -> (PS.Query, [SqlValue])
-postsWhereTags (OneTag tid) =
+postsWhereTags :: Y.TagsOptions -> (PS.Query, [SqlValue])
+postsWhereTags (Y.OneTag tid) =
    ("? && tagids", [SqlValue $ PSTy.PGArray [tid]])
-postsWhereTags (TagsIn tids) =
+postsWhereTags (Y.TagsIn tids) =
    ("? && tagids", [SqlValue $ PSTy.PGArray tids])
-postsWhereTags (TagsAll tids) =
+postsWhereTags (Y.TagsAll tids) =
    ("? <@ tagids", [SqlValue $ PSTy.PGArray tids])
 
-postsWhereSearch :: SearchOptions -> (PS.Query, [SqlValue])
-postsWhereSearch (SearchOptions text) =
+postsWhereSearch :: Y.SearchOptions -> (PS.Query, [SqlValue])
+postsWhereSearch (Y.SearchOptions text) =
    let str =
           "title ILIKE ? OR content ILIKE ?\
               \ OR array_to_string(tagnames, ',') ILIKE ?\
@@ -140,17 +140,17 @@ enclosePar qu = "(" <> qu <> ")"
 enclose :: T.Text -> T.Text -> T.Text
 enclose p qu = p <> qu <> p
 
-instance Read GetCategories where
-   type MType GetCategories = Category
-   selectQuery GetCategories =
+instance Read Y.GetCategories where
+   type MType Y.GetCategories = Y.Category
+   selectQuery Y.GetCategories =
       let selectClause =
              "SELECT catids, catnames FROM news.get_categories"
           args = []
        in (selectClause, args)
 
-instance Read GetAuthors where
-   type MType GetAuthors = Author
-   selectQuery (GetAuthors mUser) =
+instance Read Y.GetAuthors where
+   type MType Y.GetAuthors = Y.Author
+   selectQuery (Y.GetAuthors mUser) =
       let selectClause =
              "SELECT author_id, description, user_id, firstname, lastname, \
                            \ image, login, pass, creation_date, NULL as is_admin FROM news.get_authors "
@@ -162,18 +162,18 @@ instance Read GetAuthors where
                 ( selectClause <> whereClause
                 , [SqlValue user])
 
-instance Read GetTags where
-   type MType GetTags = Tag
-   selectQuery GetTags =
+instance Read Y.GetTags where
+   type MType Y.GetTags = Y.Tag
+   selectQuery Y.GetTags =
       let selectClause =
              "SELECT tag_id, name \
                            \ FROM news.get_tags"
           args = []
        in (selectClause, args)
 
-instance Read GetComments where
-   type MType GetComments = Comment
-   selectQuery (GetComments pid) =
+instance Read Y.GetComments where
+   type MType Y.GetComments = Y.Comment
+   selectQuery (Y.GetComments pid) =
       let selectClause =
              "SELECT comment_id, content,  \
                             \ user_id, firstname, lastname, image, login, \
@@ -182,9 +182,9 @@ instance Read GetComments where
           args = [SqlValue pid]
        in (selectClause, args)
 
-instance Read (WithAuthor GetDrafts) where
-   type MType (WithAuthor GetDrafts) = Draft
-   selectQuery (WithAuthor a _) =
+instance Read (Y.WithAuthor Y.GetDrafts) where
+   type MType (Y.WithAuthor Y.GetDrafts) = Y.Draft
+   selectQuery (Y.WithAuthor a _) =
       let selectClause =
              "SELECT \
                \ draft_id, \
@@ -209,9 +209,9 @@ instance Read (WithAuthor GetDrafts) where
                \ FROM news.get_drafts WHERE author_id = ?"
        in (selectClause, [SqlValue a])
 
-instance Read (WithAuthor Publish) where
-   type MType (WithAuthor Publish) = DraftRaw
-   selectQuery (WithAuthor a (Publish draft)) =
+instance Read (Y.WithAuthor Y.Publish) where
+   type MType (Y.WithAuthor Y.Publish) = Y.DraftRaw
+   selectQuery (Y.WithAuthor a (Y.Publish draft)) =
       let selectClause =
              "SELECT \
                \ draft_id, \
@@ -225,8 +225,8 @@ instance Read (WithAuthor Publish) where
                \ FROM news.draft_tag_total WHERE author_id = ? AND draft_id = ?"
        in (selectClause, [SqlValue a, SqlValue draft])
 
-instance Read Token where
-   type MType Token = User
+instance Read Y.Token where
+   type MType Y.Token = Y.User
    selectQuery y =
       let str =
              "SELECT user_id, firstname, lastname, \

@@ -3,9 +3,9 @@ module Action.Draft where
 import Action.Common (Router)
 import qualified Action.Utils as AU
 import Prelude hiding (readList)
-import Types
+import qualified Types as Y
 
-createDraftToAction :: Router CreateDraft
+createDraftToAction :: Router Y.CreateDraft
 createDraftToAction = do
    title <- AU.requireField AU.validateNotEmpty "title"
    tags <- AU.requireField AU.readList "tags"
@@ -14,7 +14,7 @@ createDraftToAction = do
    mainPhoto <- AU.optional AU.validateNotEmpty "main_photo"
    extraPhotos <- AU.optional AU.readList "extra_photos"
    pure $
-      CreateDraft
+      Y.CreateDraft
          title
          tags
          category
@@ -22,7 +22,7 @@ createDraftToAction = do
          mainPhoto
          extraPhotos
 
-editDraftToAction :: Router EditDraft
+editDraftToAction :: Router Y.EditDraft
 editDraftToAction = do
    draftId <- AU.requireField AU.readInt "draft_id"
    title <- AU.optional AU.validateNotEmpty "title"
@@ -32,7 +32,7 @@ editDraftToAction = do
    mainPhoto <- AU.optional AU.validateNotEmpty "main_photo"
    extraPhotos <- AU.optional AU.readList "extra_photos"
    pure $
-      EditDraft
+      Y.EditDraft
          draftId
          title
          tags
@@ -41,12 +41,12 @@ editDraftToAction = do
          mainPhoto
          extraPhotos
 
-deleteDraftToAction :: Router DeleteDraft
+deleteDraftToAction :: Router Y.DeleteDraft
 deleteDraftToAction = do
    draftId <- AU.requireField AU.readInt "draft_id"
-   pure $ DeleteDraft draftId
+   pure $ Y.DeleteDraft draftId
 
-publishAction :: Router Publish
+publishAction :: Router Y.Publish
 publishAction = do
    draftId <- AU.requireField AU.readInt "draft_id"
-   pure $ Publish draftId
+   pure $ Y.Publish draftId

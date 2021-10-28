@@ -4,7 +4,7 @@ module Lib
    ( main
    ) where
 
-import Action.RequestToAction (requestToActionHTTP, requestToAction)
+import Action.RequestToAction (requestToActionHTTP)
 import qualified App.Database as D
 import qualified App.Database.Postgres as DP
 import qualified App.Logger as L
@@ -29,10 +29,8 @@ import qualified Network.Wai as W
 import qualified Network.Wai.Handler.Warp as Warp (run)
 import qualified Result as R
 import qualified RunOptions as Opt
-import System.Environment (getArgs)
 import qualified System.Exit as Q
-import System.IO (hPutStrLn, stderr)
-import qualified Types as T
+import qualified Types as Y
 import qualified Utils as S
 import qualified Data.Text as T (unpack)
 
@@ -117,11 +115,11 @@ mainServer req logger resources
       Left err -> resourcesUnchanged $ coerceResponse <$> handleError h err
       Right whowhat -> do
          D.logDebug h "Action type is"
-         D.logDebug h $ GP.textPretty $ T._ww_action whowhat
+         D.logDebug h $ GP.textPretty $ Y._ww_action whowhat
          let withLog res = do
                 r <- res
                 D.logDebug h "Result is"
-                D.logDebug h $ T.logResult r
+                D.logDebug h $ Y.logResult r
                 pure $ toResponse r
              action = fmap coerceResponse (
                 withLog (executeAction h whowhat) `CMC.catches`
@@ -134,22 +132,22 @@ coerceResponse :: R.Response -> W.Response
 coerceResponse (R.Response status msg) =
    W.responseLBS status [] $ Ae.encode msg
 
-toResponse :: T.APIResult -> R.Response
-toResponse (T.RGet (T.RGettable xs)) =
+toResponse :: Y.APIResult -> R.Response
+toResponse (Y.RGet (Y.RGettable xs)) =
    R.ok R.successGet (Ae.toJSON xs)
-toResponse (T.RGetUser user) =
+toResponse (Y.RGetUser user) =
    R.ok R.successGetProfile (Ae.toJSON user)
-toResponse (T.RGetToken tok) =
+toResponse (Y.RGetToken tok) =
    R.ok R.successNewToken (Ae.toJSON tok)
-toResponse (T.RCreated ent int) =
+toResponse (Y.RCreated ent int) =
    R.ok (R.createdMsg ent) (Ae.toJSON int)
-toResponse (T.REdited ent int) =
+toResponse (Y.REdited ent int) =
    R.ok (R.editedMsg ent) (Ae.toJSON int)
-toResponse (T.RDeleted ent int) =
+toResponse (Y.RDeleted ent int) =
    R.ok (R.deletedMsg ent) (Ae.toJSON int)
-toResponse (T.RNotFound ent) = R.bad (R.entityNotFoundMsg ent)
-toResponse (T.RAlreadyInUse ent field value) =
+toResponse (Y.RNotFound ent) = R.bad (R.entityNotFoundMsg ent)
+toResponse (Y.RAlreadyInUse ent field value) =
    R.bad (R.alreadyInUseMsg ent field value)
-toResponse (T.RInvalidForeign _ field value) =
+toResponse (Y.RInvalidForeign _ field value) =
    R.bad (R.invalidForeignMsg field value)
-toResponse (T.RInvalidTag value) = R.bad (R.tagNotFoundMsg value)
+toResponse (Y.RInvalidTag value) = R.bad (R.tagNotFoundMsg value)

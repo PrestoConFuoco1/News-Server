@@ -11,7 +11,7 @@ import qualified Data.Text.Encoding as E
    , encodeUtf8
    )
 import qualified Data.Time as Time
-import Types
+import qualified Types as Y
 
 notEmpty :: T.Text -> Bool
 notEmpty = (/= "")
@@ -97,7 +97,7 @@ fmap2 ::
 fmap2 f = fmap (fmap f)
 
 {-
-data Paginated a = Paginated {
+data Y.Paginated a = Paginated {
     _pag_page :: Int,
     _pag_size :: Int,
     _pag_data :: a
@@ -109,10 +109,10 @@ defaultPage = 0
 
 defaultSize = 10000
 
-withPagination :: Router a -> Router (Paginated a)
+withPagination :: Router a -> Router (Y.Paginated a)
 withPagination m = do
    x <- m
    page <- requireWithDefault readInt defaultPage "page"
    size <- requireWithDefault readInt defaultSize "size"
-   pure $ Paginated page size x
+   pure $ Y.Paginated page size x
 

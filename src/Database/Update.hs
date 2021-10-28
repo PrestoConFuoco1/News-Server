@@ -6,7 +6,7 @@ import Data.Maybe (mapMaybe)
 import qualified Database.PostgreSQL.Simple as PS
 import qualified Database.PostgreSQL.Simple.Types as PSTy
 import Database.SqlValue
-import Types
+import qualified Types as Y
 
 updateParams ::
       (UpdateSQL a)
@@ -25,6 +25,7 @@ intercalateQ xs = Just $ f xs
   where
     f [y] = y
     f (y:ys) = y <> ", " <> f ys
+    f _ = error "this pattern cannot match!"
 
 intercalateWith :: PS.Query -> [PS.Query] -> Maybe PS.Query
 intercalateWith _ [] = Nothing
@@ -32,6 +33,7 @@ intercalateWith delim xs = Just $ f xs
   where
     f [y] = y
     f (y:ys) = y <> delim <> f ys
+    f _ = error "this pattern cannot match!"
 
 setUnit :: PS.Query -> PS.Query
 setUnit fname = fname <> " = ?"
@@ -44,7 +46,7 @@ optionals = mapMaybe f . optionalsMaybe
 
 class UpdateSQL a where
    updateQuery :: PS.Query -> PS.Query
-   uName :: Entity
+   uName :: Y.Entity
    optionalsMaybe ::
          a -> [(PS.Query, Maybe SqlValue)]
    identifParams :: a -> [SqlValue]
@@ -52,52 +54,52 @@ class UpdateSQL a where
 
 
 
-instance UpdateSQL EditTag where
+instance UpdateSQL Y.EditTag where
    updateQuery p =
       "UPDATE news.tag SET " <>
       p <> " WHERE tag_id = ? RETURNING tag_id"
-   uName = ETag
-   optionalsMaybe EditTag {..} =
+   uName = Y.ETag
+   optionalsMaybe Y.EditTag {..} =
       [("name", Just $ SqlValue _et_tagName)]
-   identifParams et = [SqlValue $ _et_tagId et]
+   identifParams et = [SqlValue $ Y._et_tagId et]
 
 
 
 
-instance UpdateSQL EditCategory where
+instance UpdateSQL Y.EditCategory where
    updateQuery p =
       "UPDATE news.category SET " <>
       p <> " WHERE category_id = ? RETURNING category_id"
-   uName = ECategory
-   optionalsMaybe EditCategory {..} =
+   uName = Y.ECategory
+   optionalsMaybe Y.EditCategory {..} =
       [ ("name", fmap SqlValue _ec_catName)
       , ("parent_category_id", fmap SqlValue _ec_parentId)
       ]
-   identifParams ec = [SqlValue $ _ec_catId ec]
+   identifParams ec = [SqlValue $ Y._ec_catId ec]
 
 
 
 
-instance UpdateSQL EditAuthor where
+instance UpdateSQL Y.EditAuthor where
    updateQuery p =
       "UPDATE news.author SET " <>
       p <> " WHERE author_id = ? RETURNING author_id"
-   uName = EAuthor
-   optionalsMaybe EditAuthor {..} =
+   uName = Y.EAuthor
+   optionalsMaybe Y.EditAuthor {..} =
       [ ("description", fmap SqlValue _ea_description)
       , ("user_id", fmap SqlValue _ea_userId)
       ]
-   identifParams ea = [SqlValue $ _ea_authorId ea]
+   identifParams ea = [SqlValue $ Y._ea_authorId ea]
 
 
 
 
-instance UpdateSQL PublishEditPost where
+instance UpdateSQL Y.PublishEditPost where
    updateQuery p =
       "UPDATE news.post SET " <>
       p <> " WHERE post_id = ? RETURNING post_id"
-   uName = EPost
-   optionalsMaybe PublishEditPost {..} =
+   uName = Y.EPost
+   optionalsMaybe Y.PublishEditPost {..} =
       [ ("title", Just $ SqlValue _pep_title)
       , ("category_id", Just $ SqlValue _pep_categoryId)
       , ("content", Just $ SqlValue _pep_content)
@@ -105,18 +107,18 @@ instance UpdateSQL PublishEditPost where
       , ( "extra_photos"
         , fmap (SqlValue . PSTy.PGArray) _pep_extraPhotos)
       ]
-   identifParams pep = [SqlValue $ _pep_postId pep]
+   identifParams pep = [SqlValue $ Y._pep_postId pep]
 
 
 
 
-instance UpdateSQL (WithAuthor EditDraft) where
+instance UpdateSQL (Y.WithAuthor Y.EditDraft) where
    updateQuery p =
       "UPDATE news.draft SET " <>
       p <>
       " WHERE draft_id = ? AND author_id = ? RETURNING draft_id"
-   uName = EDraft
-   optionalsMaybe (WithAuthor _ EditDraft {..}) =
+   uName = Y.EDraft
+   optionalsMaybe (Y.WithAuthor _ Y.EditDraft {..}) =
       [ ("title", fmap SqlValue _ed_title)
       , ("category_id", fmap SqlValue _ed_categoryId)
       , ("content", fmap SqlValue _ed_content)
@@ -124,18 +126,18 @@ instance UpdateSQL (WithAuthor EditDraft) where
       , ( "extra_photos"
         , fmap (SqlValue . PSTy.PGArray) _ed_extraPhotos)
       ]
-   identifParams (WithAuthor a EditDraft {..}) =
+   identifParams (Y.WithAuthor a Y.EditDraft {..}) =
       [SqlValue _ed_draftId, SqlValue a]
 
 
 
 
-instance UpdateSQL EditDraftPublish where
+instance UpdateSQL Y.EditDraftPublish where
    updateQuery p =
       "UPDATE news.draft SET " <>
       p <> " WHERE draft_id = ? RETURNING draft_id"
-   uName = EDraft
-   optionalsMaybe EditDraftPublish {..} =
+   uName = Y.EDraft
+   optionalsMaybe Y.EditDraftPublish {..} =
       [("post_id", Just $ SqlValue _edp_postId)]
-   identifParams EditDraftPublish {..} =
+   identifParams Y.EditDraftPublish {..} =
       [SqlValue _edp_draftId]

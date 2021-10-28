@@ -10,7 +10,7 @@ import qualified Database.PostgreSQL.Simple.Types as PSTy
 import Database.SqlValue (SqlValue(..))
 import qualified Exceptions as Ex
 import Prelude hiding (Read)
-import Types
+import qualified Types as Y
 import qualified Utils as U
 
 generateToken :: Int -> IO String
@@ -22,38 +22,38 @@ withTransaction = PS.withTransaction
 userAuthor ::
       PS.Connection
    -> L.Handle IO
-   -> User
-   -> IO (Maybe Author)
+   -> Y.User
+   -> IO (Maybe Y.Author)
 userAuthor con logger u = do
    as <-
       getThis
-         @GetAuthors
+         @Y.GetAuthors
          con
          logger
-         (GetAuthors $ Just $ _u_id u)
+         (Y.GetAuthors $ Just $ Y._u_id u)
    case as of
       [] -> pure Nothing
       [a] -> pure $ Just a
       _ ->
-         Ex.throwInvalidUnique EAuthor (map _a_authorId as)
+         Ex.throwInvalidUnique Y.EAuthor (map Y._a_authorId as)
 
 getUserByToken ::
       PS.Connection
    -> L.Handle IO
-   -> Token
-   -> IO (Maybe User)
+   -> Y.Token
+   -> IO (Maybe Y.User)
 getUserByToken con logger token = do
-   users <- getThis @Token con logger token
+   users <- getThis @Y.Token con logger token
    case users of
       [] -> pure Nothing
       [u] -> pure $ Just u
-      _ -> Ex.throwTokenShared $ map _u_id users
+      _ -> Ex.throwTokenShared $ map Y._u_id users
 
 getUserByLogin ::
       PS.Connection
    -> L.Handle IO
    -> T.Text
-   -> IO (Maybe User)
+   -> IO (Maybe Y.User)
 getUserByLogin con logger login = do
    let str =
           "SELECT user_id, firstname, lastname, \
@@ -66,12 +66,12 @@ getUserByLogin con logger login = do
       case users of
          [] -> pure Nothing
          [x] -> pure $ Just x
-         _ -> Ex.throwInvalidUnique EUser $ map _u_id users
+         _ -> Ex.throwInvalidUnique Y.EUser $ map Y._u_id users
 
 addToken ::
       PS.Connection
    -> L.Handle IO
-   -> UserId
+   -> Y.UserId
    -> T.Text
    -> IO T.Text
 addToken con logger uid token = do
@@ -89,9 +89,9 @@ getThisPaginated ::
       (Read a)
    => PS.Connection
    -> L.Handle IO
-   -> Paginated a
+   -> Y.Paginated a
    -> IO [MType a]
-getThisPaginated con logger (Paginated page size g) = do
+getThisPaginated con logger (Y.Paginated page size g) = do
    let (qu, pars) = selectQuery g
        (qupag, parspag) = pageingClause page size
        qu' = qu <> qupag
@@ -117,7 +117,7 @@ editThis ::
    => PS.Connection
    -> L.Handle IO
    -> a
-   -> IO (Either ModifyError Int)
+   -> IO (Either Y.ModifyError Int)
 editThis con logger u =
    case updateParams u of
       Nothing -> Ex.throwInvalidUpdate
@@ -133,7 +133,7 @@ editThis con logger u =
                   map PSTy.fromOnly <$>
                   PS.query con str params
                case ids of
-                  [] -> pure (Left MNoAction)
+                  [] -> pure (Left Y.MNoAction)
                   [x] -> pure (Right x)
                   _ -> Ex.throwInvalidUnique (uName @a) ids
 
@@ -142,7 +142,7 @@ createThis ::
    => PS.Connection
    -> L.Handle IO
    -> a
-   -> IO (Either ModifyError Int)
+   -> IO (Either Y.ModifyError Int)
 createThis con logger cres = do
    let (str, params) = createQuery cres
        modifyHandler = fmap Left . Ex.modifyErrorHandler
@@ -152,7 +152,7 @@ createThis con logger cres = do
          ints <-
             map PSTy.fromOnly <$> PS.query con str params
          case ints of
-            [] -> pure $ Left MNoAction
+            [] -> pure $ Left Y.MNoAction
             [x] -> pure $ Right x
             _ -> Ex.throwInvalidUnique (cName @a) ints
 
@@ -161,19 +161,19 @@ deleteThis ::
    => PS.Connection
    -> L.Handle IO
    -> a
-   -> IO (Either DeleteError Int)
+   -> IO (Either Y.DeleteError Int)
 deleteThis con logger del = do
    let (str, params) = deleteQuery del
    Ex.withExceptionHandlers
       (Ex.sqlHandlers logger str params) $ do
       ids <- map PSTy.fromOnly <$> PS.query con str params
       case ids of
-         [] -> pure $ Left DNoAction
+         [] -> pure $ Left Y.DNoAction
          [eid] -> pure $ Right eid
          _ -> Ex.throwInvalidUnique (dName @a) ids
 
 checkUnique ::
-      a -> (b -> a) -> Entity -> (b -> Int) -> [b] -> IO a
+      a -> (b -> a) -> Y.Entity -> (b -> Int) -> [b] -> IO a
 checkUnique empty one entity getId xs =
    case xs of
       [] -> pure empty
@@ -187,7 +187,7 @@ attachTags ::
    -> L.Handle IO
    -> HIdent s
    -> [Int]
-   -> IO (Either TagsError [Int])
+   -> IO (Either Y.TagsError [Int])
 attachTags _ _ _ _ []
  = do
    pure (Right [])

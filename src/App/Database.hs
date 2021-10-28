@@ -5,51 +5,51 @@ module App.Database where
 import qualified App.Logger as Logger
 import qualified Data.Text as T
 import Prelude hiding (log)
-import Types
+import qualified Types as Y
 
 data Handle m =
    Handle
     -- logger
       { log :: Logger.Handle m
     -- basic
-      , createUser :: Logger.Handle m -> CreateUser -> m (Either ModifyError Int)
-      , deleteUser :: Logger.Handle m -> DeleteUser -> m (Either DeleteError Int)
-      , getUserByToken :: Logger.Handle m -> Token -> m (Maybe User)
-      , userAuthor :: Logger.Handle m -> User -> m (Maybe Author)
-      , getUserByLogin :: Logger.Handle m -> T.Text -> m (Maybe User)
-      , addToken :: Logger.Handle m -> UserId -> T.Text -> m T.Text
+      , createUser :: Logger.Handle m -> Y.CreateUser -> m (Either Y.ModifyError Int)
+      , deleteUser :: Logger.Handle m -> Y.DeleteUser -> m (Either Y.DeleteError Int)
+      , getUserByToken :: Logger.Handle m -> Y.Token -> m (Maybe Y.User)
+      , userAuthor :: Logger.Handle m -> Y.User -> m (Maybe Y.Author)
+      , getUserByLogin :: Logger.Handle m -> T.Text -> m (Maybe Y.User)
+      , addToken :: Logger.Handle m -> Y.UserId -> T.Text -> m T.Text
       , generateToken :: Int -> m String
     -- entities,
-      , getAuthors :: Logger.Handle m -> Paginated GetAuthors -> m [Author]
-      , createAuthor :: Logger.Handle m -> CreateAuthor -> m (Either ModifyError Int)
-      , editAuthor :: Logger.Handle m -> EditAuthor -> m (Either ModifyError Int)
-      , deleteAuthor :: Logger.Handle m -> DeleteAuthor -> m (Either DeleteError Int)
-      , getTags :: Logger.Handle m -> Paginated GetTags -> m [Tag]
-      , createTag :: Logger.Handle m -> CreateTag -> m (Either ModifyError Int)
-      , editTag :: Logger.Handle m -> EditTag -> m (Either ModifyError Int)
-      , deleteTag :: Logger.Handle m -> DeleteTag -> m (Either DeleteError Int)
-      , getCategories :: Logger.Handle m -> Paginated GetCategories -> m [Category]
-      , createCategory :: Logger.Handle m -> CreateCategory -> m (Either ModifyError Int)
-      , editCategory :: Logger.Handle m -> EditCategory -> m (Either ModifyError Int)
-      , deleteCategory :: Logger.Handle m -> DeleteCategory -> m (Either DeleteError Int)
-      , getPosts :: Logger.Handle m -> Paginated GetPosts -> m [Post]
-      , getComments :: Logger.Handle m -> Paginated GetComments -> m [Comment]
-      , createComment :: Logger.Handle m -> WithUser CreateComment -> m (Either ModifyError Int)
-      , deleteComment :: Logger.Handle m -> WithUser DeleteComment -> m (Either DeleteError Int)
+      , getAuthors :: Logger.Handle m -> Y.Paginated Y.GetAuthors -> m [Y.Author]
+      , createAuthor :: Logger.Handle m -> Y.CreateAuthor -> m (Either Y.ModifyError Int)
+      , editAuthor :: Logger.Handle m -> Y.EditAuthor -> m (Either Y.ModifyError Int)
+      , deleteAuthor :: Logger.Handle m -> Y.DeleteAuthor -> m (Either Y.DeleteError Int)
+      , getTags :: Logger.Handle m -> Y.Paginated Y.GetTags -> m [Y.Tag]
+      , createTag :: Logger.Handle m -> Y.CreateTag -> m (Either Y.ModifyError Int)
+      , editTag :: Logger.Handle m -> Y.EditTag -> m (Either Y.ModifyError Int)
+      , deleteTag :: Logger.Handle m -> Y.DeleteTag -> m (Either Y.DeleteError Int)
+      , getCategories :: Logger.Handle m -> Y.Paginated Y.GetCategories -> m [Y.Category]
+      , createCategory :: Logger.Handle m -> Y.CreateCategory -> m (Either Y.ModifyError Int)
+      , editCategory :: Logger.Handle m -> Y.EditCategory -> m (Either Y.ModifyError Int)
+      , deleteCategory :: Logger.Handle m -> Y.DeleteCategory -> m (Either Y.DeleteError Int)
+      , getPosts :: Logger.Handle m -> Y.Paginated Y.GetPosts -> m [Y.Post]
+      , getComments :: Logger.Handle m -> Y.Paginated Y.GetComments -> m [Y.Comment]
+      , createComment :: Logger.Handle m -> Y.WithUser Y.CreateComment -> m (Either Y.ModifyError Int)
+      , deleteComment :: Logger.Handle m -> Y.WithUser Y.DeleteComment -> m (Either Y.DeleteError Int)
     -- drafts, posts, publish,
       , withTransaction :: forall a. m a -> m a
-      , getDrafts :: Logger.Handle m -> Paginated (WithAuthor GetDrafts) -> m [Draft]
-      , deleteDraft :: Logger.Handle m -> WithAuthor DeleteDraft -> m (Either DeleteError DraftId)
-      , createDraft :: Logger.Handle m -> WithAuthor CreateDraft -> m (Either ModifyError DraftId)
-      , attachTagsToDraft :: Logger.Handle m -> Int -> [TagId] -> m (Either TagsError [TagId])
-      , editDraft :: Logger.Handle m -> WithAuthor EditDraft -> m (Either ModifyError DraftId)
-      , removeAllButGivenTagsDraft :: Logger.Handle m -> DraftId -> [TagId] -> m [TagId]
-      , getDraftRaw :: Logger.Handle m -> WithAuthor Publish -> m (Maybe DraftRaw)
-      , createPost :: Logger.Handle m -> DraftRaw -> m (Either ModifyError PostId)
-      , editDraftPublish :: Logger.Handle m -> EditDraftPublish -> m (Either ModifyError Int)
-      , attachTagsToPost :: Logger.Handle m -> Int -> [TagId] -> m (Either TagsError [TagId])
-      , editPostPublish :: Logger.Handle m -> PublishEditPost -> m (Either ModifyError Int)
-      , removeAllButGivenTagsPost :: Logger.Handle m -> PostId -> [TagId] -> m [TagId]
+      , getDrafts :: Logger.Handle m -> Y.Paginated (Y.WithAuthor Y.GetDrafts) -> m [Y.Draft]
+      , deleteDraft :: Logger.Handle m -> Y.WithAuthor Y.DeleteDraft -> m (Either Y.DeleteError Y.DraftId)
+      , createDraft :: Logger.Handle m -> Y.WithAuthor Y.CreateDraft -> m (Either Y.ModifyError Y.DraftId)
+      , attachTagsToDraft :: Logger.Handle m -> Int -> [Y.TagId] -> m (Either Y.TagsError [Y.TagId])
+      , editDraft :: Logger.Handle m -> Y.WithAuthor Y.EditDraft -> m (Either Y.ModifyError Y.DraftId)
+      , removeAllButGivenTagsDraft :: Logger.Handle m -> Y.DraftId -> [Y.TagId] -> m [Y.TagId]
+      , getDraftRaw :: Logger.Handle m -> Y.WithAuthor Y.Publish -> m (Maybe Y.DraftRaw)
+      , createPost :: Logger.Handle m -> Y.DraftRaw -> m (Either Y.ModifyError Y.PostId)
+      , editDraftPublish :: Logger.Handle m -> Y.EditDraftPublish -> m (Either Y.ModifyError Int)
+      , attachTagsToPost :: Logger.Handle m -> Int -> [Y.TagId] -> m (Either Y.TagsError [Y.TagId])
+      , editPostPublish :: Logger.Handle m -> Y.PublishEditPost -> m (Either Y.ModifyError Int)
+      , removeAllButGivenTagsPost :: Logger.Handle m -> Y.PostId -> [Y.TagId] -> m [Y.TagId]
       }
 
 logDebug, logInfo, logWarning, logError, logFatal ::

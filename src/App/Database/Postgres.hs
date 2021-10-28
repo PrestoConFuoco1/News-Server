@@ -12,7 +12,7 @@ import qualified Database.PostgreSQL.Simple as PS
 import GHC.Generics
 import qualified GenericPretty as GP
 import qualified IO.Postgres as IOP
-import Types
+import qualified Types as Y
 
 data Config =
    Config
@@ -59,46 +59,46 @@ resourcesToHandle (Resources con) logger =
    Handle
       { log = logger
       , userAuthor = IOP.userAuthor con
-      , createUser = IOP.createThis @CreateUser con
-      , deleteUser = IOP.deleteThis @DeleteUser con
+      , createUser = IOP.createThis @Y.CreateUser con
+      , deleteUser = IOP.deleteThis @Y.DeleteUser con
       , getUserByToken = IOP.getUserByToken con
       , getUserByLogin = IOP.getUserByLogin con
       , addToken = IOP.addToken con
       , generateToken = IOP.generateToken
-      , getAuthors = IOP.getThisPaginated @GetAuthors con
-      , createAuthor = IOP.createThis @CreateAuthor con
-      , editAuthor = IOP.editThis @EditAuthor con
-      , deleteAuthor = IOP.deleteThis @DeleteAuthor con
-      , getTags = IOP.getThisPaginated @GetTags con
-      , createTag = IOP.createThis @CreateTag con
-      , editTag = IOP.editThis @EditTag con
-      , deleteTag = IOP.deleteThis @DeleteTag con
-      , getCategories = IOP.getThisPaginated @GetCategories con
-      , createCategory = IOP.createThis @CreateCategory con
-      , editCategory = IOP.editThis @EditCategory con
-      , deleteCategory = IOP.deleteThis @DeleteCategory con
-      , getPosts = IOP.getThisPaginated @GetPosts con
-      , getComments = IOP.getThisPaginated @GetComments con
-      , createComment = IOP.createThis @(WithUser CreateComment) con
-      , deleteComment = IOP.deleteThis @(WithUser DeleteComment) con
+      , getAuthors = IOP.getThisPaginated @Y.GetAuthors con
+      , createAuthor = IOP.createThis @Y.CreateAuthor con
+      , editAuthor = IOP.editThis @Y.EditAuthor con
+      , deleteAuthor = IOP.deleteThis @Y.DeleteAuthor con
+      , getTags = IOP.getThisPaginated @Y.GetTags con
+      , createTag = IOP.createThis @Y.CreateTag con
+      , editTag = IOP.editThis @Y.EditTag con
+      , deleteTag = IOP.deleteThis @Y.DeleteTag con
+      , getCategories = IOP.getThisPaginated @Y.GetCategories con
+      , createCategory = IOP.createThis @Y.CreateCategory con
+      , editCategory = IOP.editThis @Y.EditCategory con
+      , deleteCategory = IOP.deleteThis @Y.DeleteCategory con
+      , getPosts = IOP.getThisPaginated @Y.GetPosts con
+      , getComments = IOP.getThisPaginated @Y.GetComments con
+      , createComment = IOP.createThis @(Y.WithUser Y.CreateComment) con
+      , deleteComment = IOP.deleteThis @(Y.WithUser Y.DeleteComment) con
       , withTransaction = IOP.withTransaction con
       , attachTagsToDraft = IOP.attachTags con HDraft
       , attachTagsToPost = IOP.attachTags con HPost
-      , editDraft = IOP.editThis @(WithAuthor EditDraft) con
+      , editDraft = IOP.editThis @(Y.WithAuthor Y.EditDraft) con
       , removeAllButGivenTagsDraft =
            IOP.removeAllButGivenTags con HDraft
       , removeAllButGivenTagsPost =
            IOP.removeAllButGivenTags con HPost
       , getDraftRaw =
            \l ->
-              IOP.getThis @(WithAuthor Publish) con l >=>
-              IOP.checkUnique Nothing Just EDraft _dr_draftId
-      , createDraft = IOP.createThis @(WithAuthor CreateDraft) con
+              IOP.getThis @(Y.WithAuthor Y.Publish) con l >=>
+              IOP.checkUnique Nothing Just Y.EDraft Y._dr_draftId
+      , createDraft = IOP.createThis @(Y.WithAuthor Y.CreateDraft) con
       , editDraftPublish =
-           IOP.editThis @EditDraftPublish con
-      , editPostPublish = IOP.editThis @PublishEditPost con
-      , createPost = IOP.createThis @DraftRaw con
-      , getDrafts = IOP.getThisPaginated @(WithAuthor GetDrafts) con
-      , deleteDraft = IOP.deleteThis @(WithAuthor DeleteDraft) con
+           IOP.editThis @Y.EditDraftPublish con
+      , editPostPublish = IOP.editThis @Y.PublishEditPost con
+      , createPost = IOP.createThis @Y.DraftRaw con
+      , getDrafts = IOP.getThisPaginated @(Y.WithAuthor Y.GetDrafts) con
+      , deleteDraft = IOP.deleteThis @(Y.WithAuthor Y.DeleteDraft) con
       }
 

@@ -29,14 +29,14 @@ import qualified GenericPretty as GP
 import qualified App.Logger as L
 import Data.Text.Encoding as E (decodeUtf8)
 import qualified Result as U
-import Types
+import qualified Types as Y
 import Utils (getPair)
 
 data ServerException
    = Default
    | SqlErrorAlreadyLogged
    | Unauthorized
-   | InvalidUniqueEntities Entity [Int]
+   | InvalidUniqueEntities Y.Entity [Int]
    | Forbidden
    | InvalidLogin
    | InvalidPassword
@@ -95,7 +95,7 @@ throwUnauthorized :: (MonadThrow m) => m a
 throwUnauthorized = CMC.throwM Unauthorized
 
 throwInvalidUnique ::
-      (MonadThrow m) => Entity -> [Int] -> m b
+      (MonadThrow m) => Y.Entity -> [Int] -> m b
 throwInvalidUnique ent xs
  = do
    CMC.throwM $ InvalidUniqueEntities ent xs
@@ -209,36 +209,36 @@ constraintViolated e = PS.sqlState e == "23514"
 -- sqlErrorDetail = "Key (tag_id)=(167) is not present in table \"tag\".", sqlErrorHint = ""}
 
 modifyErrorHandler ::
-      (CMC.MonadCatch m) => PS.SqlError -> m ModifyError
+      (CMC.MonadCatch m) => PS.SqlError -> m Y.ModifyError
 modifyErrorHandler e =
    maybe (CMC.throwM e) pure (toModifyError e)
 
-toModifyError :: PS.SqlError -> Maybe ModifyError
+toModifyError :: PS.SqlError -> Maybe Y.ModifyError
 toModifyError e
    | uniqueConstraintViolated e =
-      MAlreadyInUse <$> getUniqueViolationData e
+      Y.MAlreadyInUse <$> getUniqueViolationData e
    | foreignKeyViolated e =
-      MInvalidForeign <$> getForeignViolationData e
+      Y.MInvalidForeign <$> getForeignViolationData e
    | otherwise = Nothing
 
 getUniqueViolationData ::
-      PS.SqlError -> Maybe UniqueViolation
+      PS.SqlError -> Maybe Y.UniqueViolation
 getUniqueViolationData = fmap f . getPair . sqlErrorDetail
   where
-    f (field, value) = UniqueViolation field value
+    f (field, value) = Y.UniqueViolation field value
 
 getForeignViolationData ::
-      PS.SqlError -> Maybe ForeignViolation
+      PS.SqlError -> Maybe Y.ForeignViolation
 getForeignViolationData = fmap f . getPair . sqlErrorDetail
   where
-    f (field, value) = ForeignViolation field value
+    f (field, value) = Y.ForeignViolation field value
 
 tagsErrorHandler ::
-      (CMC.MonadCatch m) => PS.SqlError -> m TagsError
+      (CMC.MonadCatch m) => PS.SqlError -> m Y.TagsError
 tagsErrorHandler e =
    maybe (CMC.throwM e) pure (toAttachTagsError e)
   where
     toAttachTagsError err
        | foreignKeyViolated err =
-          TagsAttachError <$> getForeignViolationData err
+          Y.TagsAttachError <$> getForeignViolationData err
        | otherwise = Nothing

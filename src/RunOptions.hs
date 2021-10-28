@@ -3,14 +3,9 @@ module RunOptions where
 
 import GHC.Generics
 import qualified App.Logger as L
-import qualified Utils as S (withMaybe)
-import Text.Read (readMaybe)
-import Data.List (isPrefixOf)
 import Options.Applicative
-import Data.Maybe (fromMaybe)
 import qualified GenericPretty as P
 import qualified Data.Text as T
-import Types
 
 data LoggerSettings =
     LogAll
@@ -56,6 +51,7 @@ getOpts = RunOptions
         <|> pure "./log")
     <*> switch (long "test-config" <> help "Test configuration")
 
+serverHeader :: String
 serverHeader = "Backend for news server"
 
 getOptsIO :: IO RunOptions

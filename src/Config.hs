@@ -61,16 +61,16 @@ loadConfig handle path = do
 
 configHandlers :: L.Handle IO -> [C.Handler IO a]
 configHandlers h =
-   let f (C.Handler g) =
+   let logThenTerminate (C.Handler g) =
           C.Handler
              (\e -> do
-                 g e
+                 _ <- g e
                  L.logFatal
                     h
                     "Failed to get required data from configuration files, terminating..."
                  Q.exitWith (Q.ExitFailure 1))
     in map
-          f
+          logThenTerminate
           [ C.Handler (handleIOError h)
           , C.Handler (handleConfigError h)
           , C.Handler (handleKeyError h)

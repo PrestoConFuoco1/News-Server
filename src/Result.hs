@@ -6,7 +6,7 @@ import qualified Data.Aeson as Ae (Value, ToJSON(..))
 import qualified Data.Text as T
 import GHC.Generics
 import qualified Network.HTTP.Types as NHT
-import Types
+import qualified Types as Y
 
 successGet, successGetProfile, successNewToken :: T.Text
 successGet = "Success"
@@ -38,36 +38,36 @@ internalErrorMsg = "Internal error"
 
 notAnAuthorMsg = "Not an author" :: T.Text
 
-createdMsg :: Entity -> T.Text
+createdMsg :: Y.Entity -> T.Text
 createdMsg ent =
-   let enttext = showEText ent
+   let enttext = Y.showEText ent
     in "Successfully created " <>
        enttext <>
        ", " <> enttext <> "_id is in \"result\" field"
 
-editedMsg :: Entity -> T.Text
+editedMsg :: Y.Entity -> T.Text
 editedMsg ent =
-   let enttext = showEText ent
+   let enttext = Y.showEText ent
     in "Successfully edited " <>
        enttext <>
        ", " <> enttext <> "_id is in \"result\" field"
 
-deletedMsg :: Entity -> T.Text
+deletedMsg :: Y.Entity -> T.Text
 deletedMsg ent =
-   let enttext = showEText ent
+   let enttext = Y.showEText ent
     in "Successfully deleted " <>
        enttext <>
        ", " <> enttext <> "_id is in \"result\" field"
 
-entityNotFoundMsg :: Entity -> T.Text
+entityNotFoundMsg :: Y.Entity -> T.Text
 entityNotFoundMsg ent =
-   let enttext = showEText ent
+   let enttext = Y.showEText ent
     in enttext <> " not found"
 
-alreadyInUseMsg :: Entity -> T.Text -> T.Text -> T.Text
+alreadyInUseMsg :: Y.Entity -> T.Text -> T.Text -> T.Text
 alreadyInUseMsg ent field value =
    "Failed: " <>
-   showEText ent <>
+   Y.showEText ent <>
    " with " <> field <> "=" <> value <> " already exists"
 
 invalidForeignMsg :: T.Text -> T.Text -> T.Text

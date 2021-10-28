@@ -2,50 +2,50 @@ module Execute.Database where
 
 import qualified Control.Monad.Catch as CMC (MonadCatch)
 import Execute.Utils (modifyErrorToApiResult)
-import Types
+import qualified Types as Y
 
 getThis ::
-      (CMC.MonadCatch m, Gettable b)
+      (CMC.MonadCatch m, Y.Gettable b)
    => (a -> m [b])
    -> a
-   -> m APIResult
-getThis f x = RGet . RGettable <$> f x
+   -> m Y.APIResult
+getThis f x = Y.RGet . Y.RGettable <$> f x
 
 createThis ::
       (CMC.MonadCatch m)
-   => Entity
-   -> (a -> m (Either ModifyError Int))
+   => Y.Entity
+   -> (a -> m (Either Y.ModifyError Int))
    -> a
-   -> m APIResult
+   -> m Y.APIResult
 createThis name create x = do
    eithInt <- create x
    case eithInt of
-      Right int -> pure $ RCreated name int
+      Right int -> pure $ Y.RCreated name int
       Left err -> pure $ modifyErrorToApiResult name err
 
-deleteErrorToApiResult :: Entity -> DeleteError -> APIResult
-deleteErrorToApiResult ent DNoAction = RNotFound ent
+deleteErrorToApiResult :: Y.Entity -> Y.DeleteError -> Y.APIResult
+deleteErrorToApiResult ent Y.DNoAction = Y.RNotFound ent
 
 deleteThis ::
       (CMC.MonadCatch m)
-   => Entity
-   -> (a -> m (Either DeleteError Int))
+   => Y.Entity
+   -> (a -> m (Either Y.DeleteError Int))
    -> a
-   -> m APIResult
+   -> m Y.APIResult
 deleteThis name delete x = do
    eithDeleted <- delete x
    case eithDeleted of
-      Right int -> pure $ RDeleted name int
+      Right int -> pure $ Y.RDeleted name int
       Left err -> pure $ deleteErrorToApiResult name err
 
 editThis ::
       (CMC.MonadCatch m)
-   => Entity
-   -> (a -> m (Either ModifyError Int))
+   => Y.Entity
+   -> (a -> m (Either Y.ModifyError Int))
    -> a
-   -> m APIResult
+   -> m Y.APIResult
 editThis name update x = do
    eithInt <- update x
    case eithInt of
-      Right int -> pure $ REdited name int
+      Right int -> pure $ Y.REdited name int
       Left err -> pure $ modifyErrorToApiResult name err

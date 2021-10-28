@@ -1,7 +1,7 @@
 module App.Logger where
 
 import Data.IORef (IORef, newIORef, readIORef, writeIORef)
-import qualified Data.Text as T (Text, pack, unpack)
+import qualified Data.Text as T (Text, pack)
 import qualified Data.Text.IO as T (hPutStrLn)
 import Prelude hiding (log)
 
@@ -145,8 +145,9 @@ selfSufficientLogger resourcesRef predicate pri s = do
    resources <- readIORef resourcesRef
    let action =
           when (predicate pri) $ do
-          T.hPutStrLn (flHandle resources) (logString pri s)
-          T.hPutStrLn I.stderr (logString pri s)
+          let handle = flHandle resources
+          T.hPutStrLn handle (logString pri s)
+          when (handle /= I.stderr) $ T.hPutStrLn I.stderr (logString pri s)
        errHandler e =
           loggerHandler resources e >>=
           writeIORef resourcesRef

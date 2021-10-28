@@ -29,23 +29,23 @@ import Action.Users
 import Action.Common
 import qualified Action.Utils as AU
 
-import Types
+import qualified Types as Y
 
 data Action
-   = AAuthors ActionAuthors
-   | ACategory ActionCategory
-   | APosts ActionPosts1
-   | ATags ActionTags
-   | AUsers ActionUsers
-   | AAuth Authenticate
-   | AComments ActionComments
-   | ADrafts ActionDrafts
-   | APublish Publish
+   = AAuthors Y.ActionAuthors
+   | ACategory Y.ActionCategory
+   | APosts Y.ActionPosts1
+   | ATags Y.ActionTags
+   | AUsers Y.ActionUsers
+   | AAuth Y.Authenticate
+   | AComments Y.ActionComments
+   | ADrafts Y.ActionDrafts
+   | APublish Y.Publish
    deriving (Generic, Show, Eq)
 
 requestToActionHTTP ::
       W.Request
-   -> Either (WhoWhat ActionErrorPerms) (WhoWhat Action)
+   -> Either (Y.WhoWhat ActionErrorPerms) (Y.WhoWhat Action)
 requestToActionHTTP req =
    let queryString = W.queryString req
        pathInfo = W.pathInfo req
@@ -54,9 +54,9 @@ requestToActionHTTP req =
 requestToAction ::
       [T.Text]
    -> [(BS.ByteString, Maybe BS.ByteString)]
-   -> Either (WhoWhat ActionErrorPerms) (WhoWhat Action)
+   -> Either (Y.WhoWhat ActionErrorPerms) (Y.WhoWhat Action)
 requestToAction pathInfo queryString =
-   let maybeToken = Token <$>
+   let maybeToken = Y.Token <$>
           case queryString of
              ((tokenPar, Just tokenVal):_) ->
                 if tokenPar == "token"
@@ -66,7 +66,7 @@ requestToAction pathInfo queryString =
        hash :: Query
        hash = HS.fromList . Mb.mapMaybe f $ queryString
        f (x, y) = (x,) <$> y
-    in bimap (WhoWhat maybeToken) (WhoWhat maybeToken) $
+    in bimap (Y.WhoWhat maybeToken) (Y.WhoWhat maybeToken) $
        requestToAction2 pathInfo hash
 
 requestToAction2 ::
@@ -102,153 +102,153 @@ requestToAction2 path hash =
       []
          | otherwise -> Left pathNotFound
 
-requestToActionAuthenticate :: Router Authenticate
+requestToActionAuthenticate :: Router Y.Authenticate
 requestToActionAuthenticate = do
    login <- AU.requireField AU.validateNotEmpty "login"
    passHash <- AU.requireField AU.validateNotEmpty "pass_hash"
-   pure $ Authenticate login passHash
+   pure $ Y.Authenticate login passHash
 
 requestToActionPosts ::
       [T.Text]
    -> Query
-   -> Either ActionErrorPerms ActionPosts1
+   -> Either ActionErrorPerms Y.ActionPosts1
 requestToActionPosts path hash =
    case path of
       [x]
          | x == "get" ->
-            fmap (AP . Read) $
+            fmap (Y.AP . Y.Read) $
             runRouter (renv False hash) $
             AU.withPagination getPostsAction
          | otherwise ->
             Left $ ActionErrorPerms False EInvalidEndpoint
       (x:xs) ->
          case AU.readIntText x of
-            (Just pid) -> GC <$> actionWithPost pid xs hash
+            (Just pid) -> Y.GC <$> actionWithPost pid xs hash
             Nothing -> Left pathNotFound
       [] -> Left pathNotFound
 
 requestToActionDrafts ::
       [T.Text]
    -> Query
-   -> Either ActionErrorPerms ActionDrafts
+   -> Either ActionErrorPerms Y.ActionDrafts
 requestToActionDrafts path hash =
    case path of
       [x]
          | x == "get" ->
-            fmap Read $
+            fmap Y.Read $
             runRouter (renv False hash) $
-            AU.withPagination (pure GetDrafts)
+            AU.withPagination (pure Y.GetDrafts)
          | x == "create" ->
-            Create <$>
+            Y.Create <$>
             runRouter (renv False hash) createDraftToAction
          | x == "edit" ->
-            Update <$>
+            Y.Update <$>
             runRouter (renv False hash) editDraftToAction
          | x == "delete" ->
-            Delete <$>
+            Y.Delete <$>
             runRouter (renv False hash) deleteDraftToAction
       _ -> Left $ ActionErrorPerms False EInvalidEndpoint
 
 requestToActionCats ::
       [T.Text]
    -> Query
-   -> Either ActionErrorPerms ActionCategory
+   -> Either ActionErrorPerms Y.ActionCategory
 requestToActionCats path hash =
    case path of
       [x]
          | x == "get" ->
-            fmap Read $
+            fmap Y.Read $
             runRouter (renv False hash) $
-            AU.withPagination (pure GetCategories)
+            AU.withPagination (pure Y.GetCategories)
          | x == "create" ->
-            Create <$>
+            Y.Create <$>
             runRouter (renv True hash) createCatsToAction
          | x == "edit" ->
-            Update <$>
+            Y.Update <$>
             runRouter (renv True hash) editCatsToAction
          | x == "delete" ->
-            Delete <$>
+            Y.Delete <$>
             runRouter (renv True hash) deleteCatsToAction
       _ -> Left $ ActionErrorPerms False EInvalidEndpoint
 
 requestToActionTags ::
       [T.Text]
    -> Query
-   -> Either ActionErrorPerms ActionTags
+   -> Either ActionErrorPerms Y.ActionTags
 requestToActionTags path hash =
    case path of
       [x]
          | x == "get" ->
-            fmap Read $
+            fmap Y.Read $
             runRouter (renv False hash) $
-            AU.withPagination (pure GetTags)
+            AU.withPagination (pure Y.GetTags)
          | x == "create" ->
-            Create <$>
+            Y.Create <$>
             runRouter (renv True hash) createTagToAction
          | x == "edit" ->
-            Update <$>
+            Y.Update <$>
             runRouter (renv True hash) editTagToAction
          | x == "delete" ->
-            Delete <$>
+            Y.Delete <$>
             runRouter (renv True hash) deleteTagToAction
       _ -> Left $ ActionErrorPerms False EInvalidEndpoint
 
 requestToActionUsers ::
       [T.Text]
    -> Query
-   -> Either ActionErrorPerms ActionUsers
+   -> Either ActionErrorPerms Y.ActionUsers
 requestToActionUsers path hash =
    case path of
       [x]
-         | x == "profile" -> pure $ Read GetProfile
+         | x == "profile" -> pure $ Y.Read Y.GetProfile
          | x == "create" ->
-            Create <$>
+            Y.Create <$>
             runRouter (renv False hash) createUserToAction
          | x == "delete" ->
-            Delete <$>
+            Y.Delete <$>
             runRouter (renv True hash) deleteUserToAction
       _ -> Left $ ActionErrorPerms False EInvalidEndpoint
 
 requestToActionAuthors ::
       [T.Text]
    -> Query
-   -> Either ActionErrorPerms ActionAuthors
+   -> Either ActionErrorPerms Y.ActionAuthors
 requestToActionAuthors path hash =
    case path of
       [x]
          | x == "get" ->
-            fmap Read $
+            fmap Y.Read $
             runRouter (renv False hash) $
-            AU.withPagination (pure $ GetAuthors Nothing)
+            AU.withPagination (pure $ Y.GetAuthors Nothing)
          | x == "create" ->
-            Create <$>
+            Y.Create <$>
             runRouter (renv True hash) createAuthorToAction
          | x == "delete" ->
-            Delete <$>
+            Y.Delete <$>
             runRouter (renv True hash) deleteAuthorToAction
          | x == "edit" ->
-            Update <$>
+            Y.Update <$>
             runRouter (renv True hash) editAuthorToAction
       _ -> Left $ ActionErrorPerms False EInvalidEndpoint
 
 requestToActionComments ::
       [T.Text]
    -> Query
-   -> Either ActionErrorPerms ActionComments
+   -> Either ActionErrorPerms Y.ActionComments
 requestToActionComments path hash =
    case path of
       [x]
          | x == "get" ->
-            fmap Read $
+            fmap Y.Read $
             runRouter (renv False hash) $
             AU.withPagination getCommentsToAction
          | x == "create" ->
-            Create <$>
+            Y.Create <$>
             runRouter
                (renv False hash)
                createCommentsToAction
          | x == "delete" ->
-            Delete <$>
+            Y.Delete <$>
             runRouter
                (renv False hash)
                deleteCommentsToAction
