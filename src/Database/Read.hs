@@ -1,6 +1,10 @@
-{-# LANGUAGE TypeFamilies, FlexibleContexts, FlexibleInstances #-}
+{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleInstances #-}
 
-module Database.Read where
+module Database.Read (
+Read(..), pageingClause
+) where
 
 import qualified Data.Aeson as Ae
 import Data.Maybe (catMaybes)
@@ -19,25 +23,23 @@ class ( Ae.ToJSON (MType a)
       , PS.FromRow (MType a)
       , Show a
       , Show (MType a)
-      ) =>
-      Read a
-   where
-   type MType a :: *
-   selectQuery :: a -> (PS.Query, [SqlValue])
+      ) => Read a where
+    type MType a :: *
+    selectQuery :: a -> (PS.Query, [SqlValue])
 
 toOffset :: Int -> Int -> Int
 toOffset page size = page * size
 
 pageingClause :: Int -> Int -> (PS.Query, [SqlValue])
 pageingClause page size =
-   ( " LIMIT ? OFFSET ? "
-   , [SqlValue size, SqlValue $ toOffset page size])
+    ( " LIMIT ? OFFSET ? "
+    , [SqlValue size, SqlValue $ toOffset page size])
 
 instance Read Y.GetPosts where
-   type MType Y.GetPosts = Y.Post
-   selectQuery (Y.GetPosts cre tags search sortOpts) =
-      let selectClause =
-             "SELECT \
+    type MType Y.GetPosts = Y.Post
+    selectQuery (Y.GetPosts cre tags search sortOpts) =
+        let selectClause =
+                "SELECT \
                \ post_id, \
                \ title, \
                \ post_creation_date, \
@@ -57,82 +59,72 @@ instance Read Y.GetPosts where
                \ catnames, \
                \ content, photo, extra_photos \
                \ FROM news.get_posts "
-          (whereClause, args) =
-             queryIntercalate " AND " $
-             catMaybes
-                [ fmap postsWhereDate cre
-                , fmap postsWhereTags tags
-                , fmap postsWhereSearch search
-                ]
-          orderClause = postsOrder sortOpts
-       in ( selectClause <>
-            notEmptyDo (" WHERE " <>) whereClause <>
-            orderClause
-          , args)
+            (whereClause, args) =
+                queryIntercalate " AND " $
+                catMaybes
+                    [ fmap postsWhereDate cre
+                    , fmap postsWhereTags tags
+                    , fmap postsWhereSearch search
+                    ]
+            orderClause = postsOrder sortOpts
+         in ( selectClause <>
+              notEmptyDo (" WHERE " <>) whereClause <> orderClause
+            , args)
 
 postsOrder :: Y.SortOptions -> PS.Query
 postsOrder (Y.SortOptions ent order) =
-   " ORDER BY " <>
-   getEntity ent <> " " <> ascDescQ order <> " NULLS LAST "
+    " ORDER BY " <>
+    getEntity ent <> " " <> ascDescQ order <> " NULLS LAST "
 
 getEntity :: Y.SortEntity -> PS.Query
 getEntity Y.SEDate = " post_creation_date "
 getEntity Y.SEAuthor = " lower(author_description) "
 getEntity Y.SECategory = " lower(catnames[1]) "
 getEntity Y.SEPhotoNumber =
-   " COALESCE(array_length(extra_photos, 1), 0) "
+    " COALESCE(array_length(extra_photos, 1), 0) "
 
 ascDescQ :: Y.SortOrder -> PS.Query
 ascDescQ Y.SOAscending = " ASC "
 ascDescQ Y.SODescending = " DESC "
 
-postsWhereDate ::
-      Y.CreationDateOptions -> (PS.Query, [SqlValue])
+postsWhereDate :: Y.CreationDateOptions -> (PS.Query, [SqlValue])
 postsWhereDate (Y.Created day) = postsWhereDate' "=" day
-postsWhereDate (Y.CreatedEarlier day) =
-   postsWhereDate' "<=" day
+postsWhereDate (Y.CreatedEarlier day) = postsWhereDate' "<=" day
 postsWhereDate (Y.CreatedLater day) = postsWhereDate' ">=" day
 
-postsWhereDate' ::
-      PS.Query -> Time.Day -> (PS.Query, [SqlValue])
+postsWhereDate' :: PS.Query -> Time.Day -> (PS.Query, [SqlValue])
 postsWhereDate' compareSym day =
-   ( " post_creation_date " <> compareSym <> " ? "
-   , [SqlValue day])
+    (" post_creation_date " <> compareSym <> " ? ", [SqlValue day])
 
 postsWhereTags :: Y.TagsOptions -> (PS.Query, [SqlValue])
 postsWhereTags (Y.OneTag tid) =
-   ("? && tagids", [SqlValue $ PSTy.PGArray [tid]])
+    ("? && tagids", [SqlValue $ PSTy.PGArray [tid]])
 postsWhereTags (Y.TagsIn tids) =
-   ("? && tagids", [SqlValue $ PSTy.PGArray tids])
+    ("? && tagids", [SqlValue $ PSTy.PGArray tids])
 postsWhereTags (Y.TagsAll tids) =
-   ("? <@ tagids", [SqlValue $ PSTy.PGArray tids])
+    ("? <@ tagids", [SqlValue $ PSTy.PGArray tids])
 
 postsWhereSearch :: Y.SearchOptions -> (PS.Query, [SqlValue])
 postsWhereSearch (Y.SearchOptions text) =
-   let str =
-          "title ILIKE ? OR content ILIKE ?\
+    let str =
+            "title ILIKE ? OR content ILIKE ?\
               \ OR array_to_string(tagnames, ',') ILIKE ?\
               \ OR catnames[1] ILIKE ?"
-    in ( str
-       , replicate 4 $
-         SqlValue $ TL.fromStrict $ enclose "%" text)
+     in ( str
+        , replicate 4 $ SqlValue $ TL.fromStrict $ enclose "%" text)
 
 queryIntercalate ::
-      PS.Query
-   -> [(PS.Query, [SqlValue])]
-   -> (PS.Query, [SqlValue])
+       PS.Query -> [(PS.Query, [SqlValue])] -> (PS.Query, [SqlValue])
 queryIntercalate delim = foldr f ("", [])
   where
     f (q, v) (qacc, vacc) =
-       let qu =
-              notEmptyDo enclosePar q <>
-              notEmptyDo (delim <>) qacc
-        in (qu, v ++ vacc)
+        let qu = notEmptyDo enclosePar q <> notEmptyDo (delim <>) qacc
+         in (qu, v ++ vacc)
 
 notEmptyDo :: (PS.Query -> PS.Query) -> PS.Query -> PS.Query
 notEmptyDo func qu
-   | qu == "" = ""
-   | otherwise = func qu
+    | qu == "" = ""
+    | otherwise = func qu
 
 enclosePar :: PS.Query -> PS.Query
 enclosePar qu = "(" <> qu <> ")"
@@ -141,52 +133,51 @@ enclose :: T.Text -> T.Text -> T.Text
 enclose p qu = p <> qu <> p
 
 instance Read Y.GetCategories where
-   type MType Y.GetCategories = Y.Category
-   selectQuery Y.GetCategories =
-      let selectClause =
-             "SELECT catids, catnames FROM news.get_categories"
-          args = []
-       in (selectClause, args)
+    type MType Y.GetCategories = Y.Category
+    selectQuery Y.GetCategories =
+        let selectClause =
+                "SELECT catids, catnames FROM news.get_categories"
+            args = []
+         in (selectClause, args)
 
 instance Read Y.GetAuthors where
-   type MType Y.GetAuthors = Y.Author
-   selectQuery (Y.GetAuthors mUser) =
-      let selectClause =
-             "SELECT author_id, description, user_id, firstname, lastname, \
+    type MType Y.GetAuthors = Y.Author
+    selectQuery (Y.GetAuthors mUser) =
+        let selectClause =
+                "SELECT author_id, description, user_id, firstname, lastname, \
                            \ image, login, pass, creation_date, NULL as is_admin FROM news.get_authors "
-          args = []
-          whereClause = " WHERE user_id = ? "
-       in case mUser of
-             Nothing -> (selectClause, args)
-             Just user ->
-                ( selectClause <> whereClause
-                , [SqlValue user])
+            args = []
+            whereClause = " WHERE user_id = ? "
+         in case mUser of
+                Nothing -> (selectClause, args)
+                Just user ->
+                    (selectClause <> whereClause, [SqlValue user])
 
 instance Read Y.GetTags where
-   type MType Y.GetTags = Y.Tag
-   selectQuery Y.GetTags =
-      let selectClause =
-             "SELECT tag_id, name \
+    type MType Y.GetTags = Y.Tag
+    selectQuery Y.GetTags =
+        let selectClause =
+                "SELECT tag_id, name \
                            \ FROM news.get_tags"
-          args = []
-       in (selectClause, args)
+            args = []
+         in (selectClause, args)
 
 instance Read Y.GetComments where
-   type MType Y.GetComments = Y.Comment
-   selectQuery (Y.GetComments pid) =
-      let selectClause =
-             "SELECT comment_id, content,  \
+    type MType Y.GetComments = Y.Comment
+    selectQuery (Y.GetComments pid) =
+        let selectClause =
+                "SELECT comment_id, content,  \
                             \ user_id, firstname, lastname, image, login, \
                             \ pass_hash, creation_date, is_admin \
                             \ FROM news.get_comments WHERE post_id = ?"
-          args = [SqlValue pid]
-       in (selectClause, args)
+            args = [SqlValue pid]
+         in (selectClause, args)
 
 instance Read (Y.WithAuthor Y.GetDrafts) where
-   type MType (Y.WithAuthor Y.GetDrafts) = Y.Draft
-   selectQuery (Y.WithAuthor a _) =
-      let selectClause =
-             "SELECT \
+    type MType (Y.WithAuthor Y.GetDrafts) = Y.Draft
+    selectQuery (Y.WithAuthor a _) =
+        let selectClause =
+                "SELECT \
                \ draft_id, \
                \ title, \
                \ draft_creation_date, \
@@ -207,13 +198,13 @@ instance Read (Y.WithAuthor Y.GetDrafts) where
                \ content, photo, extra_photos, \
                \ post_id \
                \ FROM news.get_drafts WHERE author_id = ?"
-       in (selectClause, [SqlValue a])
+         in (selectClause, [SqlValue a])
 
 instance Read (Y.WithAuthor Y.Publish) where
-   type MType (Y.WithAuthor Y.Publish) = Y.DraftRaw
-   selectQuery (Y.WithAuthor a (Y.Publish draft)) =
-      let selectClause =
-             "SELECT \
+    type MType (Y.WithAuthor Y.Publish) = Y.DraftRaw
+    selectQuery (Y.WithAuthor a (Y.Publish draft)) =
+        let selectClause =
+                "SELECT \
                \ draft_id, \
                \ title, \
                \ creation_date, \
@@ -223,13 +214,13 @@ instance Read (Y.WithAuthor Y.Publish) where
                \ content, photo, extra_photos, \
                \ post_id \
                \ FROM news.draft_tag_total WHERE author_id = ? AND draft_id = ?"
-       in (selectClause, [SqlValue a, SqlValue draft])
+         in (selectClause, [SqlValue a, SqlValue draft])
 
 instance Read Y.Token where
-   type MType Y.Token = Y.User
-   selectQuery y =
-      let str =
-             "SELECT user_id, firstname, lastname, \
+    type MType Y.Token = Y.User
+    selectQuery y =
+        let str =
+                "SELECT user_id, firstname, lastname, \
               \image, login, pass_hash, creation_date, is_admin \
               \FROM news.get_users_by_token WHERE token = ?"
-       in (str, [SqlValue y])
+         in (str, [SqlValue y])

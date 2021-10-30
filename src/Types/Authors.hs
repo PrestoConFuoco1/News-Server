@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE DerivingVia #-}
 
 module Types.Authors where
 
@@ -11,34 +12,33 @@ import Types.Users
 type AuthorId = Int
 
 type ActionAuthors
-    = CRUD CreateAuthor (Paginated GetAuthors) EditAuthor DeleteAuthor
-
-instance GP.PrettyShow GetAuthors where
-   prettyShow = GP.LStr . show
+     = CRUD CreateAuthor (Paginated GetAuthors) EditAuthor DeleteAuthor
 
 newtype GetAuthors =
-   GetAuthors
-      { _ga_userId :: Maybe UserId
-      }
-   deriving (Show, Eq, Generic)
+    GetAuthors
+        { _ga_userId :: Maybe UserId
+        }
+  deriving (Show, Eq, Generic)
+    deriving GP.PrettyShow via GP.Showable GetAuthors
 
 data CreateAuthor =
-   CreateAuthor
-      { _ca_userId :: UserId
-      , _ca_description :: T.Text
-      }
-   deriving (Show, Eq, Generic, GP.PrettyShow)
+    CreateAuthor
+        { _ca_userId :: UserId
+        , _ca_description :: T.Text
+        }
+  deriving (Show, Eq, Generic, GP.PrettyShow)
 
 newtype DeleteAuthor =
-   DeleteAuthor
-      { _da_authorId :: AuthorId
-      }
-   deriving (Show, Eq, Generic, GP.PrettyShow)
+    DeleteAuthor
+        { _da_authorId :: AuthorId
+        }
+  deriving (Show, Eq, Generic, GP.PrettyShow)
 
 data EditAuthor =
-   EditAuthor
-      { _ea_authorId :: AuthorId
-      , _ea_description :: Maybe T.Text
-      , _ea_userId :: Maybe UserId
-      }
-   deriving (Show, Eq, Generic, GP.PrettyShow)
+    EditAuthor
+        { _ea_authorId :: AuthorId
+        , _ea_description :: Maybe T.Text
+        , _ea_userId :: Maybe UserId
+        }
+  deriving (Show, Eq, Generic, GP.PrettyShow)
+

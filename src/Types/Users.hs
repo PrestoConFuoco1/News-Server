@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE DerivingVia #-}
 
 module Types.Users where
 
@@ -11,34 +12,32 @@ import Types.Common
 
 type UserId = Int
 
-type ActionUsers
-    = CRUD CreateUser GetProfile Void DeleteUser
+type ActionUsers = CRUD CreateUser GetProfile Void DeleteUser
 
 data CreateUser =
-   CreateUser
-      { _cu_login :: T.Text
-      , _cu_passHash :: T.Text
-      , _cu_firstName :: T.Text
-      , _cu_lastName :: T.Text
-      }
-   deriving (Show, Eq, Generic, GP.PrettyShow, PS.ToRow)
+    CreateUser
+        { _cu_login :: T.Text
+        , _cu_passHash :: T.Text
+        , _cu_firstName :: T.Text
+        , _cu_lastName :: T.Text
+        }
+  deriving (Show, Eq, Generic, GP.PrettyShow, PS.ToRow)
 
 data GetProfile =
-   GetProfile
-   deriving (Show, Eq, Generic, PS.ToRow)
-
-instance GP.PrettyShow GetProfile where
-   prettyShow = GP.LStr . show
+    GetProfile
+  deriving (Show, Eq, Generic, PS.ToRow)
+    deriving GP.PrettyShow via GP.Showable GetProfile
 
 newtype DeleteUser =
-   DeleteUser
-      { _du_userId :: UserId
-      }
-   deriving (Show, Eq, Generic, GP.PrettyShow, PS.ToRow)
+    DeleteUser
+        { _du_userId :: UserId
+        }
+  deriving (Show, Eq, Generic, GP.PrettyShow, PS.ToRow)
 
 data Authenticate =
-   Authenticate
-      { _au_login :: T.Text
-      , _au_passHash :: T.Text
-      }
-   deriving (Show, Eq, Generic, GP.PrettyShow)
+    Authenticate
+        { _au_login :: T.Text
+        , _au_passHash :: T.Text
+        }
+  deriving (Show, Eq, Generic, GP.PrettyShow)
+

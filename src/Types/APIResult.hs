@@ -11,30 +11,30 @@ import Prelude as P
 import qualified Utils as S
 
 data APIResult
-   = RGet RGettable
-   | RGetUser User
-   | RGetToken T.Text
-   | RCreated Entity Int
-   | REdited Entity Int
-   | RDeleted Entity Int
-   | RNotFound Entity
-   | RAlreadyInUse Entity T.Text T.Text
-   | RInvalidForeign Entity T.Text T.Text
-   | RInvalidTag T.Text
-   deriving (Show, Generic)
+    = RGet RGettable
+    | RGetUser User
+    | RGetToken T.Text
+    | RCreated Entity Int
+    | REdited Entity Int
+    | RDeleted Entity Int
+    | RNotFound Entity
+    | RAlreadyInUse Entity T.Text T.Text
+    | RInvalidForeign Entity T.Text T.Text
+    | RInvalidTag T.Text
+  deriving (Show, Generic)
 
 logResult :: APIResult -> T.Text
 logResult (RGet (RGettable xs)) =
-   "fetched " <> S.showText (length xs) <> " entities"
+    "fetched " <> S.showText (length xs) <> " entities"
 logResult (RGetUser u) = GP.textPretty u
 logResult x = S.showText x
 
 data RGettable =
-   forall a. (Gettable a, Show a) =>
-             RGettable [a]
+    forall a. (Gettable a, Show a) =>
+              RGettable [a]
 
 instance Show RGettable where
-   show (RGettable xs) = show xs
+    show (RGettable xs) = show xs
 
 instance GP.PrettyShow RGettable where
-   prettyShow (RGettable xs) = GP.prettyShow xs
+    prettyShow (RGettable xs) = GP.prettyShow xs

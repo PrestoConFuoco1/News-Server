@@ -1,6 +1,6 @@
 module Database
-   ( module D
-   ) where
+    ( module D
+    ) where
 
 import Database.Create as D
 import Database.Delete as D

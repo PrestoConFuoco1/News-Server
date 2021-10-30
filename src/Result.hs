@@ -1,8 +1,10 @@
 {-# LANGUAGE DeriveAnyClass #-}
 
-module Result where
+module Result (
+module Result
+) where
 
-import qualified Data.Aeson as Ae (Value, ToJSON(..))
+import qualified Data.Aeson as Ae (ToJSON(..), Value)
 import qualified Data.Text as T
 import GHC.Generics
 import qualified Network.HTTP.Types as NHT
@@ -17,7 +19,7 @@ successNewToken = "Got token successfully"
 
 forbidden, badInsert, idInResult, unauthorizedMsg :: T.Text
 forbidden =
-   "Access only for administrators, sending 404 invalid endpoint."
+    "Access only for administrators, sending 404 invalid endpoint."
 
 badInsert = "Bad insertion"
 
@@ -30,8 +32,7 @@ invalidPasswordMsg = "Invalid password"
 
 invalidLoginMsg = "Invalid login"
 
-invalidEndpointMsg, internalErrorMsg, notAnAuthorMsg ::
-      T.Text
+invalidEndpointMsg, internalErrorMsg, notAnAuthorMsg :: T.Text
 invalidEndpointMsg = "Invalid endpoint"
 
 internalErrorMsg = "Internal error"
@@ -40,58 +41,49 @@ notAnAuthorMsg = "Not an author" :: T.Text
 
 createdMsg :: Y.Entity -> T.Text
 createdMsg ent =
-   let enttext = Y.showEText ent
-    in "Successfully created " <>
-       enttext <>
-       ", " <> enttext <> "_id is in \"result\" field"
+    let enttext = Y.showEText ent
+     in "Successfully created " <>
+        enttext <> ", " <> enttext <> "_id is in \"result\" field"
 
 editedMsg :: Y.Entity -> T.Text
 editedMsg ent =
-   let enttext = Y.showEText ent
-    in "Successfully edited " <>
-       enttext <>
-       ", " <> enttext <> "_id is in \"result\" field"
+    let enttext = Y.showEText ent
+     in "Successfully edited " <>
+        enttext <> ", " <> enttext <> "_id is in \"result\" field"
 
 deletedMsg :: Y.Entity -> T.Text
 deletedMsg ent =
-   let enttext = Y.showEText ent
-    in "Successfully deleted " <>
-       enttext <>
-       ", " <> enttext <> "_id is in \"result\" field"
+    let enttext = Y.showEText ent
+     in "Successfully deleted " <>
+        enttext <> ", " <> enttext <> "_id is in \"result\" field"
 
 entityNotFoundMsg :: Y.Entity -> T.Text
 entityNotFoundMsg ent =
-   let enttext = Y.showEText ent
-    in enttext <> " not found"
+    let enttext = Y.showEText ent
+     in enttext <> " not found"
 
 alreadyInUseMsg :: Y.Entity -> T.Text -> T.Text -> T.Text
 alreadyInUseMsg ent field value =
-   "Failed: " <>
-   Y.showEText ent <>
-   " with " <> field <> "=" <> value <> " already exists"
+    "Failed: " <>
+    Y.showEText ent <>
+    " with " <> field <> "=" <> value <> " already exists"
 
 invalidForeignMsg :: T.Text -> T.Text -> T.Text
 invalidForeignMsg field value =
-   "Failed: " <>
-   field <> " has an invalid value of " <> value
+    "Failed: " <> field <> " has an invalid value of " <> value
 
 tagNotFoundMsg :: T.Text -> T.Text
-tagNotFoundMsg tag =
-   "Failed: no tag found with id = " <> tag
+tagNotFoundMsg tag = "Failed: no tag found with id = " <> tag
 
 okCreated :: T.Text -> Int -> Response
 okCreated msg eid = Response NHT.ok200 val
   where
-    val =
-       Ae.toJSON $
-       Result True (Just msg) (Just $ Ae.toJSON eid)
+    val = Ae.toJSON $ Result True (Just msg) (Just $ Ae.toJSON eid)
 
 okDeleted :: (Ae.ToJSON a) => T.Text -> a -> Response
 okDeleted msg eid = Response NHT.ok200 val
   where
-    val =
-       Ae.toJSON $
-       Result True (Just msg) (Just $ Ae.toJSON eid)
+    val = Ae.toJSON $ Result True (Just msg) (Just $ Ae.toJSON eid)
 
 ok :: T.Text -> Ae.Value -> Response
 ok text res = Response NHT.ok200 val
@@ -111,16 +103,17 @@ notFound = Response NHT.status404 . errR
 internal = Response NHT.internalServerError500 . errR
 
 data Response =
-   Response
-      { _r_status :: NHT.Status
-      , _r_message :: Ae.Value
-      }
-   deriving (Show, Eq)
+    Response
+        { _r_status :: NHT.Status
+        , _r_message :: Ae.Value
+        }
+  deriving (Show, Eq)
 
 data Result =
-   Result
-      { _ok :: Bool
-      , message :: Maybe T.Text
-      , result :: Maybe Ae.Value
-      }
-   deriving (Show, Eq, Generic, Ae.ToJSON)
+    Result
+        { _ok :: Bool
+        , message :: Maybe T.Text
+        , result :: Maybe Ae.Value
+        }
+  deriving (Show, Eq, Generic, Ae.ToJSON)
+
