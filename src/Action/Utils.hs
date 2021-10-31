@@ -96,14 +96,6 @@ readList = Ae.decode . BSL.fromStrict
 fmap2 :: (Functor f, Functor g) => (a -> b) -> f (g a) -> f (g b)
 fmap2 f = fmap (fmap f)
 
-{-
-data Y.Paginated a = Paginated {
-    _pag_page :: Int,
-    _pag_size :: Int,
-    _pag_data :: a
-    } deriving (Show, Generic, GP.PrettyShow) 
-
--}
 defaultPage, defaultSize :: Int
 defaultPage = 0
 

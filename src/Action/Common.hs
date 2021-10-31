@@ -10,7 +10,7 @@ module Action.Common
     , askHash
     , ActionErrorPerms(..)
     , runRouter
-    , renv
+    , routingEnv
     , pathNotFound
     ) where
 
@@ -74,5 +74,5 @@ withMaybe r = maybe r pure
 errorOnNothing :: ActionError -> Maybe a -> Router a
 errorOnNothing e = maybe (routerError e) pure
 
-renv :: Bool -> Query -> RoutingEnv
-renv = RoutingEnv
+routingEnv :: Bool -> Query -> RoutingEnv
+routingEnv = RoutingEnv

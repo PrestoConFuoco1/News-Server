@@ -83,8 +83,7 @@ getUser ::
     => D.Handle m
     -> Maybe Y.User
     -> m Y.APIResult
-getUser h muser =
-    Y.RGetUser <$> maybeUserToUser h muser
+getUser h muser = Y.RGetUser <$> maybeUserToUser h muser
 
 authenticate ::
        (CMC.MonadThrow m)

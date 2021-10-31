@@ -21,7 +21,7 @@ actionWithPost pid path hash =
     case path of
         [x]
             | x == "comments" ->
-                runRouter (renv False hash) $
+                runRouter (routingEnv False hash) $
                 AU.withPagination $ pure $ Y.GetComments pid
         _ -> Left $ ActionErrorPerms False EInvalidEndpoint
 

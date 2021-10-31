@@ -3,7 +3,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 
 module Database.Read
-    ( Read(..)
+    ( ReadSQL(..)
     , pageingClause
     ) where
 
@@ -16,7 +16,6 @@ import qualified Database.PostgreSQL.Simple as PS
 import qualified Database.PostgreSQL.Simple.Types as PSTy
 import Database.SqlValue
 import qualified GenericPretty as GP (PrettyShow(..))
-import Prelude hiding (Read)
 import qualified Types as Y
 import qualified Utils as S
 
@@ -25,7 +24,7 @@ class ( Ae.ToJSON (MType a)
       , PS.FromRow (MType a)
       , Show a
       , Show (MType a)
-      ) => Read a where
+      ) => ReadSQL a where
     type MType a :: *
     selectQuery :: a -> (PS.Query, [SqlValue])
 
@@ -37,7 +36,7 @@ pageingClause page size =
     ( " LIMIT ? OFFSET ? "
     , [SqlValue size, SqlValue $ toOffset page size])
 
-instance Read Y.GetPosts where
+instance ReadSQL Y.GetPosts where
     type MType Y.GetPosts = Y.Post
     selectQuery (Y.GetPosts cre tags search sortOpts) =
         let selectClause =
@@ -134,7 +133,7 @@ enclosePar qu = "(" <> qu <> ")"
 enclose :: T.Text -> T.Text -> T.Text
 enclose p qu = p <> qu <> p
 
-instance Read Y.GetCategories where
+instance ReadSQL Y.GetCategories where
     type MType Y.GetCategories = Y.Category
     selectQuery (Y.GetCategories mCatId) =
         let selectClause =
@@ -144,7 +143,7 @@ instance Read Y.GetCategories where
          in S.withMaybe mCatId (selectClause, args) $ \cid ->
                 (selectClause <> whereClause, args ++ [SqlValue cid])
 
-instance Read Y.GetAuthors where
+instance ReadSQL Y.GetAuthors where
     type MType Y.GetAuthors = Y.Author
     selectQuery (Y.GetAuthors mUser) =
         let selectClause =
@@ -159,7 +158,7 @@ instance Read Y.GetAuthors where
                     ( selectClause <> whereClause
                     , args ++ [SqlValue user])
 
-instance Read Y.GetTags where
+instance ReadSQL Y.GetTags where
     type MType Y.GetTags = Y.Tag
     selectQuery Y.GetTags =
         let selectClause =
@@ -168,7 +167,7 @@ instance Read Y.GetTags where
             args = []
          in (selectClause, args)
 
-instance Read Y.GetComments where
+instance ReadSQL Y.GetComments where
     type MType Y.GetComments = Y.Comment
     selectQuery (Y.GetComments pid) =
         let selectClause =
@@ -179,7 +178,7 @@ instance Read Y.GetComments where
             args = [SqlValue pid]
          in (selectClause, args)
 
-instance Read (Y.WithAuthor Y.GetDrafts) where
+instance ReadSQL (Y.WithAuthor Y.GetDrafts) where
     type MType (Y.WithAuthor Y.GetDrafts) = Y.Draft
     selectQuery (Y.WithAuthor a _) =
         let selectClause =
@@ -206,7 +205,7 @@ instance Read (Y.WithAuthor Y.GetDrafts) where
                \ FROM news.get_drafts WHERE author_id = ?"
          in (selectClause, [SqlValue a])
 
-instance Read (Y.WithAuthor Y.Publish) where
+instance ReadSQL (Y.WithAuthor Y.Publish) where
     type MType (Y.WithAuthor Y.Publish) = Y.DraftRaw
     selectQuery (Y.WithAuthor a (Y.Publish draft)) =
         let selectClause =
@@ -222,7 +221,7 @@ instance Read (Y.WithAuthor Y.Publish) where
                \ FROM news.draft_tag_total WHERE author_id = ? AND draft_id = ?"
          in (selectClause, [SqlValue a, SqlValue draft])
 
-instance Read Y.Token where
+instance ReadSQL Y.Token where
     type MType Y.Token = Y.User
     selectQuery y =
         let str =

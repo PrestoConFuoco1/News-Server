@@ -1,21 +1,20 @@
 module Exceptions
-    (
-    sqlHandlers,
-    withHandler,
-    withExceptionHandlers,
-    throwInvalidUnique,
-    tagsErrorHandler,
-    throwTokenShared,
-    throwInvalidUpdate,
-    modifyErrorHandler,
-    throwForbidden,
-    throwUnauthorized,
-    throwInvalidLogin,
-    throwInvalidPassword,
-    notAnAuthor,
-    defaultMainHandler,
-    mainErrorHandler,
-    ServerException(..), -- only for tests
+    ( sqlHandlers
+    , withHandler
+    , withExceptionHandlers
+    , throwInvalidUnique
+    , tagsErrorHandler
+    , throwTokenShared
+    , throwInvalidUpdate
+    , modifyErrorHandler
+    , throwForbidden
+    , throwUnauthorized
+    , throwInvalidLogin
+    , throwInvalidPassword
+    , notAnAuthor
+    , defaultMainHandler
+    , mainErrorHandler
+    , ServerException(..) -- only for tests
     ) where
 
 import Control.Monad.Catch as CMC

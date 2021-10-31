@@ -74,10 +74,11 @@ requestToAction1 path hash =
             | x == "auth" ->
                 AAuth <$>
                 runRouter
-                    (renv False hash)
+                    (routingEnv False hash)
                     requestToActionAuthenticate
             | x == "publish" ->
-                APublish <$> runRouter (renv False hash) publishAction
+                APublish <$>
+                runRouter (routingEnv False hash) publishAction
             | otherwise -> Left pathNotFound
         (x:xs)
             | x == "posts" -> APosts <$> requestToActionPosts xs hash
@@ -108,7 +109,7 @@ requestToActionPosts path hash =
         [x]
             | x == "get" ->
                 fmap (Y.AP . Y.Read) $
-                runRouter (renv False hash) $
+                runRouter (routingEnv False hash) $
                 AU.withPagination getPostsAction
             | otherwise ->
                 Left $ ActionErrorPerms False EInvalidEndpoint
@@ -125,17 +126,17 @@ requestToActionDrafts path hash =
         [x]
             | x == "get" ->
                 fmap Y.Read $
-                runRouter (renv False hash) $
+                runRouter (routingEnv False hash) $
                 AU.withPagination (pure Y.GetDrafts)
             | x == "create" ->
                 Y.Create <$>
-                runRouter (renv False hash) createDraftToAction
+                runRouter (routingEnv False hash) createDraftToAction
             | x == "edit" ->
                 Y.Update <$>
-                runRouter (renv False hash) editDraftToAction
+                runRouter (routingEnv False hash) editDraftToAction
             | x == "delete" ->
                 Y.Delete <$>
-                runRouter (renv False hash) deleteDraftToAction
+                runRouter (routingEnv False hash) deleteDraftToAction
         _ -> Left pathNotFound
 
 requestToActionCats ::
@@ -145,17 +146,17 @@ requestToActionCats path hash =
         [x]
             | x == "get" ->
                 fmap Y.Read $
-                runRouter (renv False hash) $
+                runRouter (routingEnv False hash) $
                 AU.withPagination (pure $ Y.GetCategories Nothing)
             | x == "create" ->
                 Y.Create <$>
-                runRouter (renv True hash) createCatsToAction
+                runRouter (routingEnv True hash) createCatsToAction
             | x == "edit" ->
                 Y.Update <$>
-                runRouter (renv True hash) editCatsToAction
+                runRouter (routingEnv True hash) editCatsToAction
             | x == "delete" ->
                 Y.Delete <$>
-                runRouter (renv True hash) deleteCatsToAction
+                runRouter (routingEnv True hash) deleteCatsToAction
         _ -> Left pathNotFound
 
 requestToActionTags ::
@@ -165,17 +166,17 @@ requestToActionTags path hash =
         [x]
             | x == "get" ->
                 fmap Y.Read $
-                runRouter (renv False hash) $
+                runRouter (routingEnv False hash) $
                 AU.withPagination (pure Y.GetTags)
             | x == "create" ->
                 Y.Create <$>
-                runRouter (renv True hash) createTagToAction
+                runRouter (routingEnv True hash) createTagToAction
             | x == "edit" ->
                 Y.Update <$>
-                runRouter (renv True hash) editTagToAction
+                runRouter (routingEnv True hash) editTagToAction
             | x == "delete" ->
                 Y.Delete <$>
-                runRouter (renv True hash) deleteTagToAction
+                runRouter (routingEnv True hash) deleteTagToAction
         _ -> Left pathNotFound
 
 requestToActionUsers ::
@@ -186,10 +187,10 @@ requestToActionUsers path hash =
             | x == "profile" -> pure $ Y.Read Y.GetProfile
             | x == "create" ->
                 Y.Create <$>
-                runRouter (renv False hash) createUserToAction
+                runRouter (routingEnv False hash) createUserToAction
             | x == "delete" ->
                 Y.Delete <$>
-                runRouter (renv True hash) deleteUserToAction
+                runRouter (routingEnv True hash) deleteUserToAction
         _ -> Left pathNotFound
 
 requestToActionAuthors ::
@@ -199,17 +200,17 @@ requestToActionAuthors path hash =
         [x]
             | x == "get" ->
                 fmap Y.Read $
-                runRouter (renv False hash) $
+                runRouter (routingEnv False hash) $
                 AU.withPagination (pure $ Y.GetAuthors Nothing)
             | x == "create" ->
                 Y.Create <$>
-                runRouter (renv True hash) createAuthorToAction
+                runRouter (routingEnv True hash) createAuthorToAction
             | x == "delete" ->
                 Y.Delete <$>
-                runRouter (renv True hash) deleteAuthorToAction
+                runRouter (routingEnv True hash) deleteAuthorToAction
             | x == "edit" ->
                 Y.Update <$>
-                runRouter (renv True hash) editAuthorToAction
+                runRouter (routingEnv True hash) editAuthorToAction
         _ -> Left pathNotFound
 
 requestToActionComments ::
@@ -219,12 +220,16 @@ requestToActionComments path hash =
         [x]
             | x == "get" ->
                 fmap Y.Read $
-                runRouter (renv False hash) $
+                runRouter (routingEnv False hash) $
                 AU.withPagination getCommentsToAction
             | x == "create" ->
                 Y.Create <$>
-                runRouter (renv False hash) createCommentsToAction
+                runRouter
+                    (routingEnv False hash)
+                    createCommentsToAction
             | x == "delete" ->
                 Y.Delete <$>
-                runRouter (renv False hash) deleteCommentsToAction
+                runRouter
+                    (routingEnv False hash)
+                    deleteCommentsToAction
         _ -> Left pathNotFound

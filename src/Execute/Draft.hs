@@ -16,9 +16,10 @@ import qualified Utils as S
 
 draftModifyErrorToApiResult :: Y.DraftModifyError -> Y.APIResult
 draftModifyErrorToApiResult (Y.DModifyError x) = Y.RFailed Y.EDraft x
-draftModifyErrorToApiResult (Y.DTagsError (Y.TagsAttachError (Y.ForeignViolation _ value))) =
-    Y.RInvalidTag value
+draftModifyErrorToApiResult (Y.DTagsError (Y.TagsAttachError Y.ForeignViolation {..})) =
+    Y.RInvalidTag _fv_value
 
+--    Y.RFailed Y.EDraft ?
 draftModifyHandler ::
        (CMC.MonadCatch m)
     => L.LoggerHandler m
@@ -38,11 +39,11 @@ createDraft h x@(Y.WithAuthor _ Y.CreateDraft {..}) =
     Ex.withHandler (draftModifyHandler $ D.log h) $
     D.withTransaction h $ do
         eithDraft <- D.createDraft h (D.log h) x
-        draft <- throwWithFunc Y.DModifyError eithDraft
+        draft <- throwWithFuncOnError Y.DModifyError eithDraft
         D.logInfo h $
             "Created draft with id = " <> T.pack (show draft)
         eithTags <- D.attachTagsToDraft h (D.log h) draft _cd_tags
-        tags <- throwWithFunc Y.DTagsError eithTags
+        tags <- throwWithFuncOnError Y.DTagsError eithTags
         D.logInfo h $ attached "draft" tags draft
         pure $ Y.RCreated Y.EDraft draft
 
@@ -55,10 +56,10 @@ editDraft h x@(Y.WithAuthor _ Y.EditDraft {..}) =
     Ex.withHandler (draftModifyHandler $ D.log h) $
     D.withTransaction h $ do
         eithDraft <- D.editDraft h (D.log h) x
-        draft <- throwWithFunc Y.DModifyError eithDraft
+        draft <- throwWithFuncOnError Y.DModifyError eithDraft
         S.withMaybe _ed_tags (pure $ Y.REdited Y.EDraft draft) $ \tags -> do
             eithTs <- D.attachTagsToDraft h (D.log h) draft tags
-            ts <- throwWithFunc Y.DTagsError eithTs
+            ts <- throwWithFuncOnError Y.DTagsError eithTs
             D.logInfo h $ attached "draft" ts draft
             tsRem <-
                 D.removeAllButGivenTagsDraft h (D.log h) draft tags
@@ -92,18 +93,18 @@ publishCreate ::
        (CMC.MonadCatch m) => D.Handle m -> Y.DraftRaw -> m Y.APIResult
 publishCreate h x = do
     eithPost <- D.createPost h (D.log h) x
-    post <- throwWithFunc Y.DModifyError eithPost
-    D.logInfo h $ "Created post with id = " <> showText post
+    post <- throwWithFuncOnError Y.DModifyError eithPost
+    D.logInfo h $ "Created post with id = " <> S.showText post
     eithDraft <-
         D.editDraftPublish
             h
             (D.log h)
             (Y.EditDraftPublish post $ Y._dr_draftId x)
-    draft <- throwWithFunc Y.DModifyError eithDraft
+    draft <- throwWithFuncOnError Y.DModifyError eithDraft
     D.logInfo h $
-        "Added post_id to draft with id = " <> showText draft
+        "Added post_id to draft with id = " <> S.showText draft
     eithTags_ <- D.attachTagsToPost h (D.log h) post (Y._dr_tagIds x)
-    tags_ <- throwWithFunc Y.DTagsError eithTags_
+    tags_ <- throwWithFuncOnError Y.DTagsError eithTags_
     D.logInfo h $ attached "post" tags_ post
     pure $ Y.RCreated Y.EPost post
 
@@ -118,10 +119,10 @@ publishEdit h post draft =
     D.withTransaction h $ do
         let publishPost = draftRawToPublishEditPost post draft
         eithPost_ <- D.editPostPublish h (D.log h) publishPost
-        post_ <- throwWithFunc Y.DModifyError eithPost_
+        post_ <- throwWithFuncOnError Y.DModifyError eithPost_
         eithTs <-
             D.attachTagsToPost h (D.log h) post $ Y._dr_tagIds draft
-        ts <- throwWithFunc Y.DTagsError eithTs
+        ts <- throwWithFuncOnError Y.DTagsError eithTs
         D.logInfo h $ attached "post" ts post
         tsRem <-
             D.removeAllButGivenTagsPost h (D.log h) post $
@@ -129,12 +130,12 @@ publishEdit h post draft =
         D.logInfo h $ removed "post" tsRem $ Y._dr_draftId draft
         pure $ Y.REdited Y.EPost post_
 
-throwWithFunc ::
+throwWithFuncOnError ::
        (CMC.MonadCatch m)
     => (e -> Y.DraftModifyError)
     -> Either e a
     -> m a
-throwWithFunc f = either (CMC.throwM . f) pure
+throwWithFuncOnError f = either (CMC.throwM . f) pure
 
 draftRawToPublishEditPost :: Int -> Y.DraftRaw -> Y.PublishEditPost
 draftRawToPublishEditPost post Y.DraftRaw {..} =
@@ -146,14 +147,11 @@ draftRawToPublishEditPost post Y.DraftRaw {..} =
         _pep_extraPhotos = _dr_extraPhotos
      in Y.PublishEditPost {..}
 
-showText :: (Show a) => a -> T.Text
-showText = T.pack . show
-
 attached, removed :: T.Text -> [Int] -> Int -> T.Text
 attached ent ids eid =
     "Attached tags with id in " <>
-    showText ids <> " to " <> ent <> " with id = " <> showText eid
+    S.showText ids <> " to " <> ent <> " with id = " <> S.showText eid
 
 removed ent ids eid =
     "Removed tags with id in " <>
-    showText ids <> " to " <> ent <> " with id = " <> showText eid
+    S.showText ids <> " to " <> ent <> " with id = " <> S.showText eid

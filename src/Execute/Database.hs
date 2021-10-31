@@ -25,7 +25,6 @@ createThis name create x = do
     eithInt <- create x
     case eithInt of
         Right int -> pure $ Y.RCreated name int
-        --Left err -> pure $ modifyErrorToApiResult name err
         Left err -> pure $ Y.RFailed name err
 
 deleteErrorToApiResult :: Y.Entity -> Y.DeleteError -> Y.APIResult
@@ -54,4 +53,3 @@ editThis name update x = do
     case eithInt of
         Right int -> pure $ Y.REdited name int
         Left err -> pure $ Y.RFailed name err
---        Left err -> pure $ modifyErrorToApiResult name err

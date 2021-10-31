@@ -8,6 +8,7 @@ module App.Database.Postgres
     ) where
 
 import App.Database (Handle(..))
+import qualified App.Database.Postgres.Internal as IOP
 import qualified App.Logger as L
 import Control.Monad ((>=>))
 import qualified Control.Monad.Catch as C (bracket)
@@ -16,7 +17,6 @@ import Database
 import qualified Database.PostgreSQL.Simple as PS
 import GHC.Generics
 import qualified GenericPretty as GP
-import qualified App.Database.Postgres.Internal as IOP
 import qualified Types as Y
 
 data Config =
