@@ -1,14 +1,21 @@
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DerivingVia #-}
 
-module Types.Users where
+module Types.Users (
+UserId,
+CreateUser(..),
+DeleteUser(..),
+GetProfile(..),
+Authenticate(..),
+ActionUsers
+) where
 
 import qualified Data.Text as T
 import Data.Void
 import qualified Database.PostgreSQL.Simple as PS
 import GHC.Generics
 import qualified GenericPretty as GP
-import Types.Common
+import Types.Common (CRUD, Paginated)
 
 type UserId = Int
 

@@ -2,7 +2,11 @@
 {-# LANGUAGE DerivingVia #-}
 {-# LANGUAGE DeriveAnyClass #-}
 
-module RunOptions where
+module RunOptions (
+RunOptions(..),
+getOptsIO,
+toLoggerFilter,
+) where
 
 import qualified App.Logger as L
 import qualified Data.Text as T

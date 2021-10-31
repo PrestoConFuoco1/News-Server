@@ -8,7 +8,7 @@ resourcesToHandle
 ) where
 
 import App.Database (Handle(..))
-import qualified App.Logger as Logger
+import qualified App.Logger as L
 import Control.Monad ((>=>))
 import qualified Control.Monad.Catch as C (bracket)
 import qualified Data.ByteString as B
@@ -40,11 +40,11 @@ connectionString Config {..} =
     " user=" <> userName <> " password='" <> password <> "'"
 
 withPostgresHandle ::
-       Logger.LoggerHandler IO -> Config -> (Resources -> IO a) -> IO a
+       L.LoggerHandler IO -> Config -> (Resources -> IO a) -> IO a
 withPostgresHandle logger conf =
     C.bracket (initResources logger conf) closeResources
 
-initResources :: Logger.LoggerHandler IO -> Config -> IO Resources
+initResources :: L.LoggerHandler IO -> Config -> IO Resources
 initResources _ conf = do
     let conStr = connectionString conf
     con <- PS.connectPostgreSQL conStr
@@ -55,7 +55,7 @@ closeResources resources =
     let conn = postgresConnection resources
      in PS.close conn
 
-resourcesToHandle :: Resources -> Logger.LoggerHandler IO -> Handle IO
+resourcesToHandle :: Resources -> L.LoggerHandler IO -> Handle IO
 resourcesToHandle (Resources con) logger =
     Handle
         { log = logger

@@ -1,17 +1,26 @@
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DerivingVia #-}
 
-module Types.Draft where
+module Types.Draft (
+DraftId,
+EditDraft(..),
+EditDraftPublish(..),
+GetDrafts(..),
+Publish(..),
+DeleteDraft(..),
+CreateDraft(..),
+ActionDrafts
+) where
 
 import qualified Data.Text as T
 import qualified Database.PostgreSQL.Simple as PS
 import GHC.Generics
 import qualified GenericPretty as GP
 import Prelude hiding (readList)
-import Types.Category
-import Types.Common
-import Types.Posts
-import Types.Tags
+import Types.Category (CategoryId)
+import Types.Common (CRUD, Paginated)
+import Types.Posts (PostId)
+import Types.Tags (TagId)
 
 type DraftId = Int
 

@@ -1,13 +1,20 @@
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DerivingVia #-}
 
-module Types.Tags where
+module Types.Tags (
+TagId,
+EditTag(..),
+GetTags(..),
+DeleteTag(..),
+CreateTag(..),
+ActionTags
+) where
 
 import qualified Data.Text as T
 import qualified Database.PostgreSQL.Simple as PS
 import GHC.Generics
 import qualified GenericPretty as GP
-import Types.Common
+import Types.Common (CRUD, Paginated)
 
 type TagId = Int
 

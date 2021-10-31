@@ -1,10 +1,27 @@
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DerivingVia #-}
 
-module Types.Posts where
+module Types.Posts (
+PostId,
+CommentId,
+PublishEditPost(..),
+GetComments(..),
+SearchOptions(..),
+TagsOptions(..),
+CreationDateOptions(..),
+SortOptions(..),
+SortOrder(..),
+SortEntity(..),
+GetPosts(..),
+DeleteComment(..),
+CreateComment(..),
+ActionPosts,
+ActionPosts1(..),
+ActionComments
+) where
 
 import Prelude hiding (readList)
-import Types.Common
+import Types.Common (CRUD, Paginated)
 
 import qualified Data.Text as T
 import qualified Data.Time as Time
@@ -12,8 +29,8 @@ import Data.Void
 import qualified Database.PostgreSQL.Simple as PS
 import GHC.Generics
 import qualified GenericPretty as GP
-import Types.Category
-import Types.Tags
+import Types.Category (CategoryId)
+import Types.Tags (TagId)
 
 type PostId = Int
 

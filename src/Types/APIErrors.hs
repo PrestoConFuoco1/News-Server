@@ -1,4 +1,6 @@
-module Types.APIErrors where
+module Types.APIErrors (
+module Types.APIErrors
+) where
 
 import qualified Control.Monad.Catch as CMC
 import Data.Text

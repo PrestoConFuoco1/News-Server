@@ -1,6 +1,18 @@
 {-# LANGUAGE DeriveAnyClass #-}
 
-module Types.Entity where
+module Types.Entity (
+Entity(..),
+Gettable(..),
+User(..),
+showEText,
+Tag(..),
+Comment(..),
+Category(..),
+Draft(..),
+DraftRaw(..),
+Author(..),
+Post(..)
+) where
 
 import qualified Data.Aeson as Ae
 import qualified Data.Text as T
@@ -9,12 +21,12 @@ import qualified Database.PostgreSQL.Simple as PS
 import qualified Database.PostgreSQL.Simple.FromRow as PSR
 import GHC.Generics
 import qualified GenericPretty as GP
-import Types.Authors
-import Types.Category
-import Types.Draft
-import Types.Posts
-import Types.Tags
-import Types.Users
+import Types.Authors (AuthorId)
+import Types.Category (CategoryId)
+import Types.Draft (DraftId)
+import Types.Posts (PostId, CommentId)
+import Types.Tags (TagId)
+import Types.Users (UserId)
 import Utils
 
 data Entity

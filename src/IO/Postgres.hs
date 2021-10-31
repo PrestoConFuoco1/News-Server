@@ -1,6 +1,8 @@
 {-# LANGUAGE TypeApplications, ScopedTypeVariables #-}
 
-module IO.Postgres where
+module IO.Postgres (
+module IO.Postgres
+) where
 
 import qualified App.Logger as L
 import Data.Maybe (fromMaybe)

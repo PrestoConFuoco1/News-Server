@@ -1,13 +1,20 @@
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DerivingVia #-}
 
-module Types.Authors where
+module Types.Authors (
+AuthorId,
+EditAuthor(..),
+GetAuthors(..),
+DeleteAuthor(..),
+CreateAuthor(..),
+ActionAuthors
+) where
 
 import qualified Data.Text as T
 import GHC.Generics
 import qualified GenericPretty as GP
-import Types.Common
-import Types.Users
+import Types.Common (CRUD, Paginated)
+import Types.Users (UserId)
 
 type AuthorId = Int
 
