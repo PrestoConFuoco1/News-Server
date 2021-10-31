@@ -23,6 +23,7 @@ import qualified Data.Text as T
 import qualified Data.Time as Time
 import qualified Database.PostgreSQL.Simple as PS
 import qualified Database.PostgreSQL.Simple.FromRow as PSR
+import DerivingJSON (RemovePrefix(..))
 import GHC.Generics
 import qualified GenericPretty as GP
 import Types.Authors (AuthorId)
@@ -32,7 +33,6 @@ import Types.Posts (CommentId, PostId)
 import Types.Tags (TagId)
 import Types.Users (UserId)
 import qualified Utils as S
-import DerivingJSON (RemovePrefix(..))
 
 data Entity
     = EUser
@@ -50,13 +50,12 @@ showE x = S.unCap $ drop 1 $ show x
 showEText :: Entity -> T.Text
 showEText = T.pack . showE
 
-class (Ae.ToJSON a, Show a, GP.PrettyShow a) =>
-      Gettable a
+class (Ae.ToJSON a, Show a, GP.PrettyShow a) => Gettable a
 
 
 data User =
     User
-       { _u_id :: UserId
+        { _u_id :: UserId
         , _u_firstname :: T.Text
         , _u_lastname :: T.Text
         , _u_pictureUrl :: Maybe T.Text
@@ -66,8 +65,8 @@ data User =
         , _u_admin :: Maybe Bool
         }
   deriving (Show, Eq, Generic, GP.PrettyShow, PSR.FromRow)
-  deriving anyclass Gettable
-    deriving Ae.ToJSON via RemovePrefix User
+  deriving anyclass (Gettable)
+  deriving Ae.ToJSON via RemovePrefix User
 
 data Author =
     Author
@@ -76,8 +75,8 @@ data Author =
         , _a_user :: User
         }
   deriving (Show, Eq, Generic, GP.PrettyShow)
-  deriving anyclass Gettable
-    deriving Ae.ToJSON via RemovePrefix Author
+  deriving anyclass (Gettable)
+  deriving Ae.ToJSON via RemovePrefix Author
 
 instance PSR.FromRow Author where
     fromRow = Author <$> PSR.field <*> PSR.field <*> PSR.fromRow
@@ -89,8 +88,8 @@ data Category =
         , _cat_parentCategory :: Maybe Category
         }
   deriving (Show, Eq, Generic, GP.PrettyShow)
-  deriving anyclass Gettable
-    deriving Ae.ToJSON via RemovePrefix Category
+  deriving anyclass (Gettable)
+  deriving Ae.ToJSON via RemovePrefix Category
 
 instance PSR.FromRow Category where
     fromRow = fmap listToCategory $ zip <$> PSR.field <*> PSR.field
@@ -101,8 +100,7 @@ defaultCategoryId = 1
 listToCategory :: [(CategoryId, T.Text)] -> Category
 listToCategory [] = Category defaultCategoryId "default" Nothing
 listToCategory ((catId, txt):xs) =
-    Category catId txt $ foldr f Nothing xs
-  where
+    Category catId txt $ foldr f Nothing xs where
     f (cid, t) cat = Just $ Category cid t cat
 
 getCategoryParents :: Category -> [CategoryId]
@@ -123,7 +121,7 @@ data Post =
         }
   deriving (Show, Eq, Generic)
   deriving anyclass (Gettable, GP.PrettyShow)
-    deriving Ae.ToJSON via RemovePrefix Post
+  deriving Ae.ToJSON via RemovePrefix Post
 
 instance PSR.FromRow Post where
     fromRow = do
@@ -158,8 +156,8 @@ data Tag =
         , _t_tagName :: T.Text
         }
   deriving (Show, Eq, Generic, GP.PrettyShow, PS.FromRow)
-  deriving anyclass Gettable
-    deriving Ae.ToJSON via RemovePrefix Tag
+  deriving anyclass (Gettable)
+  deriving Ae.ToJSON via RemovePrefix Tag
 
 data Comment =
     Comment
@@ -168,8 +166,8 @@ data Comment =
         , _com_user :: User
         }
   deriving (Show, Eq, Generic, GP.PrettyShow)
-  deriving anyclass Gettable
-    deriving Ae.ToJSON via RemovePrefix Comment
+  deriving anyclass (Gettable)
+  deriving Ae.ToJSON via RemovePrefix Comment
 
 instance PSR.FromRow Comment where
     fromRow = do
@@ -197,8 +195,8 @@ data Draft =
         , _d_postId :: Maybe PostId
         }
   deriving (Show, Eq, Generic, GP.PrettyShow)
-  deriving anyclass Gettable
-    deriving Ae.ToJSON via RemovePrefix Draft
+  deriving anyclass (Gettable)
+  deriving Ae.ToJSON via RemovePrefix Draft
 
 instance PSR.FromRow Draft where
     fromRow = do
@@ -243,7 +241,7 @@ data DraftRaw =
         , _dr_postId :: Maybe PostId
         }
   deriving (Show, Eq, Generic, GP.PrettyShow)
-    deriving Ae.ToJSON via RemovePrefix DraftRaw
+  deriving Ae.ToJSON via RemovePrefix DraftRaw
 
 instance PSR.FromRow DraftRaw where
     fromRow = do

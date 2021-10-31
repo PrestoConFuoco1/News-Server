@@ -141,7 +141,8 @@ toResponse (Y.REdited ent int) =
 toResponse (Y.RDeleted ent int) =
     R.ok (R.deletedMsg ent) (Ae.toJSON int)
 toResponse (Y.RInvalidTag value) = R.bad (R.tagNotFoundMsg value)
-toResponse (Y.RFailed ent modifError) = modifyErrorToApiResponse ent modifError
+toResponse (Y.RFailed ent modifError) =
+    modifyErrorToApiResponse ent modifError
 
 modifyErrorToApiResponse :: Y.Entity -> Y.ModifyError -> R.Response
 modifyErrorToApiResponse ent (Y.MAlreadyInUse (Y.UniqueViolation field value)) =
@@ -152,5 +153,3 @@ modifyErrorToApiResponse ent (Y.MConstraintViolated (Y.ConstraintViolation field
     R.bad $ R.constraintViolatedMsg field value description
 modifyErrorToApiResponse ent Y.MNoAction =
     R.bad $ R.entityNotFoundMsg ent
-
-

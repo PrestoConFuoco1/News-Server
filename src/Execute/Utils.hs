@@ -1,5 +1,4 @@
 module Execute.Utils
-    --( modifyErrorToApiResult
     ( withAuthor
     , withAuthAdmin
     , withAuth
@@ -65,9 +64,7 @@ checkAdmin h muser = do
                         fname <>
                         "user is not admin, throwing forbidden"
                     Ex.throwForbidden
-                else do
-                    D.logDebug h $ fname <> "ok, user is admin"
-                    pure ()
+                else D.logDebug h $ fname <> "ok, user is admin"
 
 maybeUserToUser ::
        (CMC.MonadThrow m) => D.Handle m -> Maybe Y.User -> m Y.User
@@ -86,9 +83,8 @@ getUser ::
     => D.Handle m
     -> Maybe Y.User
     -> m Y.APIResult
-getUser h muser = do
-    user <- maybeUserToUser h muser
-    pure $ Y.RGetUser user
+getUser h muser =
+    Y.RGetUser <$> maybeUserToUser h muser
 
 authenticate ::
        (CMC.MonadThrow m)
@@ -99,30 +95,42 @@ authenticate h auth = do
     muser <- D.getUserByLogin h (D.log h) $ Y._au_login auth
     user <- maybe Ex.throwInvalidLogin pure muser
     when (Y._u_passHash user /= Y._au_passHash auth) $
-        CMC.throwM Ex.InvalidPassword
+        Ex.throwInvalidPassword
     token <- T.pack <$> D.generateToken h 10
     token' <- D.addToken h (D.log h) (Y._u_id user) token
     pure $ Y.RGetToken token'
 
-checkCategoryUpdate :: (CMC.MonadThrow m) => D.Handle m -> Y.EditCategory -> m (Maybe Y.ModifyError)
+checkCategoryUpdate ::
+       (CMC.MonadThrow m)
+    => D.Handle m
+    -> Y.EditCategory
+    -> m (Maybe Y.ModifyError)
 checkCategoryUpdate h editCat = do
     let funcName = "checkCategoryUpdate: "
     D.logDebug h $ funcName <> "action is:"
     D.logDebug h $ funcName <> GP.textPretty editCat
     S.withMaybe (Y._ec_parentId editCat) (pure Nothing) $ \parentCatId -> do
         mParentCat <- D.getCategoryById h (D.log h) parentCatId
-        D.logDebug h $ funcName <> "parent cat is:"
+        D.logDebug h $ funcName <> "new parent category is:"
         D.logDebug h $ funcName <> GP.textPretty mParentCat
-        S.withMaybe mParentCat
-            (pure $ Just $ Y.MInvalidForeign $ Y.ForeignViolation "parent_id" $ S.showText parentCatId)
+        S.withMaybe
+            mParentCat
+            (pure $
+             Just $
+             Y.MInvalidForeign $
+             Y.ForeignViolation "parent_id" $ S.showText parentCatId)
             (pure . checkCategoryCycles (Y._ec_catId editCat))
 
-checkCategoryCycles :: Y.CategoryId -> Y.Category -> Maybe Y.ModifyError
+checkCategoryCycles ::
+       Y.CategoryId -> Y.Category -> Maybe Y.ModifyError
 checkCategoryCycles cid newParentCat =
-    if cid `elem` Y.getCategoryParents newParentCat
-        then Just $ Y.MConstraintViolated $ Y.ConstraintViolation {
-            Y._cv_field = "parent_id"
-            , Y._cv_value = S.showText $ Y._cat_categoryId newParentCat
-            , Y._cv_description = "categories form a cycle"
-            }
-        else Nothing
+    if not $ cid `elem` Y.getCategoryParents newParentCat
+        then Nothing
+        else Just $
+             Y.MConstraintViolated $
+             Y.ConstraintViolation
+                 { Y._cv_field = "parent_id"
+                 , Y._cv_value =
+                       S.showText $ Y._cat_categoryId newParentCat
+                 , Y._cv_description = "categories form a cycle"
+                 }

@@ -80,14 +80,20 @@ addToken con logger uid token = do
         _ <- PS.execute con str params
         pure token'
 
-getCategoryById :: PS.Connection -> L.LoggerHandler IO -> Y.CategoryId -> IO (Maybe Y.Category)
+getCategoryById ::
+       PS.Connection
+    -> L.LoggerHandler IO
+    -> Y.CategoryId
+    -> IO (Maybe Y.Category)
 getCategoryById con logger cid = do
-    let getcats = Y.GetCategories { Y._gc_catId = Just cid }
+    let getcats = Y.GetCategories {Y._gc_catId = Just cid}
     cats <- getThis con logger getcats
     case cats of
         [] -> pure Nothing
         [c] -> pure $ Just c
-        _ -> Ex.throwInvalidUnique Y.ECategory $ map Y._cat_categoryId cats
+        _ ->
+            Ex.throwInvalidUnique Y.ECategory $
+            map Y._cat_categoryId cats
 
 getThisPaginated ::
        (Read a)

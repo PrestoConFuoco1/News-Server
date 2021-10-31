@@ -33,21 +33,25 @@ instance (Generic a, Ae.GToJSON' Ae.Value Ae.Zero (Rep a)) =>
                  }) .
         unBotSelectorModifier
 
+newtype RemovePrefix a =
+    RemovePrefix
+        { unRemovePrefix :: a
+        }
 
-newtype RemovePrefix a = RemovePrefix { unRemovePrefix :: a } 
-  
-instance (Generic a, Ae.GFromJSON Ae.Zero (Rep a)) => Ae.FromJSON (RemovePrefix a) where 
-     parseJSON = fmap RemovePrefix . Ae.genericParseJSON 
-         Ae.defaultOptions {Ae.fieldLabelModifier = removeTwoUnderscores}
+instance (Generic a, Ae.GFromJSON Ae.Zero (Rep a)) =>
+         Ae.FromJSON (RemovePrefix a) where
+    parseJSON =
+        fmap RemovePrefix .
+        Ae.genericParseJSON
+            Ae.defaultOptions
+                {Ae.fieldLabelModifier = removeTwoUnderscores}
 
 instance (Generic a, Ae.GToJSON' Ae.Value Ae.Zero (Rep a)) =>
          Ae.ToJSON (RemovePrefix a) where
     toJSON =
         Ae.genericToJSON
             (Ae.defaultOptions
-                 { Ae.fieldLabelModifier =
-                       removeTwoUnderscores
-                 }) .
+                 {Ae.fieldLabelModifier = removeTwoUnderscores}) .
         unRemovePrefix
 
 removeTwoUnderscores :: String -> String

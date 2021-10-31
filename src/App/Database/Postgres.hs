@@ -59,7 +59,6 @@ resourcesToHandle :: Resources -> L.LoggerHandler IO -> Handle IO
 resourcesToHandle (Resources con) logger =
     Handle
         { log = logger
-
         , userAuthor = IOP.userAuthor con
         , createUser = IOP.createThis @Y.CreateUser con
         , deleteUser = IOP.deleteThis @Y.DeleteUser con
@@ -67,31 +66,25 @@ resourcesToHandle (Resources con) logger =
         , getUserByLogin = IOP.getUserByLogin con
         , addToken = IOP.addToken con
         , generateToken = IOP.generateToken
-
         , getAuthors = IOP.getThisPaginated @Y.GetAuthors con
         , createAuthor = IOP.createThis @Y.CreateAuthor con
         , editAuthor = IOP.editThis @Y.EditAuthor con
         , deleteAuthor = IOP.deleteThis @Y.DeleteAuthor con
-
         , getTags = IOP.getThisPaginated @Y.GetTags con
         , createTag = IOP.createThis @Y.CreateTag con
         , editTag = IOP.editThis @Y.EditTag con
         , deleteTag = IOP.deleteThis @Y.DeleteTag con
-
         , getCategories = IOP.getThisPaginated @Y.GetCategories con
         , getCategoryById = IOP.getCategoryById con
         , createCategory = IOP.createThis @Y.CreateCategory con
         , editCategory = IOP.editThis @Y.EditCategory con
         , deleteCategory = IOP.deleteThis @Y.DeleteCategory con
-
         , getPosts = IOP.getThisPaginated @Y.GetPosts con
-
         , getComments = IOP.getThisPaginated @Y.GetComments con
         , createComment =
               IOP.createThis @(Y.WithUser Y.CreateComment) con
         , deleteComment =
               IOP.deleteThis @(Y.WithUser Y.DeleteComment) con
-
         , withTransaction = IOP.withTransaction con
         , attachTagsToDraft = IOP.attachTags con HDraft
         , attachTagsToPost = IOP.attachTags con HPost

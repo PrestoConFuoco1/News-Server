@@ -18,10 +18,10 @@ import Data.Void (absurd)
 import Execute.Database (createThis, deleteThis, editThis, getThis)
 import Execute.Draft (createDraft, editDraft, publish)
 import qualified Execute.Utils as U
+import qualified GenericPretty as GP
 import qualified Result as R
 import qualified Types as Y
 import qualified Utils as S
-import qualified GenericPretty as GP
 
 executeAction ::
        CMC.MonadCatch m
@@ -110,7 +110,6 @@ executeCategory h (Y.WhoWhat token (Y.Update x)) = do
     mModifError <- U.checkCategoryUpdate h x
     let action = editThis Y.ECategory (D.editCategory h (D.log h)) x
     maybe action (pure . Y.RFailed Y.ECategory) mModifError
-
 executeCategory h (Y.WhoWhat token (Y.Delete x)) =
     U.withAuthAdmin h token >>
     deleteThis Y.ECategory (D.deleteCategory h (D.log h)) x

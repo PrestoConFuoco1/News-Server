@@ -8,7 +8,7 @@ module Action.RequestToAction
     ) where
 
 import qualified Data.ByteString as BS
-import qualified Data.HashMap.Strict as HS (fromList)
+import qualified Data.HashMap.Strict as HS (fromList, lookup)
 import qualified Data.Maybe as Mb (mapMaybe)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as E (decodeUtf8)
@@ -56,19 +56,15 @@ requestToAction ::
     -> [(BS.ByteString, Maybe BS.ByteString)]
     -> Either (Y.WhoWhat ActionErrorPerms) (Y.WhoWhat Action)
 requestToAction pathInfo queryString =
-    let maybeToken =
-            Y.Token <$>
-            case queryString of
-                ((tokenPar, Just tokenVal):_) ->
-                    if tokenPar == "token"
-                        then Just $ E.decodeUtf8 tokenVal
-                        else Nothing
-                _ -> Nothing
-        hash :: Query
+    let hash :: Query
         hash = HS.fromList . Mb.mapMaybe f $ queryString
+        maybeToken = extractToken hash
         f (x, y) = (x, ) <$> y
      in bimap (Y.WhoWhat maybeToken) (Y.WhoWhat maybeToken) $
         requestToAction1 pathInfo hash
+
+extractToken :: Query -> Maybe Y.Token
+extractToken = fmap (Y.Token . E.decodeUtf8) . HS.lookup "token"
 
 requestToAction1 ::
        [T.Text] -> Query -> Either ActionErrorPerms Action
@@ -140,7 +136,7 @@ requestToActionDrafts path hash =
             | x == "delete" ->
                 Y.Delete <$>
                 runRouter (renv False hash) deleteDraftToAction
-        _ -> Left $ ActionErrorPerms False EInvalidEndpoint
+        _ -> Left pathNotFound
 
 requestToActionCats ::
        [T.Text] -> Query -> Either ActionErrorPerms Y.ActionCategory
@@ -160,7 +156,7 @@ requestToActionCats path hash =
             | x == "delete" ->
                 Y.Delete <$>
                 runRouter (renv True hash) deleteCatsToAction
-        _ -> Left $ ActionErrorPerms False EInvalidEndpoint
+        _ -> Left pathNotFound
 
 requestToActionTags ::
        [T.Text] -> Query -> Either ActionErrorPerms Y.ActionTags
@@ -180,7 +176,7 @@ requestToActionTags path hash =
             | x == "delete" ->
                 Y.Delete <$>
                 runRouter (renv True hash) deleteTagToAction
-        _ -> Left $ ActionErrorPerms False EInvalidEndpoint
+        _ -> Left pathNotFound
 
 requestToActionUsers ::
        [T.Text] -> Query -> Either ActionErrorPerms Y.ActionUsers
@@ -194,7 +190,7 @@ requestToActionUsers path hash =
             | x == "delete" ->
                 Y.Delete <$>
                 runRouter (renv True hash) deleteUserToAction
-        _ -> Left $ ActionErrorPerms False EInvalidEndpoint
+        _ -> Left pathNotFound
 
 requestToActionAuthors ::
        [T.Text] -> Query -> Either ActionErrorPerms Y.ActionAuthors
@@ -214,7 +210,7 @@ requestToActionAuthors path hash =
             | x == "edit" ->
                 Y.Update <$>
                 runRouter (renv True hash) editAuthorToAction
-        _ -> Left $ ActionErrorPerms False EInvalidEndpoint
+        _ -> Left pathNotFound
 
 requestToActionComments ::
        [T.Text] -> Query -> Either ActionErrorPerms Y.ActionComments
@@ -231,4 +227,4 @@ requestToActionComments path hash =
             | x == "delete" ->
                 Y.Delete <$>
                 runRouter (renv False hash) deleteCommentsToAction
-        _ -> Left $ ActionErrorPerms False EInvalidEndpoint
+        _ -> Left pathNotFound

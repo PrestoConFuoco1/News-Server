@@ -1,5 +1,21 @@
 module Exceptions
-    ( module Exceptions
+    (
+    sqlHandlers,
+    withHandler,
+    withExceptionHandlers,
+    throwInvalidUnique,
+    tagsErrorHandler,
+    throwTokenShared,
+    throwInvalidUpdate,
+    modifyErrorHandler,
+    throwForbidden,
+    throwUnauthorized,
+    throwInvalidLogin,
+    throwInvalidPassword,
+    notAnAuthor,
+    defaultMainHandler,
+    mainErrorHandler,
+    ServerException(..), -- only for tests
     ) where
 
 import Control.Monad.Catch as CMC
@@ -11,7 +27,7 @@ import Control.Monad.Catch as CMC
     , catches
     , throwM
     )
-import qualified Data.Text as T (pack, Text)
+import qualified Data.Text as T (Text, pack)
 import Database.PostgreSQL.Simple as PS
     ( FormatError
     , Query
@@ -68,7 +84,7 @@ mainErrorHandler' _ (InvalidUniqueEntities _ _) =
     pure $ U.internal U.internalErrorMsg
 mainErrorHandler' _ Forbidden = pure $ U.bad U.invalidEndpointMsg
 mainErrorHandler' _ InvalidLogin = pure $ U.bad U.invalidLoginMsg
-mainErrorHandler' _ (InvalidUpdate details)=
+mainErrorHandler' _ (InvalidUpdate details) =
     pure $ U.bad $ "invalid data to update: " <> details
 mainErrorHandler' _ InvalidPassword =
     pure $ U.bad U.invalidPasswordMsg
@@ -93,6 +109,9 @@ throwInvalidUnique ent xs = do
 
 throwInvalidLogin :: (MonadThrow m) => m a
 throwInvalidLogin = CMC.throwM InvalidLogin
+
+throwInvalidPassword :: (MonadThrow m) => m a
+throwInvalidPassword = CMC.throwM InvalidPassword
 
 notAnAuthor :: (MonadThrow m) => m a
 notAnAuthor = CMC.throwM NotAnAuthor

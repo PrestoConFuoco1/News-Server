@@ -31,24 +31,19 @@ data Handle m =
         , createAuthor :: L.LoggerHandler m -> Y.CreateAuthor -> m (Either Y.ModifyError Int)
         , editAuthor :: L.LoggerHandler m -> Y.EditAuthor -> m (Either Y.ModifyError Int)
         , deleteAuthor :: L.LoggerHandler m -> Y.DeleteAuthor -> m (Either Y.DeleteError Int)
-
         , getTags :: L.LoggerHandler m -> Y.Paginated Y.GetTags -> m [Y.Tag]
         , createTag :: L.LoggerHandler m -> Y.CreateTag -> m (Either Y.ModifyError Int)
         , editTag :: L.LoggerHandler m -> Y.EditTag -> m (Either Y.ModifyError Int)
         , deleteTag :: L.LoggerHandler m -> Y.DeleteTag -> m (Either Y.DeleteError Int)
-
         , getCategories :: L.LoggerHandler m -> Y.Paginated Y.GetCategories -> m [Y.Category]
         , getCategoryById :: L.LoggerHandler m -> Y.CategoryId -> m (Maybe Y.Category)
         , createCategory :: L.LoggerHandler m -> Y.CreateCategory -> m (Either Y.ModifyError Int)
         , editCategory :: L.LoggerHandler m -> Y.EditCategory -> m (Either Y.ModifyError Int)
         , deleteCategory :: L.LoggerHandler m -> Y.DeleteCategory -> m (Either Y.DeleteError Int)
-
         , getPosts :: L.LoggerHandler m -> Y.Paginated Y.GetPosts -> m [Y.Post]
-
         , getComments :: L.LoggerHandler m -> Y.Paginated Y.GetComments -> m [Y.Comment]
         , createComment :: L.LoggerHandler m -> Y.WithUser Y.CreateComment -> m (Either Y.ModifyError Int)
         , deleteComment :: L.LoggerHandler m -> Y.WithUser Y.DeleteComment -> m (Either Y.DeleteError Int)
-
     -- drafts, posts, publish,
         , withTransaction :: forall a. m a -> m a
         , getDrafts :: L.LoggerHandler m -> Y.Paginated (Y.WithAuthor Y.GetDrafts) -> m [Y.Draft]

@@ -156,7 +156,8 @@ instance Read Y.GetAuthors where
          in case mUser of
                 Nothing -> (selectClause, args)
                 Just user ->
-                    (selectClause <> whereClause, args ++ [SqlValue user])
+                    ( selectClause <> whereClause
+                    , args ++ [SqlValue user])
 
 instance Read Y.GetTags where
     type MType Y.GetTags = Y.Tag

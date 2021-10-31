@@ -73,8 +73,9 @@ invalidForeignMsg field value =
 
 constraintViolatedMsg :: T.Text -> T.Text -> T.Text -> T.Text
 constraintViolatedMsg field value description =
-    field <> " has an invalid value of " <> value
-    <> "; reason: " <> description
+    field <>
+    " has an invalid value of " <>
+    value <> "; reason: " <> description
 
 tagNotFoundMsg :: T.Text -> T.Text
 tagNotFoundMsg tag = "Failed: no tag found with id = " <> tag

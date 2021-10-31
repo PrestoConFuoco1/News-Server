@@ -15,8 +15,7 @@ import qualified Types as Y
 import qualified Utils as S
 
 draftModifyErrorToApiResult :: Y.DraftModifyError -> Y.APIResult
-draftModifyErrorToApiResult (Y.DModifyError x) =
-    Y.RFailed Y.EDraft x
+draftModifyErrorToApiResult (Y.DModifyError x) = Y.RFailed Y.EDraft x
 draftModifyErrorToApiResult (Y.DTagsError (Y.TagsAttachError (Y.ForeignViolation _ value))) =
     Y.RInvalidTag value
 
