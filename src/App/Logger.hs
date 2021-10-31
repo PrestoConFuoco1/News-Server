@@ -17,7 +17,7 @@ module App.Logger
 import Control.Monad (unless, when)
 import qualified Control.Monad.Catch as C
 import Data.IORef
-import qualified Data.Text as T (Text, pack)
+import qualified Data.Text as Text (Text, pack)
 import qualified Data.Text.IO as T (hPutStrLn)
 import qualified GHC.IO.Handle.Lock as Lk
 import Prelude hiding (log)
@@ -28,10 +28,10 @@ import qualified Utils as S (showText)
 
 newtype LoggerHandler m =
     LoggerHandler
-        { log :: Priority -> T.Text -> m ()
+        { log :: Priority -> Text.Text -> m ()
         }
 
-type LoggerEntry = (Priority, T.Text)
+type LoggerEntry = (Priority, Text.Text)
 
 data Priority
     = Debug
@@ -42,7 +42,7 @@ data Priority
   deriving (Eq, Ord, Show, Read)
 
 logDebug, logInfo, logWarning, logError, logFatal ::
-       LoggerHandler m -> T.Text -> m ()
+       LoggerHandler m -> Text.Text -> m ()
 logDebug = (`log` Debug)
 
 logInfo = (`log` Info)
@@ -53,7 +53,7 @@ logError = (`log` Error)
 
 logFatal = (`log` Fatal)
 
-logString :: Priority -> T.Text -> T.Text
+logString :: Priority -> Text.Text -> Text.Text
 logString pri s = "[" <> S.showText pri <> "]: " <> s
 
 stdHandler :: LoggerHandler IO
@@ -67,7 +67,7 @@ stdCondHandler predicate =
                 | otherwise = S.stdout
          in when (predicate p) $ handleLogger h p s
 
-handleLogger :: S.Handle -> Priority -> T.Text -> IO ()
+handleLogger :: S.Handle -> Priority -> Text.Text -> IO ()
 handleLogger h p s = T.hPutStrLn h $ logString p s
 
 emptyLogger :: (Monad m) => LoggerHandler m
@@ -100,15 +100,15 @@ logIOError err
         logError stdHandler "not enough permissions"
     | otherwise =
         logError stdHandler $
-        "unexpected IO error: " <> T.pack (C.displayException err)
+        "unexpected IO error: " <> Text.pack (C.displayException err)
 
-lockedmsg :: T.Text
+lockedmsg :: Text.Text
 lockedmsg = "target log file is locked"
 
 initializeDefaultHandler :: C.SomeException -> IO a
 initializeDefaultHandler e = do
     logFatal stdHandler "failed to initialize logger"
-    logFatal stdHandler $ T.pack $ C.displayException e
+    logFatal stdHandler $ Text.pack $ C.displayException e
     Q.exitWith (Q.ExitFailure 1)
 
 withSelfSufficientLogger ::
@@ -148,7 +148,7 @@ selfSufficientLogger ::
        IORef LoggerResources
     -> (Priority -> Bool)
     -> Priority
-    -> T.Text
+    -> Text.Text
     -> IO ()
 selfSufficientLogger resourcesRef predicate pri s = do
     resources <- readIORef resourcesRef
@@ -166,6 +166,6 @@ loggerHandler ::
        LoggerResources -> C.SomeException -> IO LoggerResources
 loggerHandler resources e = do
     logError stdHandler "failed to use log file, error is:"
-    logError stdHandler $ T.pack $ C.displayException e
+    logError stdHandler $ Text.pack $ C.displayException e
     logError stdHandler "using standard error handle"
     pure $ resources {flHandle = S.stderr}

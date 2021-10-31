@@ -21,16 +21,16 @@ import qualified Data.Aeson as Ae (FromJSON, decode)
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BSL (fromStrict)
 import qualified Data.HashMap.Strict as HS (lookup)
-import qualified Data.Text as T
+import qualified Data.Text as Text
 import qualified Data.Text.Encoding as E (decodeUtf8, encodeUtf8)
 import qualified Data.Time as Time
 import Prelude hiding (readList)
-import qualified Types as Y
+import qualified Types as T
 
-notEmpty :: T.Text -> Bool
+notEmpty :: Text.Text -> Bool
 notEmpty = (/= "")
 
-validateNotEmpty :: BS.ByteString -> Maybe T.Text
+validateNotEmpty :: BS.ByteString -> Maybe Text.Text
 validateNotEmpty = validator notEmpty . readText
 
 validator :: (a -> Bool) -> a -> Maybe a
@@ -76,10 +76,10 @@ requireWithDefault prse deflt fieldname = do
 getBs :: Query -> BS.ByteString -> Maybe BS.ByteString
 getBs hash field = HS.lookup field hash
 
-readText :: BS.ByteString -> T.Text
+readText :: BS.ByteString -> Text.Text
 readText = E.decodeUtf8
 
-readIntText :: T.Text -> Maybe Int
+readIntText :: Text.Text -> Maybe Int
 readIntText = readInt . E.encodeUtf8
 
 readInt :: BS.ByteString -> Maybe Int
@@ -88,7 +88,7 @@ readInt = Ae.decode . BSL.fromStrict
 readDay :: BS.ByteString -> Maybe Time.Day
 readDay =
     Time.parseTimeM True Time.defaultTimeLocale "%Y-%-m-%-d" .
-    T.unpack . E.decodeUtf8
+    Text.unpack . E.decodeUtf8
 
 readList :: (Ae.FromJSON a) => BS.ByteString -> Maybe [a]
 readList = Ae.decode . BSL.fromStrict
@@ -101,9 +101,9 @@ defaultPage = 0
 
 defaultSize = 10000
 
-withPagination :: Router a -> Router (Y.Paginated a)
+withPagination :: Router a -> Router (T.Paginated a)
 withPagination m = do
     x <- m
     page <- requireWithDefault readInt defaultPage "page"
     size <- requireWithDefault readInt defaultSize "size"
-    pure $ Y.Paginated page size x
+    pure $ T.Paginated page size x

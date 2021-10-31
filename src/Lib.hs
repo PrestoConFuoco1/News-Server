@@ -13,7 +13,7 @@ import Control.Monad (when)
 import qualified Control.Monad.Catch as CMC
 import qualified Data.Aeson as Ae (ToJSON(..), encode)
 import Data.IORef (IORef, newIORef, readIORef, writeIORef)
-import qualified Data.Text as T (unpack)
+import qualified Data.Text as Text (unpack)
 import qualified Exceptions as Ex
     ( defaultMainHandler
     , mainErrorHandler
@@ -31,7 +31,7 @@ import qualified Network.Wai.Handler.Warp as Warp (run)
 import qualified Result as R
 import qualified RunOptions as Opt
 import qualified System.Exit as Q
-import qualified Types as Y
+import qualified Types as T
 import qualified Utils as S
 
 main :: IO ()
@@ -44,7 +44,7 @@ runWithOpts :: Opt.RunOptions -> IO ()
 runWithOpts opts = do
     let configLogger = L.stdHandler
     conf <-
-        C.loadConfig configLogger (T.unpack $ Opt.confPath opts) `CMC.catches`
+        C.loadConfig configLogger (Text.unpack $ Opt.confPath opts) `CMC.catches`
         C.configHandlers configLogger
     when (Opt.testConfig opts) Q.exitSuccess
     if Opt.migrations opts
@@ -57,7 +57,7 @@ runOptsToLoggerSettings :: Opt.RunOptions -> L.LoggerConfig
 runOptsToLoggerSettings opts =
     L.LoggerConfig
         { lcFilter = Opt.toLoggerFilter $ Opt.loggerSettings opts
-        , lcPath = T.unpack $ Opt.logPath opts
+        , lcPath = Text.unpack $ Opt.logPath opts
         }
 
 configToAppConfig :: C.Config -> DP.Config
@@ -109,11 +109,11 @@ mainServer req logger resources = do
             resourcesUnchanged $ coerceResponse <$> handleError h err
         Right whowhat -> do
             D.logDebug h "Action type is"
-            D.logDebug h $ GP.textPretty $ Y._ww_action whowhat
+            D.logDebug h $ GP.textPretty $ T._ww_action whowhat
             let withLog res = do
                     r <- res
                     D.logDebug h "Result is"
-                    D.logDebug h $ Y.logResult r
+                    D.logDebug h $ T.logResult r
                     pure $ toResponse r
                 action =
                     fmap
@@ -128,28 +128,28 @@ coerceResponse :: R.Response -> W.Response
 coerceResponse (R.Response status msg) =
     W.responseLBS status [] $ Ae.encode msg
 
-toResponse :: Y.APIResult -> R.Response
-toResponse (Y.RGet (Y.RGettable xs)) =
+toResponse :: T.APIResult -> R.Response
+toResponse (T.RGet (T.RGettable xs)) =
     R.ok R.successGet (Ae.toJSON xs)
-toResponse (Y.RGetUser user) =
+toResponse (T.RGetUser user) =
     R.ok R.successGetProfile (Ae.toJSON user)
-toResponse (Y.RGetToken tok) = R.ok R.successNewToken (Ae.toJSON tok)
-toResponse (Y.RCreated ent int) =
+toResponse (T.RGetToken tok) = R.ok R.successNewToken (Ae.toJSON tok)
+toResponse (T.RCreated ent int) =
     R.ok (R.createdMsg ent) (Ae.toJSON int)
-toResponse (Y.REdited ent int) =
+toResponse (T.REdited ent int) =
     R.ok (R.editedMsg ent) (Ae.toJSON int)
-toResponse (Y.RDeleted ent int) =
+toResponse (T.RDeleted ent int) =
     R.ok (R.deletedMsg ent) (Ae.toJSON int)
-toResponse (Y.RInvalidTag value) = R.bad (R.tagNotFoundMsg value)
-toResponse (Y.RFailed ent modifError) =
+toResponse (T.RInvalidTag value) = R.bad (R.tagNotFoundMsg value)
+toResponse (T.RFailed ent modifError) =
     modifyErrorToApiResponse ent modifError
 
-modifyErrorToApiResponse :: Y.Entity -> Y.ModifyError -> R.Response
-modifyErrorToApiResponse ent (Y.MAlreadyInUse (Y.UniqueViolation field value)) =
+modifyErrorToApiResponse :: T.Entity -> T.ModifyError -> R.Response
+modifyErrorToApiResponse ent (T.MAlreadyInUse (T.UniqueViolation field value)) =
     R.bad $ R.alreadyInUseMsg ent field value
-modifyErrorToApiResponse ent (Y.MInvalidForeign (Y.ForeignViolation field value)) =
+modifyErrorToApiResponse ent (T.MInvalidForeign (T.ForeignViolation field value)) =
     R.bad $ R.invalidForeignMsg field value
-modifyErrorToApiResponse ent (Y.MConstraintViolated (Y.ConstraintViolation field value description)) =
+modifyErrorToApiResponse ent (T.MConstraintViolated (T.ConstraintViolation field value description)) =
     R.bad $ R.constraintViolatedMsg field value description
-modifyErrorToApiResponse ent Y.MNoAction =
+modifyErrorToApiResponse ent T.MNoAction =
     R.bad $ R.entityNotFoundMsg ent

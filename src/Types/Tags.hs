@@ -10,7 +10,7 @@ module Types.Tags
     , ActionTags
     ) where
 
-import qualified Data.Text as T
+import qualified Data.Text as Text
 import qualified Database.PostgreSQL.Simple as PS
 import GHC.Generics
 import qualified GenericPretty as GP
@@ -27,14 +27,14 @@ data GetTags =
 
 newtype CreateTag =
     CreateTag
-        { _ct_tagName :: T.Text
+        { _ct_tagName :: Text.Text
         }
   deriving (Show, Eq, Generic, GP.PrettyShow, PS.ToRow)
 
 data EditTag =
     EditTag
         { _et_tagId :: TagId
-        , _et_tagName :: T.Text
+        , _et_tagName :: Text.Text
         }
   deriving (Show, Eq, Generic, GP.PrettyShow, PS.ToRow)
 

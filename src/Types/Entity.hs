@@ -19,7 +19,7 @@ module Types.Entity
     ) where
 
 import qualified Data.Aeson as Ae
-import qualified Data.Text as T
+import qualified Data.Text as Text
 import qualified Data.Time as Time
 import qualified Database.PostgreSQL.Simple as PS
 import qualified Database.PostgreSQL.Simple.FromRow as PSR
@@ -47,8 +47,8 @@ data Entity
 showE :: Entity -> String
 showE x = S.unCap $ drop 1 $ show x
 
-showEText :: Entity -> T.Text
-showEText = T.pack . showE
+showEText :: Entity -> Text.Text
+showEText = Text.pack . showE
 
 class (Ae.ToJSON a, Show a, GP.PrettyShow a) => Gettable a
 
@@ -56,11 +56,11 @@ class (Ae.ToJSON a, Show a, GP.PrettyShow a) => Gettable a
 data User =
     User
         { _u_id :: UserId
-        , _u_firstname :: T.Text
-        , _u_lastname :: T.Text
-        , _u_pictureUrl :: Maybe T.Text
-        , _u_login :: T.Text
-        , _u_passHash :: T.Text
+        , _u_firstname :: Text.Text
+        , _u_lastname :: Text.Text
+        , _u_pictureUrl :: Maybe Text.Text
+        , _u_login :: Text.Text
+        , _u_passHash :: Text.Text
         , _u_creationDate :: Time.Day
         , _u_admin :: Maybe Bool
         }
@@ -71,7 +71,7 @@ data User =
 data Author =
     Author
         { _a_authorId :: AuthorId
-        , _a_description :: Maybe T.Text
+        , _a_description :: Maybe Text.Text
         , _a_user :: User
         }
   deriving (Show, Eq, Generic, GP.PrettyShow)
@@ -84,7 +84,7 @@ instance PSR.FromRow Author where
 data Category =
     Category
         { _cat_categoryId :: CategoryId
-        , _cat_description :: T.Text
+        , _cat_description :: Text.Text
         , _cat_parentCategory :: Maybe Category
         }
   deriving (Show, Eq, Generic, GP.PrettyShow)
@@ -97,7 +97,7 @@ instance PSR.FromRow Category where
 defaultCategoryId :: CategoryId
 defaultCategoryId = 1
 
-listToCategory :: [(CategoryId, T.Text)] -> Category
+listToCategory :: [(CategoryId, Text.Text)] -> Category
 listToCategory [] = Category defaultCategoryId "default" Nothing
 listToCategory ((catId, txt):xs) =
     Category catId txt $ foldr f Nothing xs where
@@ -110,14 +110,14 @@ getCategoryParents Category {..} =
 data Post =
     Post
         { _p_postId :: PostId
-        , _p_title :: T.Text
+        , _p_title :: Text.Text
         , _p_creationDate :: Time.Day
         , _p_author :: Author
         , _p_tags :: [Tag]
         , _p_category :: Category
-        , _p_content :: T.Text
-        , _p_mainPhoto :: Maybe T.Text
-        , _p_extraPhotos :: Maybe [T.Text]
+        , _p_content :: Text.Text
+        , _p_mainPhoto :: Maybe Text.Text
+        , _p_extraPhotos :: Maybe [Text.Text]
         }
   deriving (Show, Eq, Generic)
   deriving anyclass (Gettable, GP.PrettyShow)
@@ -153,7 +153,7 @@ instance PSR.FromRow Post where
 data Tag =
     Tag
         { _t_tagId :: TagId
-        , _t_tagName :: T.Text
+        , _t_tagName :: Text.Text
         }
   deriving (Show, Eq, Generic, GP.PrettyShow, PS.FromRow)
   deriving anyclass (Gettable)
@@ -162,7 +162,7 @@ data Tag =
 data Comment =
     Comment
         { _com_commentId :: CommentId
-        , _com_content :: T.Text
+        , _com_content :: Text.Text
         , _com_user :: User
         }
   deriving (Show, Eq, Generic, GP.PrettyShow)
@@ -184,14 +184,14 @@ instance PSR.FromRow Comment where
 data Draft =
     Draft
         { _d_draftId :: DraftId
-        , _d_title :: T.Text
+        , _d_title :: Text.Text
         , _d_creationDate :: Time.Day
         , _d_author :: Author
         , _d_tags :: [Tag]
         , _d_category :: Category
-        , _d_content :: T.Text
-        , _d_mainPhoto :: Maybe T.Text
-        , _d_extraPhotos :: Maybe [T.Text]
+        , _d_content :: Text.Text
+        , _d_mainPhoto :: Maybe Text.Text
+        , _d_extraPhotos :: Maybe [Text.Text]
         , _d_postId :: Maybe PostId
         }
   deriving (Show, Eq, Generic, GP.PrettyShow)
@@ -230,14 +230,14 @@ instance PSR.FromRow Draft where
 data DraftRaw =
     DraftRaw
         { _dr_draftId :: DraftId
-        , _dr_title :: T.Text
+        , _dr_title :: Text.Text
         , _dr_creationDate :: Time.Day
         , _dr_authorId :: Int
         , _dr_categoryId :: Int
         , _dr_tagIds :: [Int]
-        , _dr_content :: T.Text
-        , _dr_mainPhoto :: Maybe T.Text
-        , _dr_extraPhotos :: Maybe [T.Text]
+        , _dr_content :: Text.Text
+        , _dr_mainPhoto :: Maybe Text.Text
+        , _dr_extraPhotos :: Maybe [Text.Text]
         , _dr_postId :: Maybe PostId
         }
   deriving (Show, Eq, Generic, GP.PrettyShow)

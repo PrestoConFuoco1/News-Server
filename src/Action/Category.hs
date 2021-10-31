@@ -6,26 +6,26 @@ module Action.Category
 
 import Action.Common (Router)
 import qualified Action.Utils as AU
-import qualified Types as Y
+import qualified Types as T
 
-createCatsToAction :: Router Y.CreateCategory
+createCatsToAction :: Router T.CreateCategory
 createCatsToAction = do
     name <-
         AU.requireField
             (AU.validator AU.notEmpty . AU.readText)
             "name"
     parentId <- AU.requireField AU.readInt "parent_id"
-    pure $ Y.CreateCategory name parentId
+    pure $ T.CreateCategory name parentId
 
-editCatsToAction :: Router Y.EditCategory
+editCatsToAction :: Router T.EditCategory
 editCatsToAction = do
     cid <- AU.requireField AU.readInt "category_id"
     parentId <- AU.optional AU.readInt "parent_id"
     name <-
         AU.optional (AU.validator AU.notEmpty . AU.readText) "name"
-    pure $ Y.EditCategory cid name parentId
+    pure $ T.EditCategory cid name parentId
 
-deleteCatsToAction :: Router Y.DeleteCategory
+deleteCatsToAction :: Router T.DeleteCategory
 deleteCatsToAction = do
     cid <- AU.requireField AU.readInt "category_id"
-    pure $ Y.DeleteCategory cid
+    pure $ T.DeleteCategory cid

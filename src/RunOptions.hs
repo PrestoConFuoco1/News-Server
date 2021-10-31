@@ -9,7 +9,7 @@ module RunOptions
     ) where
 
 import qualified App.Logger as L
-import qualified Data.Text as T
+import qualified Data.Text as Text
 import GHC.Generics
 import qualified GenericPretty as GP
 import Options.Applicative
@@ -26,10 +26,10 @@ toLoggerFilter (LogGreaterThan pri) = (>= pri)
 
 data RunOptions =
     RunOptions
-        { confPath :: T.Text
+        { confPath :: Text.Text
         , migrations :: Bool
         , loggerSettings :: LoggerSettings
-        , logPath :: T.Text
+        , logPath :: Text.Text
         , testConfig :: Bool
         }
   deriving (Show, Eq, Generic)

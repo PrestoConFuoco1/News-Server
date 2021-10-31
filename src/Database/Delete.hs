@@ -8,56 +8,56 @@ module Database.Delete
 import Data.Maybe (fromMaybe)
 import qualified Database.PostgreSQL.Simple as PS
 import Database.SqlValue
-import qualified Types as Y
+import qualified Types as T
 
 class DeleteSQL a where
     deleteQuery :: a -> (PS.Query, [SqlValue])
-    dName :: Y.Entity
+    dName :: T.Entity
 
-instance DeleteSQL Y.DeleteTag where
+instance DeleteSQL T.DeleteTag where
     deleteQuery dt =
         ( "DELETE FROM news.tag WHERE tag_id = ? RETURNING tag_id"
-        , [SqlValue $ Y._dt_tagId dt])
-    dName = Y.ETag
+        , [SqlValue $ T._dt_tagId dt])
+    dName = T.ETag
 
-instance DeleteSQL Y.DeleteCategory where
+instance DeleteSQL T.DeleteCategory where
     deleteQuery dc =
         ( "DELETE FROM news.category WHERE category_id = ? RETURNING category_id"
-        , [SqlValue $ Y._dc_catId dc])
-    dName = Y.ECategory
+        , [SqlValue $ T._dc_catId dc])
+    dName = T.ECategory
 
-instance DeleteSQL Y.DeleteAuthor where
+instance DeleteSQL T.DeleteAuthor where
     deleteQuery da =
         ( "DELETE FROM news.author WHERE author_id = ? RETURNING author_id"
-        , [SqlValue $ Y._da_authorId da])
-    dName = Y.EAuthor
+        , [SqlValue $ T._da_authorId da])
+    dName = T.EAuthor
 
-instance DeleteSQL Y.DeleteUser where
+instance DeleteSQL T.DeleteUser where
     deleteQuery du =
         ( "DELETE FROM news.users WHERE user_id = ? RETURNING user_id"
-        , [SqlValue $ Y._du_userId du])
-    dName = Y.EUser
+        , [SqlValue $ T._du_userId du])
+    dName = T.EUser
 
-isAdmin :: Y.User -> Bool
-isAdmin u = fromMaybe False $ Y._u_admin u
+isAdmin :: T.User -> Bool
+isAdmin u = fromMaybe False $ T._u_admin u
 
-instance DeleteSQL (Y.WithUser Y.DeleteComment) where
-    deleteQuery (Y.WithUser u dc) =
+instance DeleteSQL (T.WithUser T.DeleteComment) where
+    deleteQuery (T.WithUser u dc) =
         let str = " DELETE FROM news.comment WHERE comment_id = ? "
             userWhere = " AND user_id = ? "
             returning = " RETURNING comment_id"
-            userParam = SqlValue $ Y._u_id u
-            commentParam = SqlValue $ Y._dc_commentId dc
+            userParam = SqlValue $ T._u_id u
+            commentParam = SqlValue $ T._dc_commentId dc
          in if isAdmin u
                 then (str <> returning, [commentParam])
                 else ( str <> userWhere <> returning
                      , [commentParam, userParam])
-    dName = Y.EComment
+    dName = T.EComment
 
-instance DeleteSQL (Y.WithAuthor Y.DeleteDraft) where
-    deleteQuery (Y.WithAuthor a (Y.DeleteDraft d)) =
+instance DeleteSQL (T.WithAuthor T.DeleteDraft) where
+    deleteQuery (T.WithAuthor a (T.DeleteDraft d)) =
         ( "\
 \ DELETE FROM news.draft \
 \ WHERE draft_id = ? AND author_id = ? RETURNING draft_id"
         , [SqlValue d, SqlValue a])
-    dName = Y.EDraft
+    dName = T.EDraft

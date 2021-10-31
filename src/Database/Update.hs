@@ -12,7 +12,7 @@ import Data.Maybe (mapMaybe)
 import qualified Database.PostgreSQL.Simple as PS
 import qualified Database.PostgreSQL.Simple.Types as PSTy
 import Database.SqlValue
-import qualified Types as Y
+import qualified Types as T
 
 updateParams :: (UpdateSQL a) => a -> Maybe (PS.Query, [SqlValue])
 updateParams ce =
@@ -48,47 +48,47 @@ optionals = mapMaybe f . optionalsMaybe
 
 class UpdateSQL a where
     updateQuery :: PS.Query -> PS.Query
-    uName :: Y.Entity
+    uName :: T.Entity
     optionalsMaybe :: a -> [(PS.Query, Maybe SqlValue)]
     identifParams :: a -> [SqlValue]
 
-instance UpdateSQL Y.EditTag where
+instance UpdateSQL T.EditTag where
     updateQuery p =
         "UPDATE news.tag SET " <>
         p <> " WHERE tag_id = ? RETURNING tag_id"
-    uName = Y.ETag
-    optionalsMaybe Y.EditTag {..} =
+    uName = T.ETag
+    optionalsMaybe T.EditTag {..} =
         [("name", Just $ SqlValue _et_tagName)]
-    identifParams et = [SqlValue $ Y._et_tagId et]
+    identifParams et = [SqlValue $ T._et_tagId et]
 
-instance UpdateSQL Y.EditCategory where
+instance UpdateSQL T.EditCategory where
     updateQuery p =
         "UPDATE news.category SET " <>
         p <> " WHERE category_id = ? RETURNING category_id"
-    uName = Y.ECategory
-    optionalsMaybe Y.EditCategory {..} =
+    uName = T.ECategory
+    optionalsMaybe T.EditCategory {..} =
         [ ("name", fmap SqlValue _ec_catName)
         , ("parent_category_id", fmap SqlValue _ec_parentId)
         ]
-    identifParams ec = [SqlValue $ Y._ec_catId ec]
+    identifParams ec = [SqlValue $ T._ec_catId ec]
 
-instance UpdateSQL Y.EditAuthor where
+instance UpdateSQL T.EditAuthor where
     updateQuery p =
         "UPDATE news.author SET " <>
         p <> " WHERE author_id = ? RETURNING author_id"
-    uName = Y.EAuthor
-    optionalsMaybe Y.EditAuthor {..} =
+    uName = T.EAuthor
+    optionalsMaybe T.EditAuthor {..} =
         [ ("description", fmap SqlValue _ea_description)
         , ("user_id", fmap SqlValue _ea_userId)
         ]
-    identifParams ea = [SqlValue $ Y._ea_authorId ea]
+    identifParams ea = [SqlValue $ T._ea_authorId ea]
 
-instance UpdateSQL Y.PublishEditPost where
+instance UpdateSQL T.PublishEditPost where
     updateQuery p =
         "UPDATE news.post SET " <>
         p <> " WHERE post_id = ? RETURNING post_id"
-    uName = Y.EPost
-    optionalsMaybe Y.PublishEditPost {..} =
+    uName = T.EPost
+    optionalsMaybe T.PublishEditPost {..} =
         [ ("title", Just $ SqlValue _pep_title)
         , ("category_id", Just $ SqlValue _pep_categoryId)
         , ("content", Just $ SqlValue _pep_content)
@@ -96,15 +96,15 @@ instance UpdateSQL Y.PublishEditPost where
         , ( "extra_photos"
           , fmap (SqlValue . PSTy.PGArray) _pep_extraPhotos)
         ]
-    identifParams pep = [SqlValue $ Y._pep_postId pep]
+    identifParams pep = [SqlValue $ T._pep_postId pep]
 
-instance UpdateSQL (Y.WithAuthor Y.EditDraft) where
+instance UpdateSQL (T.WithAuthor T.EditDraft) where
     updateQuery p =
         "UPDATE news.draft SET " <>
         p <>
         " WHERE draft_id = ? AND author_id = ? RETURNING draft_id"
-    uName = Y.EDraft
-    optionalsMaybe (Y.WithAuthor _ Y.EditDraft {..}) =
+    uName = T.EDraft
+    optionalsMaybe (T.WithAuthor _ T.EditDraft {..}) =
         [ ("title", fmap SqlValue _ed_title)
         , ("category_id", fmap SqlValue _ed_categoryId)
         , ("content", fmap SqlValue _ed_content)
@@ -112,14 +112,14 @@ instance UpdateSQL (Y.WithAuthor Y.EditDraft) where
         , ( "extra_photos"
           , fmap (SqlValue . PSTy.PGArray) _ed_extraPhotos)
         ]
-    identifParams (Y.WithAuthor a Y.EditDraft {..}) =
+    identifParams (T.WithAuthor a T.EditDraft {..}) =
         [SqlValue _ed_draftId, SqlValue a]
 
-instance UpdateSQL Y.EditDraftPublish where
+instance UpdateSQL T.EditDraftPublish where
     updateQuery p =
         "UPDATE news.draft SET " <>
         p <> " WHERE draft_id = ? RETURNING draft_id"
-    uName = Y.EDraft
-    optionalsMaybe Y.EditDraftPublish {..} =
+    uName = T.EDraft
+    optionalsMaybe T.EditDraftPublish {..} =
         [("post_id", Just $ SqlValue _edp_postId)]
-    identifParams Y.EditDraftPublish {..} = [SqlValue _edp_draftId]
+    identifParams T.EditDraftPublish {..} = [SqlValue _edp_draftId]

@@ -3,7 +3,7 @@ module Utils where
 import Control.Monad (replicateM)
 import qualified Data.ByteString as B
 import Data.Char (toLower)
-import qualified Data.Text as T
+import qualified Data.Text as Text
 import qualified Data.Text.Encoding as E
 import qualified Data.Time as Time
 import qualified Database.PostgreSQL.Simple.FromField as PSF
@@ -23,15 +23,15 @@ defaultModifier ('_':xs) =
         _ -> xs
 defaultModifier xs = xs
 
-showText :: (Show a) => a -> T.Text
-showText = T.pack . show
+showText :: (Show a) => a -> Text.Text
+showText = Text.pack . show
 
 test1, test2 :: B.ByteString
 test1 = "Key (user_id)=(6666) is not present in table \"users\"."
 
 test2 = "Key (user_id)=(2) already exists."
 
-getPair :: B.ByteString -> Maybe (T.Text, T.Text)
+getPair :: B.ByteString -> Maybe (Text.Text, Text.Text)
 getPair str =
     let patt = "\\((\\w+)\\)=\\((\\w+)\\)" :: B.ByteString
      in case str =~ patt of

@@ -5,19 +5,19 @@ module Result
     ) where
 
 import qualified Data.Aeson as Ae (ToJSON(..), Value)
-import qualified Data.Text as T
+import qualified Data.Text as Text
 import GHC.Generics
 import qualified Network.HTTP.Types as NHT
-import qualified Types as Y
+import qualified Types as T
 
-successGet, successGetProfile, successNewToken :: T.Text
+successGet, successGetProfile, successNewToken :: Text.Text
 successGet = "Success"
 
 successGetProfile = "Got profile successfully"
 
 successNewToken = "Got token successfully"
 
-forbidden, badInsert, idInResult, unauthorizedMsg :: T.Text
+forbidden, badInsert, idInResult, unauthorizedMsg :: Text.Text
 forbidden =
     "Access only for administrators, sending 404 invalid endpoint."
 
@@ -27,78 +27,78 @@ idInResult = "id is int \"result\" field"
 
 unauthorizedMsg = "Unauthorized, use /auth"
 
-invalidPasswordMsg, invalidLoginMsg :: T.Text
+invalidPasswordMsg, invalidLoginMsg :: Text.Text
 invalidPasswordMsg = "Invalid password"
 
 invalidLoginMsg = "Invalid login"
 
-invalidEndpointMsg, internalErrorMsg, notAnAuthorMsg :: T.Text
+invalidEndpointMsg, internalErrorMsg, notAnAuthorMsg :: Text.Text
 invalidEndpointMsg = "Invalid endpoint"
 
 internalErrorMsg = "Internal error"
 
-notAnAuthorMsg = "Not an author" :: T.Text
+notAnAuthorMsg = "Not an author" :: Text.Text
 
-createdMsg :: Y.Entity -> T.Text
+createdMsg :: T.Entity -> Text.Text
 createdMsg ent =
-    let enttext = Y.showEText ent
+    let enttext = T.showEText ent
      in "Successfully created " <>
         enttext <> ", " <> enttext <> "_id is in \"result\" field"
 
-editedMsg :: Y.Entity -> T.Text
+editedMsg :: T.Entity -> Text.Text
 editedMsg ent =
-    let enttext = Y.showEText ent
+    let enttext = T.showEText ent
      in "Successfully edited " <>
         enttext <> ", " <> enttext <> "_id is in \"result\" field"
 
-deletedMsg :: Y.Entity -> T.Text
+deletedMsg :: T.Entity -> Text.Text
 deletedMsg ent =
-    let enttext = Y.showEText ent
+    let enttext = T.showEText ent
      in "Successfully deleted " <>
         enttext <> ", " <> enttext <> "_id is in \"result\" field"
 
-entityNotFoundMsg :: Y.Entity -> T.Text
+entityNotFoundMsg :: T.Entity -> Text.Text
 entityNotFoundMsg ent =
-    let enttext = Y.showEText ent
+    let enttext = T.showEText ent
      in enttext <> " not found"
 
-alreadyInUseMsg :: Y.Entity -> T.Text -> T.Text -> T.Text
+alreadyInUseMsg :: T.Entity -> Text.Text -> Text.Text -> Text.Text
 alreadyInUseMsg ent field value =
-    Y.showEText ent <>
+    T.showEText ent <>
     " with " <> field <> "=" <> value <> " already exists"
 
-invalidForeignMsg :: T.Text -> T.Text -> T.Text
+invalidForeignMsg :: Text.Text -> Text.Text -> Text.Text
 invalidForeignMsg field value =
     field <> " has an invalid value of " <> value
 
-constraintViolatedMsg :: T.Text -> T.Text -> T.Text -> T.Text
+constraintViolatedMsg :: Text.Text -> Text.Text -> Text.Text -> Text.Text
 constraintViolatedMsg field value description =
     field <>
     " has an invalid value of " <>
     value <> "; reason: " <> description
 
-tagNotFoundMsg :: T.Text -> T.Text
+tagNotFoundMsg :: Text.Text -> Text.Text
 tagNotFoundMsg tag = "Failed: no tag found with id = " <> tag
 
-okCreated :: T.Text -> Int -> Response
+okCreated :: Text.Text -> Int -> Response
 okCreated msg eid = Response NHT.ok200 val
   where
     val = Ae.toJSON $ Result True (Just msg) (Just $ Ae.toJSON eid)
 
-okDeleted :: (Ae.ToJSON a) => T.Text -> a -> Response
+okDeleted :: (Ae.ToJSON a) => Text.Text -> a -> Response
 okDeleted msg eid = Response NHT.ok200 val
   where
     val = Ae.toJSON $ Result True (Just msg) (Just $ Ae.toJSON eid)
 
-ok :: T.Text -> Ae.Value -> Response
+ok :: Text.Text -> Ae.Value -> Response
 ok text res = Response NHT.ok200 val
   where
     val = Ae.toJSON $ Result True (Just text) (Just res)
 
-errR :: T.Text -> Ae.Value
+errR :: Text.Text -> Ae.Value
 errR t = Ae.toJSON $ Result False (Just t) Nothing
 
-bad, unauthorized, notFound, internal :: T.Text -> Response
+bad, unauthorized, notFound, internal :: Text.Text -> Response
 bad = Response NHT.status400 . errR
 
 unauthorized = Response NHT.unauthorized401 . errR
@@ -117,7 +117,7 @@ data Response =
 data Result =
     Result
         { _ok :: Bool
-        , message :: Maybe T.Text
+        , message :: Maybe Text.Text
         , result :: Maybe Ae.Value
         }
   deriving (Show, Eq, Generic, Ae.ToJSON)

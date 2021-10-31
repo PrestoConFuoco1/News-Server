@@ -6,13 +6,13 @@ module App.Database.Postgres.Internal
 
 import qualified App.Logger as L
 import Data.Maybe (fromMaybe)
-import qualified Data.Text as T
+import qualified Data.Text as Text
 import Database
 import qualified Database.PostgreSQL.Simple as PS
 import qualified Database.PostgreSQL.Simple.Types as PSTy
 import Database.SqlValue (SqlValue(..))
 import qualified Exceptions as Ex
-import qualified Types as Y
+import qualified Types as T
 import qualified Utils as U
 
 generateToken :: Int -> IO String
@@ -24,33 +24,33 @@ withTransaction = PS.withTransaction
 userAuthor ::
        PS.Connection
     -> L.LoggerHandler IO
-    -> Y.User
-    -> IO (Maybe Y.Author)
+    -> T.User
+    -> IO (Maybe T.Author)
 userAuthor con logger u = do
-    let getauthors = (Y.GetAuthors $ Just $ Y._u_id u)
-    as <- getThis @Y.GetAuthors con logger getauthors
+    let getauthors = (T.GetAuthors $ Just $ T._u_id u)
+    as <- getThis @T.GetAuthors con logger getauthors
     case as of
         [] -> pure Nothing
         [a] -> pure $ Just a
-        _ -> Ex.throwInvalidUnique Y.EAuthor (map Y._a_authorId as)
+        _ -> Ex.throwInvalidUnique T.EAuthor (map T._a_authorId as)
 
 getUserByToken ::
        PS.Connection
     -> L.LoggerHandler IO
-    -> Y.Token
-    -> IO (Maybe Y.User)
+    -> T.Token
+    -> IO (Maybe T.User)
 getUserByToken con logger token = do
-    users <- getThis @Y.Token con logger token
+    users <- getThis @T.Token con logger token
     case users of
         [] -> pure Nothing
         [u] -> pure $ Just u
-        _ -> Ex.throwTokenShared $ map Y._u_id users
+        _ -> Ex.throwTokenShared $ map T._u_id users
 
 getUserByLogin ::
        PS.Connection
     -> L.LoggerHandler IO
-    -> T.Text
-    -> IO (Maybe Y.User)
+    -> Text.Text
+    -> IO (Maybe T.User)
 getUserByLogin con logger login = do
     let str =
             "SELECT user_id, firstname, lastname, \
@@ -62,18 +62,18 @@ getUserByLogin con logger login = do
         case users of
             [] -> pure Nothing
             [x] -> pure $ Just x
-            _ -> Ex.throwInvalidUnique Y.EUser $ map Y._u_id users
+            _ -> Ex.throwInvalidUnique T.EUser $ map T._u_id users
 
 addToken ::
        PS.Connection
     -> L.LoggerHandler IO
-    -> Y.UserId
-    -> T.Text
-    -> IO T.Text
+    -> T.UserId
+    -> Text.Text
+    -> IO Text.Text
 addToken con logger uid token = do
     let str =
             "INSERT INTO news.token (user_id, token) VALUES (?, ?) ON CONFLICT (user_id) DO UPDATE SET token = ?"
-        token' = T.pack (show uid) <> token
+        token' = Text.pack (show uid) <> token
         params = [SqlValue uid, SqlValue token', SqlValue token']
     Ex.withExceptionHandlers (Ex.sqlHandlers logger str params) $ do
         _ <- PS.execute con str params
@@ -82,25 +82,25 @@ addToken con logger uid token = do
 getCategoryById ::
        PS.Connection
     -> L.LoggerHandler IO
-    -> Y.CategoryId
-    -> IO (Maybe Y.Category)
+    -> T.CategoryId
+    -> IO (Maybe T.Category)
 getCategoryById con logger cid = do
-    let getcats = Y.GetCategories {Y._gc_catId = Just cid}
+    let getcats = T.GetCategories {T._gc_catId = Just cid}
     cats <- getThis con logger getcats
     case cats of
         [] -> pure Nothing
         [c] -> pure $ Just c
         _ ->
-            Ex.throwInvalidUnique Y.ECategory $
-            map Y._cat_categoryId cats
+            Ex.throwInvalidUnique T.ECategory $
+            map T._cat_categoryId cats
 
 getThisPaginated ::
        (ReadSQL a)
     => PS.Connection
     -> L.LoggerHandler IO
-    -> Y.Paginated a
+    -> T.Paginated a
     -> IO [MType a]
-getThisPaginated con logger (Y.Paginated page size g) = do
+getThisPaginated con logger (T.Paginated page size g) = do
     let (qu, pars) = selectQuery g
         (qupag, parspag) = pageingClause page size
         qu' = qu <> qupag
@@ -126,7 +126,7 @@ editThis ::
     => PS.Connection
     -> L.LoggerHandler IO
     -> a
-    -> IO (Either Y.ModifyError Int)
+    -> IO (Either T.ModifyError Int)
 editThis con logger u =
     case updateParams u of
         Nothing -> Ex.throwInvalidUpdate "no properties to update"
@@ -140,7 +140,7 @@ editThis con logger u =
                     ids <-
                         map PSTy.fromOnly <$> PS.query con str params
                     case ids of
-                        [] -> pure (Left Y.MNoAction)
+                        [] -> pure (Left T.MNoAction)
                         [x] -> pure (Right x)
                         _ -> Ex.throwInvalidUnique (uName @a) ids
 
@@ -149,7 +149,7 @@ createThis ::
     => PS.Connection
     -> L.LoggerHandler IO
     -> a
-    -> IO (Either Y.ModifyError Int)
+    -> IO (Either T.ModifyError Int)
 createThis con logger cres = do
     let (str, params) = createQuery cres
         modifyHandler = fmap Left . Ex.modifyErrorHandler
@@ -157,7 +157,7 @@ createThis con logger cres = do
         Ex.withHandler modifyHandler $ do
             ints <- map PSTy.fromOnly <$> PS.query con str params
             case ints of
-                [] -> pure $ Left Y.MNoAction
+                [] -> pure $ Left T.MNoAction
                 [x] -> pure $ Right x
                 _ -> Ex.throwInvalidUnique (cName @a) ints
 
@@ -166,17 +166,17 @@ deleteThis ::
     => PS.Connection
     -> L.LoggerHandler IO
     -> a
-    -> IO (Either Y.DeleteError Int)
+    -> IO (Either T.DeleteError Int)
 deleteThis con logger del = do
     let (str, params) = deleteQuery del
     Ex.withExceptionHandlers (Ex.sqlHandlers logger str params) $ do
         ids <- map PSTy.fromOnly <$> PS.query con str params
         case ids of
-            [] -> pure $ Left Y.DNoAction
+            [] -> pure $ Left T.DNoAction
             [eid] -> pure $ Right eid
             _ -> Ex.throwInvalidUnique (dName @a) ids
 
-checkUnique :: a -> (b -> a) -> Y.Entity -> (b -> Int) -> [b] -> IO a
+checkUnique :: a -> (b -> a) -> T.Entity -> (b -> Int) -> [b] -> IO a
 checkUnique empty one entity getId xs =
     case xs of
         [] -> pure empty
@@ -190,7 +190,7 @@ attachTags ::
     -> L.LoggerHandler IO
     -> HIdent s
     -> [Int]
-    -> IO (Either Y.TagsError [Int])
+    -> IO (Either T.TagsError [Int])
 attachTags _ _ _ _ [] = do
     pure (Right [])
 attachTags con s logger hasTagsId tags = do

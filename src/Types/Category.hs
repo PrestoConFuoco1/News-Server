@@ -10,7 +10,7 @@ module Types.Category
     , ActionCategory
     ) where
 
-import qualified Data.Text as T
+import qualified Data.Text as Text
 import qualified Database.PostgreSQL.Simple as PS
 import GHC.Generics
 import qualified GenericPretty as GP
@@ -30,7 +30,7 @@ newtype GetCategories =
 
 data CreateCategory =
     CreateCategory
-        { _cc_catName :: T.Text
+        { _cc_catName :: Text.Text
         , _cc_parentCat :: CategoryId
         }
   deriving (Show, Eq, Generic, GP.PrettyShow, PS.ToRow)
@@ -38,7 +38,7 @@ data CreateCategory =
 data EditCategory =
     EditCategory
         { _ec_catId :: CategoryId
-        , _ec_catName :: Maybe T.Text
+        , _ec_catName :: Maybe Text.Text
         , _ec_parentId :: Maybe CategoryId
         }
   deriving (Show, Eq, Generic, GP.PrettyShow, PS.ToRow)

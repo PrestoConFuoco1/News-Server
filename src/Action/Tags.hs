@@ -6,20 +6,20 @@ module Action.Tags
 
 import Action.Common (Router)
 import qualified Action.Utils as AU
-import qualified Types as Y
+import qualified Types as T
 
-createTagToAction :: Router Y.CreateTag
+createTagToAction :: Router T.CreateTag
 createTagToAction = do
     name <- AU.requireField AU.validateNotEmpty "name"
-    pure $ Y.CreateTag name
+    pure $ T.CreateTag name
 
-editTagToAction :: Router Y.EditTag
+editTagToAction :: Router T.EditTag
 editTagToAction = do
     tid <- AU.requireField AU.readInt "tag_id"
     name <- AU.requireField AU.validateNotEmpty "name"
-    pure $ Y.EditTag tid name
+    pure $ T.EditTag tid name
 
-deleteTagToAction :: Router Y.DeleteTag
+deleteTagToAction :: Router T.DeleteTag
 deleteTagToAction = do
     tid <- AU.requireField AU.readInt "tag_id"
-    pure $ Y.DeleteTag tid
+    pure $ T.DeleteTag tid

@@ -14,7 +14,7 @@ import qualified Control.Monad.Catch as C
 import qualified Data.ByteString as B
 import qualified Data.Configurator as C
 import qualified Data.Configurator.Types as CT
-import qualified Data.Text as T (pack)
+import qualified Data.Text as Text (pack)
 import GHC.Generics
 import qualified GenericPretty as GP
 import qualified System.Exit as Q (ExitCode(..), exitWith)
@@ -90,7 +90,7 @@ handleIOError logger exc
         L.logError logger "File is already in use."
     | otherwise = do
         L.logError logger "Unknown IOError occured"
-        L.logError logger $ T.pack $ C.displayException exc
+        L.logError logger $ Text.pack $ C.displayException exc
 
 handleConfigError :: L.LoggerHandler IO -> CT.ConfigError -> IO ()
 handleConfigError logger (CT.ParseError _ _) =
@@ -103,4 +103,4 @@ handleKeyError logger (CT.KeyError name) = do
 handleOthers :: L.LoggerHandler IO -> E.SomeException -> IO ()
 handleOthers logger exc = do
     L.logError logger "Unknown error occured."
-    L.logError logger $ T.pack $ C.displayException exc
+    L.logError logger $ Text.pack $ C.displayException exc

@@ -19,7 +19,7 @@ import Data.Aeson (encode)
 import Data.Aeson.Types (Value)
 import qualified Data.ByteString as BS (ByteString)
 import qualified Data.ByteString.Lazy as BSL (ByteString, toStrict)
-import qualified Data.Text as T (Text, pack, unpack)
+import qualified Data.Text as Text (Text, pack, unpack)
 import Data.Text.Encoding as E (decodeUtf8)
 import qualified Data.Time as Time
 import Data.Void (Void)
@@ -100,8 +100,8 @@ withIndent ind str = numToIndent ind ++ str
 defaultPretty :: (PrettyShow a) => a -> String
 defaultPretty x = prettyValue 0 (prettyShow x)
 
-textPretty :: (PrettyShow a) => a -> T.Text
-textPretty = T.pack . defaultPretty
+textPretty :: (PrettyShow a) => a -> Text.Text
+textPretty = Text.pack . defaultPretty
 
 prettyUnit :: Int -> LayoutUnit -> String
 prettyUnit _ (LayoutUnit _ LEmpty) = ""
@@ -156,12 +156,12 @@ instance PrettyShow Integer where
 instance PrettyShow Double where
     prettyShow = LStr . show
 
-instance PrettyShow T.Text where
+instance PrettyShow Text.Text where
     prettyShow = LStr . show
 
 instance PrettyShow Value where
     prettyShow val =
-        LJSON $ T.unpack $ E.decodeUtf8 $ BSL.toStrict $ encode val
+        LJSON $ Text.unpack $ E.decodeUtf8 $ BSL.toStrict $ encode val
 
 instance PrettyShow Bool where
     prettyShow = LStr . show

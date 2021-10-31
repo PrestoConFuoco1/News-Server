@@ -9,51 +9,51 @@ module Database.Create
 import qualified Database.PostgreSQL.Simple as PS
 import qualified Database.PostgreSQL.Simple.Types as PSTy
 import Database.SqlValue (SqlValue(..))
-import qualified Types as Y
+import qualified Types as T
 
 class CreateSQL a where
     createQuery :: a -> (PS.Query, [SqlValue])
-    cName :: Y.Entity
+    cName :: T.Entity
 
-instance CreateSQL Y.CreateTag where
-    createQuery Y.CreateTag {..} =
+instance CreateSQL T.CreateTag where
+    createQuery T.CreateTag {..} =
         ( "INSERT INTO news.tag (name) VALUES (?) RETURNING tag_id"
         , [SqlValue _ct_tagName])
-    cName = Y.ETag
+    cName = T.ETag
 
-instance CreateSQL Y.CreateCategory where
-    createQuery Y.CreateCategory {..} =
+instance CreateSQL T.CreateCategory where
+    createQuery T.CreateCategory {..} =
         ( "INSERT INTO news.category (name, parent_category_Id) VALUES (?, ?) RETURNING category_id"
         , [SqlValue _cc_catName, SqlValue _cc_parentCat])
-    cName = Y.ECategory
+    cName = T.ECategory
 
-instance CreateSQL Y.CreateUser where
-    createQuery Y.CreateUser {..} =
+instance CreateSQL T.CreateUser where
+    createQuery T.CreateUser {..} =
         ( "INSERT INTO news.users (login, pass_hash, firstname, lastname) VALUES (?, ?, ?, ?) RETURNING user_id"
         , [ SqlValue _cu_login
           , SqlValue _cu_passHash
           , SqlValue _cu_firstName
           , SqlValue _cu_lastName
           ])
-    cName = Y.EUser
+    cName = T.EUser
 
-instance CreateSQL Y.CreateAuthor where
-    createQuery Y.CreateAuthor {..} =
+instance CreateSQL T.CreateAuthor where
+    createQuery T.CreateAuthor {..} =
         ( "INSERT INTO news.author (user_id, description) VALUES (?, ?) RETURNING author_id"
         , [SqlValue _ca_userId, SqlValue _ca_description])
-    cName = Y.EAuthor
+    cName = T.EAuthor
 
-instance CreateSQL (Y.WithUser Y.CreateComment) where
-    createQuery (Y.WithUser u Y.CreateComment {..}) =
+instance CreateSQL (T.WithUser T.CreateComment) where
+    createQuery (T.WithUser u T.CreateComment {..}) =
         ( "INSERT INTO news.comment (user_id, post_id, content) values (?, ?, ?) RETURNING comment_id"
-        , [ SqlValue $ Y._u_id u
+        , [ SqlValue $ T._u_id u
           , SqlValue _ccom_postId
           , SqlValue _ccom_content
           ])
-    cName = Y.EComment
+    cName = T.EComment
 
-instance CreateSQL Y.DraftRaw where
-    createQuery Y.DraftRaw {..} =
+instance CreateSQL T.DraftRaw where
+    createQuery T.DraftRaw {..} =
         ( "INSERT INTO news.post ( title, \
                                  \ author_id,\
                                  \ category_id,\
@@ -68,10 +68,10 @@ instance CreateSQL Y.DraftRaw where
           , SqlValue _dr_mainPhoto
           , SqlValue $ fmap PSTy.PGArray _dr_extraPhotos
           ])
-    cName = Y.EPost
+    cName = T.EPost
 
-instance CreateSQL (Y.WithAuthor Y.CreateDraft) where
-    createQuery (Y.WithAuthor a Y.CreateDraft {..}) =
+instance CreateSQL (T.WithAuthor T.CreateDraft) where
+    createQuery (T.WithAuthor a T.CreateDraft {..}) =
         ( "INSERT INTO news.draft (title, author_id, category_id, content, photo, extra_photos) \
          \VALUES (?, ?, ?, ?, ?, ?) RETURNING draft_id"
         , [ SqlValue _cd_title
@@ -81,4 +81,4 @@ instance CreateSQL (Y.WithAuthor Y.CreateDraft) where
           , SqlValue _cd_mainPhoto
           , SqlValue $ fmap PSTy.PGArray _cd_extraPhotos
           ])
-    cName = Y.EDraft
+    cName = T.EDraft

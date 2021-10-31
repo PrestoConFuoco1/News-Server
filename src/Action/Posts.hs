@@ -5,44 +5,44 @@ module Action.Posts
 
 import Action.Common
 import qualified Action.Utils as AU
-import qualified Data.Text as T
+import qualified Data.Text as Text
 import Prelude hiding (readList)
-import qualified Types as Y
+import qualified Types as T
 
-defaultSortOptions :: Y.SortOptions
-defaultSortOptions = Y.SortOptions Y.SEDate Y.SODescending
+defaultSortOptions :: T.SortOptions
+defaultSortOptions = T.SortOptions T.SEDate T.SODescending
 
 actionWithPost ::
        Int
-    -> [T.Text]
+    -> [Text.Text]
     -> Query
-    -> Either ActionErrorPerms (Y.Paginated Y.GetComments)
+    -> Either ActionErrorPerms (T.Paginated T.GetComments)
 actionWithPost pid path hash =
     case path of
         [x]
             | x == "comments" ->
                 runRouter (routingEnv False hash) $
-                AU.withPagination $ pure $ Y.GetComments pid
+                AU.withPagination $ pure $ T.GetComments pid
         _ -> Left $ ActionErrorPerms False EInvalidEndpoint
 
-getPostsAction :: Router Y.GetPosts
+getPostsAction :: Router T.GetPosts
 getPostsAction = do
     tagopts <-
         AU.oneOf
-            [ AU.fmap2 Y.OneTag $ AU.optional AU.readInt "tag"
-            , AU.fmap2 Y.TagsIn $ AU.optional AU.readList "tags__in"
-            , AU.fmap2 Y.TagsAll $ AU.optional AU.readList "tags__all"
+            [ AU.fmap2 T.OneTag $ AU.optional AU.readInt "tag"
+            , AU.fmap2 T.TagsIn $ AU.optional AU.readList "tags__in"
+            , AU.fmap2 T.TagsAll $ AU.optional AU.readList "tags__all"
             ]
     creationopts <-
         AU.oneOf
-            [ AU.fmap2 Y.Created $ AU.optional AU.readDay "created_at"
-            , AU.fmap2 Y.CreatedEarlier $
+            [ AU.fmap2 T.Created $ AU.optional AU.readDay "created_at"
+            , AU.fmap2 T.CreatedEarlier $
               AU.optional AU.readDay "created_at__lt"
-            , AU.fmap2 Y.CreatedLater $
+            , AU.fmap2 T.CreatedLater $
               AU.optional AU.readDay "created_at__gt"
             ]
     sortoptsRaw <-
-        AU.optional AU.validateNotEmpty "sort" :: Router (Maybe T.Text)
+        AU.optional AU.validateNotEmpty "sort" :: Router (Maybe Text.Text)
     sortopts <-
         case sortoptsRaw of
             Nothing -> pure defaultSortOptions
@@ -50,25 +50,25 @@ getPostsAction = do
                 errorOnNothing (EInvalidFieldValue "sort") $
                 sortOptions s
     searchopts <-
-        AU.fmap2 Y.SearchOptions $
+        AU.fmap2 T.SearchOptions $
         AU.optional AU.validateNotEmpty "search"
-    pure $ Y.GetPosts creationopts tagopts searchopts sortopts
+    pure $ T.GetPosts creationopts tagopts searchopts sortopts
 
-sortOptions :: T.Text -> Maybe Y.SortOptions
-sortOptions text = sortOptions' $ T.unpack text
+sortOptions :: Text.Text -> Maybe T.SortOptions
+sortOptions text = sortOptions' $ Text.unpack text
 
-sortOptions' :: String -> Maybe Y.SortOptions
-sortOptions' (x:y:_) = Y.SortOptions <$> toSortBy x <*> ascDesc y
+sortOptions' :: String -> Maybe T.SortOptions
+sortOptions' (x:y:_) = T.SortOptions <$> toSortBy x <*> ascDesc y
 sortOptions' _ = Nothing
 
-toSortBy :: Char -> Maybe Y.SortEntity
-toSortBy 'd' = Just Y.SEDate
-toSortBy 'a' = Just Y.SEAuthor
-toSortBy 'c' = Just Y.SECategory
-toSortBy 'p' = Just Y.SEPhotoNumber
+toSortBy :: Char -> Maybe T.SortEntity
+toSortBy 'd' = Just T.SEDate
+toSortBy 'a' = Just T.SEAuthor
+toSortBy 'c' = Just T.SECategory
+toSortBy 'p' = Just T.SEPhotoNumber
 toSortBy _ = Nothing
 
-ascDesc :: Char -> Maybe Y.SortOrder
-ascDesc 'a' = Just Y.SOAscending
-ascDesc 'd' = Just Y.SODescending
+ascDesc :: Char -> Maybe T.SortOrder
+ascDesc 'a' = Just T.SOAscending
+ascDesc 'd' = Just T.SODescending
 ascDesc _ = Nothing

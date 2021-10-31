@@ -23,7 +23,7 @@ module Types.Posts
 import Prelude hiding (readList)
 import Types.Common (CRUD, Paginated)
 
-import qualified Data.Text as T
+import qualified Data.Text as Text
 import qualified Data.Time as Time
 import Data.Void
 import qualified Database.PostgreSQL.Simple as PS
@@ -49,7 +49,7 @@ newtype GetComments =
 data CreateComment =
     CreateComment
         { _ccom_postId :: PostId
-        , _ccom_content :: T.Text
+        , _ccom_content :: Text.Text
         }
   deriving (Show, Eq, Generic, GP.PrettyShow, PS.ToRow)
 
@@ -62,11 +62,11 @@ newtype DeleteComment =
 data PublishEditPost =
     PublishEditPost
         { _pep_postId :: PostId
-        , _pep_title :: T.Text
+        , _pep_title :: Text.Text
         , _pep_categoryId :: CategoryId
-        , _pep_content :: T.Text
-        , _pep_mainPhoto :: Maybe T.Text
-        , _pep_extraPhotos :: Maybe [T.Text]
+        , _pep_content :: Text.Text
+        , _pep_mainPhoto :: Maybe Text.Text
+        , _pep_extraPhotos :: Maybe [Text.Text]
         }
   deriving (Show, Eq)
 
@@ -102,7 +102,7 @@ data TagsOptions
   deriving GP.PrettyShow via GP.Showable TagsOptions
 
 newtype SearchOptions =
-    SearchOptions T.Text
+    SearchOptions Text.Text
   deriving (Show, Eq, Generic)
   deriving GP.PrettyShow via GP.Showable SearchOptions
 

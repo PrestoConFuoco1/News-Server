@@ -20,175 +20,175 @@ import Execute.Draft (createDraft, editDraft, publish)
 import qualified Execute.Utils as U
 import qualified GenericPretty as GP
 import qualified Result as R
-import qualified Types as Y
+import qualified Types as T
 import qualified Utils as S
 
 executeAction ::
        CMC.MonadCatch m
     => D.Handle m
-    -> Y.WhoWhat Action
-    -> m Y.APIResult
-executeAction h (Y.WhoWhat token (AAuthors x)) =
-    executeAuthor h (Y.WhoWhat token x)
-executeAction h (Y.WhoWhat token (ACategory x)) =
-    executeCategory h (Y.WhoWhat token x)
-executeAction h (Y.WhoWhat token (APosts x)) =
-    executePosts h (Y.WhoWhat token x)
-executeAction h (Y.WhoWhat token (ATags x)) =
-    executeTags h (Y.WhoWhat token x)
-executeAction h (Y.WhoWhat token (AUsers x)) =
-    executeUsers h (Y.WhoWhat token x)
-executeAction h (Y.WhoWhat _ (AAuth x)) = U.authenticate h x
-executeAction h (Y.WhoWhat token (AComments x)) =
-    executeComments h (Y.WhoWhat token x)
-executeAction h (Y.WhoWhat token (ADrafts x)) =
-    executeDraft h (Y.WhoWhat token x)
-executeAction h (Y.WhoWhat token (APublish x)) =
-    executePublish h (Y.WhoWhat token x)
+    -> T.WhoWhat Action
+    -> m T.APIResult
+executeAction h (T.WhoWhat token (AAuthors x)) =
+    executeAuthor h (T.WhoWhat token x)
+executeAction h (T.WhoWhat token (ACategory x)) =
+    executeCategory h (T.WhoWhat token x)
+executeAction h (T.WhoWhat token (APosts x)) =
+    executePosts h (T.WhoWhat token x)
+executeAction h (T.WhoWhat token (ATags x)) =
+    executeTags h (T.WhoWhat token x)
+executeAction h (T.WhoWhat token (AUsers x)) =
+    executeUsers h (T.WhoWhat token x)
+executeAction h (T.WhoWhat _ (AAuth x)) = U.authenticate h x
+executeAction h (T.WhoWhat token (AComments x)) =
+    executeComments h (T.WhoWhat token x)
+executeAction h (T.WhoWhat token (ADrafts x)) =
+    executeDraft h (T.WhoWhat token x)
+executeAction h (T.WhoWhat token (APublish x)) =
+    executePublish h (T.WhoWhat token x)
 
 executePosts ::
        CMC.MonadCatch m
     => D.Handle m
-    -> Y.WhoWhat Y.ActionPosts1
-    -> m Y.APIResult
-executePosts h (Y.WhoWhat _ (Y.GC x)) =
+    -> T.WhoWhat T.ActionPosts1
+    -> m T.APIResult
+executePosts h (T.WhoWhat _ (T.GC x)) =
     getThis (D.getComments h (D.log h)) x
-executePosts h (Y.WhoWhat _ (Y.AP (Y.Read x))) = do
+executePosts h (T.WhoWhat _ (T.AP (T.Read x))) = do
     getThis (D.getPosts h (D.log h)) x
-executePosts _ (Y.WhoWhat _ (Y.AP (Y.Create x))) = pure $ absurd x
-executePosts _ (Y.WhoWhat _ (Y.AP (Y.Update x))) = pure $ absurd x
-executePosts _ (Y.WhoWhat _ (Y.AP (Y.Delete x))) = pure $ absurd x
+executePosts _ (T.WhoWhat _ (T.AP (T.Create x))) = pure $ absurd x
+executePosts _ (T.WhoWhat _ (T.AP (T.Update x))) = pure $ absurd x
+executePosts _ (T.WhoWhat _ (T.AP (T.Delete x))) = pure $ absurd x
 
 executeAuthor ::
        CMC.MonadCatch m
     => D.Handle m
-    -> Y.WhoWhat Y.ActionAuthors
-    -> m Y.APIResult
-executeAuthor h (Y.WhoWhat token (Y.Read x)) =
+    -> T.WhoWhat T.ActionAuthors
+    -> m T.APIResult
+executeAuthor h (T.WhoWhat token (T.Read x)) =
     U.withAuthAdmin h token >> getThis (D.getAuthors h (D.log h)) x
-executeAuthor h (Y.WhoWhat token (Y.Create x)) =
+executeAuthor h (T.WhoWhat token (T.Create x)) =
     U.withAuthAdmin h token >>
-    createThis Y.EAuthor (D.createAuthor h (D.log h)) x
-executeAuthor h (Y.WhoWhat token (Y.Update x)) =
+    createThis T.EAuthor (D.createAuthor h (D.log h)) x
+executeAuthor h (T.WhoWhat token (T.Update x)) =
     U.withAuthAdmin h token >>
-    editThis Y.EAuthor (D.editAuthor h (D.log h)) x
-executeAuthor h (Y.WhoWhat token (Y.Delete x)) =
+    editThis T.EAuthor (D.editAuthor h (D.log h)) x
+executeAuthor h (T.WhoWhat token (T.Delete x)) =
     U.withAuthAdmin h token >>
-    deleteThis Y.EAuthor (D.deleteAuthor h (D.log h)) x
+    deleteThis T.EAuthor (D.deleteAuthor h (D.log h)) x
 
 {-
 -}
 executeTags ::
        CMC.MonadCatch m
     => D.Handle m
-    -> Y.WhoWhat Y.ActionTags
-    -> m Y.APIResult
-executeTags h (Y.WhoWhat _ (Y.Read x)) =
+    -> T.WhoWhat T.ActionTags
+    -> m T.APIResult
+executeTags h (T.WhoWhat _ (T.Read x)) =
     getThis (D.getTags h (D.log h)) x
-executeTags h (Y.WhoWhat token (Y.Create x)) =
+executeTags h (T.WhoWhat token (T.Create x)) =
     U.withAuthAdmin h token >>
-    createThis Y.ETag (D.createTag h (D.log h)) x
-executeTags h (Y.WhoWhat token (Y.Update x)) =
+    createThis T.ETag (D.createTag h (D.log h)) x
+executeTags h (T.WhoWhat token (T.Update x)) =
     U.withAuthAdmin h token >>
-    editThis Y.ETag (D.editTag h (D.log h)) x
-executeTags h (Y.WhoWhat token (Y.Delete x)) =
+    editThis T.ETag (D.editTag h (D.log h)) x
+executeTags h (T.WhoWhat token (T.Delete x)) =
     U.withAuthAdmin h token >>
-    deleteThis Y.ETag (D.deleteTag h (D.log h)) x
+    deleteThis T.ETag (D.deleteTag h (D.log h)) x
 
 executeCategory ::
        CMC.MonadCatch m
     => D.Handle m
-    -> Y.WhoWhat Y.ActionCategory
-    -> m Y.APIResult
-executeCategory h (Y.WhoWhat _ (Y.Read x)) =
+    -> T.WhoWhat T.ActionCategory
+    -> m T.APIResult
+executeCategory h (T.WhoWhat _ (T.Read x)) =
     getThis (D.getCategories h (D.log h)) x
-executeCategory h (Y.WhoWhat token (Y.Create x)) =
+executeCategory h (T.WhoWhat token (T.Create x)) =
     U.withAuthAdmin h token >>
-    createThis Y.ECategory (D.createCategory h (D.log h)) x
-executeCategory h (Y.WhoWhat token (Y.Update x)) = do
+    createThis T.ECategory (D.createCategory h (D.log h)) x
+executeCategory h (T.WhoWhat token (T.Update x)) = do
     U.withAuthAdmin h token
     mModifError <- U.checkCategoryUpdate h x
-    let action = editThis Y.ECategory (D.editCategory h (D.log h)) x
-    maybe action (pure . Y.RFailed Y.ECategory) mModifError
-executeCategory h (Y.WhoWhat token (Y.Delete x)) =
+    let action = editThis T.ECategory (D.editCategory h (D.log h)) x
+    maybe action (pure . T.RFailed T.ECategory) mModifError
+executeCategory h (T.WhoWhat token (T.Delete x)) =
     U.withAuthAdmin h token >>
-    deleteThis Y.ECategory (D.deleteCategory h (D.log h)) x
+    deleteThis T.ECategory (D.deleteCategory h (D.log h)) x
 
 executeUsers ::
        CMC.MonadCatch m
     => D.Handle m
-    -> Y.WhoWhat Y.ActionUsers
-    -> m Y.APIResult
-executeUsers h (Y.WhoWhat _ (Y.Create x)) =
-    createThis Y.EUser (D.createUser h (D.log h)) x
-executeUsers h (Y.WhoWhat token (Y.Delete x)) =
+    -> T.WhoWhat T.ActionUsers
+    -> m T.APIResult
+executeUsers h (T.WhoWhat _ (T.Create x)) =
+    createThis T.EUser (D.createUser h (D.log h)) x
+executeUsers h (T.WhoWhat token (T.Delete x)) =
     U.withAuthAdmin h token >>
-    deleteThis Y.EUser (D.deleteUser h (D.log h)) x
-executeUsers h (Y.WhoWhat token (Y.Read Y.GetProfile)) =
+    deleteThis T.EUser (D.deleteUser h (D.log h)) x
+executeUsers h (T.WhoWhat token (T.Read T.GetProfile)) =
     U.withAuth h token >>= U.getUser h
-executeUsers _ (Y.WhoWhat _ (Y.Update x)) = pure $ absurd x
+executeUsers _ (T.WhoWhat _ (T.Update x)) = pure $ absurd x
 
 executeComments ::
        CMC.MonadCatch m
     => D.Handle m
-    -> Y.WhoWhat Y.ActionComments
-    -> m Y.APIResult
-executeComments h (Y.WhoWhat _ (Y.Read x)) =
+    -> T.WhoWhat T.ActionComments
+    -> m T.APIResult
+executeComments h (T.WhoWhat _ (T.Read x)) =
     getThis (D.getComments h (D.log h)) x
-executeComments h (Y.WhoWhat token (Y.Create x)) =
+executeComments h (T.WhoWhat token (T.Create x)) =
     U.withAuth h token >>= U.maybeUserToUser h >>= \u ->
-        createThis Y.EComment (D.createComment h (D.log h)) $
-        Y.WithUser u x
-executeComments h (Y.WhoWhat token (Y.Delete x)) =
+        createThis T.EComment (D.createComment h (D.log h)) $
+        T.WithUser u x
+executeComments h (T.WhoWhat token (T.Delete x)) =
     U.withAuth h token >>= U.maybeUserToUser h >>= \u ->
-        deleteThis Y.EComment (D.deleteComment h (D.log h)) $
-        Y.WithUser u x
-executeComments _ (Y.WhoWhat _ (Y.Update x)) = pure $ absurd x
+        deleteThis T.EComment (D.deleteComment h (D.log h)) $
+        T.WithUser u x
+executeComments _ (T.WhoWhat _ (T.Update x)) = pure $ absurd x
 
 executeDraft ::
        (CMC.MonadCatch m)
     => D.Handle m
-    -> Y.WhoWhat Y.ActionDrafts
-    -> m Y.APIResult
-executeDraft h (Y.WhoWhat token (Y.Create x)) =
+    -> T.WhoWhat T.ActionDrafts
+    -> m T.APIResult
+executeDraft h (T.WhoWhat token (T.Create x)) =
     U.withAuthor h token >>= \author ->
-        createDraft h $ Y.WithAuthor (Y._a_authorId author) x
-executeDraft h (Y.WhoWhat token (Y.Read (Y.Paginated p s x))) =
+        createDraft h $ T.WithAuthor (T._a_authorId author) x
+executeDraft h (T.WhoWhat token (T.Read (T.Paginated p s x))) =
     U.withAuthor h token >>= \author ->
         getThis (D.getDrafts h (D.log h)) $
-        Y.Paginated p s (Y.WithAuthor (Y._a_authorId author) x)
-executeDraft h (Y.WhoWhat token (Y.Delete x)) =
+        T.Paginated p s (T.WithAuthor (T._a_authorId author) x)
+executeDraft h (T.WhoWhat token (T.Delete x)) =
     U.withAuthor h token >>= \author ->
-        deleteThis Y.EDraft (D.deleteDraft h (D.log h)) $
-        Y.WithAuthor (Y._a_authorId author) x
-executeDraft h (Y.WhoWhat token (Y.Update x)) =
+        deleteThis T.EDraft (D.deleteDraft h (D.log h)) $
+        T.WithAuthor (T._a_authorId author) x
+executeDraft h (T.WhoWhat token (T.Update x)) =
     U.withAuthor h token >>= \author ->
-        editDraft h $ Y.WithAuthor (Y._a_authorId author) x
+        editDraft h $ T.WithAuthor (T._a_authorId author) x
 
 executePublish ::
        (CMC.MonadCatch m)
     => D.Handle m
-    -> Y.WhoWhat Y.Publish
-    -> m Y.APIResult
-executePublish h (Y.WhoWhat token x) =
+    -> T.WhoWhat T.Publish
+    -> m T.APIResult
+executePublish h (T.WhoWhat token x) =
     U.withAuthor h token >>= \author ->
-        publish h $ Y.WithAuthor (Y._a_authorId author) x
+        publish h $ T.WithAuthor (T._a_authorId author) x
 
 handleError ::
        CMC.MonadCatch m
     => D.Handle m
-    -> Y.WhoWhat ActionErrorPerms
+    -> T.WhoWhat ActionErrorPerms
     -> m R.Response
-handleError h (Y.WhoWhat _ (ActionErrorPerms False (ERequiredFieldMissing x))) =
+handleError h (T.WhoWhat _ (ActionErrorPerms False (ERequiredFieldMissing x))) =
     handleFieldMissing h x
-handleError h (Y.WhoWhat _ (ActionErrorPerms False (EInvalidFieldValue x))) =
+handleError h (T.WhoWhat _ (ActionErrorPerms False (EInvalidFieldValue x))) =
     handleInvalidValue h x
-handleError h (Y.WhoWhat _ (ActionErrorPerms False EInvalidEndpoint)) = do
+handleError h (T.WhoWhat _ (ActionErrorPerms False EInvalidEndpoint)) = do
     D.logError h "Invalid endpoint"
     pure $ R.notFound "Invalid endpoint"
-handleError h (Y.WhoWhat token (ActionErrorPerms True x)) =
+handleError h (T.WhoWhat token (ActionErrorPerms True x)) =
     (U.withAuthAdmin h token >>
-     handleError h (Y.WhoWhat token (ActionErrorPerms False x))) `CMC.catch`
+     handleError h (T.WhoWhat token (ActionErrorPerms False x))) `CMC.catch`
     f h
   where
     f :: (CMC.MonadCatch m)

@@ -12,7 +12,7 @@ module Types.Draft
     , ActionDrafts
     ) where
 
-import qualified Data.Text as T
+import qualified Data.Text as Text
 import qualified Database.PostgreSQL.Simple as PS
 import GHC.Generics
 import qualified GenericPretty as GP
@@ -29,12 +29,12 @@ type ActionDrafts
 
 data CreateDraft =
     CreateDraft
-        { _cd_title :: T.Text
+        { _cd_title :: Text.Text
         , _cd_tags :: [TagId]
         , _cd_categoryId :: CategoryId
-        , _cd_content :: T.Text
-        , _cd_mainPhoto :: Maybe T.Text
-        , _cd_extraPhotos :: Maybe [T.Text]
+        , _cd_content :: Text.Text
+        , _cd_mainPhoto :: Maybe Text.Text
+        , _cd_extraPhotos :: Maybe [Text.Text]
         }
   deriving (Show, Eq, Generic, GP.PrettyShow)
 
@@ -46,12 +46,12 @@ data GetDrafts =
 data EditDraft =
     EditDraft
         { _ed_draftId :: DraftId
-        , _ed_title :: Maybe T.Text
+        , _ed_title :: Maybe Text.Text
         , _ed_tags :: Maybe [TagId]
         , _ed_categoryId :: Maybe CategoryId
-        , _ed_content :: Maybe T.Text
-        , _ed_mainPhoto :: Maybe T.Text
-        , _ed_extraPhotos :: Maybe [T.Text]
+        , _ed_content :: Maybe Text.Text
+        , _ed_mainPhoto :: Maybe Text.Text
+        , _ed_extraPhotos :: Maybe [Text.Text]
         }
   deriving (Show, Eq, Generic, GP.PrettyShow)
 

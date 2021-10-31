@@ -6,7 +6,7 @@ module Types
     , module TypesInternal
     ) where
 
-import qualified Data.Text as T
+import qualified Data.Text as Text
 import qualified Database.PostgreSQL.Simple.ToField as PST
 import GHC.Generics
 import qualified GenericPretty as GP
@@ -37,7 +37,7 @@ data WithAuthor a =
 
 newtype Token =
     Token
-        { _t_token :: T.Text
+        { _t_token :: Text.Text
         }
   deriving (Show, Eq, PST.ToField)
   deriving GP.PrettyShow via GP.Showable Token

@@ -6,7 +6,7 @@ module Types.APIResult
     , RGettable(..)
     ) where
 
-import qualified Data.Text as T
+import qualified Data.Text as Text
 import GHC.Generics
 import qualified GenericPretty as GP
 import Prelude as P
@@ -17,18 +17,18 @@ import qualified Utils as S
 data APIResult
     = RGet RGettable
     | RGetUser User
-    | RGetToken T.Text
+    | RGetToken Text.Text
     | RCreated Entity Int
     | REdited Entity Int
     | RDeleted Entity Int
     | RFailed Entity ModifyError
-    | RInvalidTag T.Text
+    | RInvalidTag Text.Text
   deriving (Show, Generic)
 
 --    | RNotFound Entity
---    | RAlreadyInUse Entity T.Text T.Text
---    | RInvalidForeign Entity T.Text T.Text
-logResult :: APIResult -> T.Text
+--    | RAlreadyInUse Entity Text.Text Text.Text
+--    | RInvalidForeign Entity Text.Text Text.Text
+logResult :: APIResult -> Text.Text
 logResult (RGet (RGettable xs)) =
     "fetched " <> S.showText (length xs) <> " entities"
 logResult (RGetUser u) = GP.textPretty u
