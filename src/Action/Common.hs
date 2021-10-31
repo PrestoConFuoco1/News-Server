@@ -2,11 +2,17 @@
 {-# LANGUAGE DerivingVia #-}
 {-# LANGUAGE DerivingStrategies #-}
 
-module Action.Common (
-    Router, Query, errorOnNothing,
-    ActionError (..), askHash, ActionErrorPerms (..),
-    runRouter, renv, pathNotFound
-) where
+module Action.Common
+    ( Router
+    , Query
+    , errorOnNothing
+    , ActionError(..)
+    , askHash
+    , ActionErrorPerms(..)
+    , runRouter
+    , renv
+    , pathNotFound
+    ) where
 
 import Control.Monad.Reader (MonadReader, ReaderT(..), asks)
 import qualified Data.ByteString as BS
@@ -21,7 +27,7 @@ data ActionError
     | ERequiredFieldMissing BS.ByteString
     | EInvalidFieldValue BS.ByteString
   deriving (Show, Generic, Eq)
-    deriving GP.PrettyShow via GP.Showable ActionError
+  deriving GP.PrettyShow via GP.Showable ActionError
 
 pathNotFound :: ActionErrorPerms
 pathNotFound =
@@ -33,7 +39,7 @@ data ActionErrorPerms =
         , _ae_error :: ActionError
         }
   deriving (Show, Generic, Eq)
-    deriving GP.PrettyShow via GP.Showable ActionErrorPerms
+  deriving GP.PrettyShow via GP.Showable ActionErrorPerms
 
 data RoutingEnv =
     RoutingEnv

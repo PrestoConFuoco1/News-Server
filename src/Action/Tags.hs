@@ -1,8 +1,8 @@
-module Action.Tags (
-createTagToAction,
-editTagToAction,
-deleteTagToAction,
-) where
+module Action.Tags
+    ( createTagToAction
+    , editTagToAction
+    , deleteTagToAction
+    ) where
 
 import Action.Common (Router)
 import qualified Action.Utils as AU

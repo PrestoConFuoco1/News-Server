@@ -1,6 +1,6 @@
-module Exceptions (
 module Exceptions
-) where
+    ( module Exceptions
+    ) where
 
 import Control.Monad.Catch as CMC
     ( Exception(..)
@@ -46,13 +46,19 @@ throwForbidden :: (CMC.MonadThrow m) => m a
 throwForbidden = CMC.throwM Forbidden
 
 mainErrorHandler ::
-       (MonadThrow m) => L.LoggerHandler m -> ServerException -> m U.Response
+       (MonadThrow m)
+    => L.LoggerHandler m
+    -> ServerException
+    -> m U.Response
 mainErrorHandler logger err = do
     L.logError logger $ T.pack $ displayException err
     mainErrorHandler' logger err
 
 mainErrorHandler' ::
-       (MonadThrow m) => L.LoggerHandler m -> ServerException -> m U.Response
+       (MonadThrow m)
+    => L.LoggerHandler m
+    -> ServerException
+    -> m U.Response
 mainErrorHandler' _ Default = pure $ U.internal U.internalErrorMsg
 mainErrorHandler' _ SqlErrorAlreadyLogged =
     pure $ U.internal U.internalErrorMsg
@@ -159,7 +165,10 @@ withHandler ::
 withHandler = flip CMC.catch
 
 defaultMainHandler ::
-       (MonadThrow m) => L.LoggerHandler m -> SomeException -> m U.Response
+       (MonadThrow m)
+    => L.LoggerHandler m
+    -> SomeException
+    -> m U.Response
 defaultMainHandler logger e = do
     L.logError logger $ T.pack $ displayException e
     pure $ U.internal U.internalErrorMsg

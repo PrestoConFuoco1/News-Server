@@ -1,8 +1,8 @@
 {-# LANGUAGE TypeApplications, ScopedTypeVariables #-}
 
-module IO.Postgres (
 module IO.Postgres
-) where
+    ( module IO.Postgres
+    ) where
 
 import qualified App.Logger as L
 import Data.Maybe (fromMaybe)
@@ -23,7 +23,10 @@ withTransaction :: PS.Connection -> IO a -> IO a
 withTransaction = PS.withTransaction
 
 userAuthor ::
-       PS.Connection -> L.LoggerHandler IO -> Y.User -> IO (Maybe Y.Author)
+       PS.Connection
+    -> L.LoggerHandler IO
+    -> Y.User
+    -> IO (Maybe Y.Author)
 userAuthor con logger u = do
     as <-
         getThis
@@ -37,7 +40,10 @@ userAuthor con logger u = do
         _ -> Ex.throwInvalidUnique Y.EAuthor (map Y._a_authorId as)
 
 getUserByToken ::
-       PS.Connection -> L.LoggerHandler IO -> Y.Token -> IO (Maybe Y.User)
+       PS.Connection
+    -> L.LoggerHandler IO
+    -> Y.Token
+    -> IO (Maybe Y.User)
 getUserByToken con logger token = do
     users <- getThis @Y.Token con logger token
     case users of
@@ -46,7 +52,10 @@ getUserByToken con logger token = do
         _ -> Ex.throwTokenShared $ map Y._u_id users
 
 getUserByLogin ::
-       PS.Connection -> L.LoggerHandler IO -> T.Text -> IO (Maybe Y.User)
+       PS.Connection
+    -> L.LoggerHandler IO
+    -> T.Text
+    -> IO (Maybe Y.User)
 getUserByLogin con logger login = do
     let str =
             "SELECT user_id, firstname, lastname, \
@@ -61,7 +70,11 @@ getUserByLogin con logger login = do
             _ -> Ex.throwInvalidUnique Y.EUser $ map Y._u_id users
 
 addToken ::
-       PS.Connection -> L.LoggerHandler IO -> Y.UserId -> T.Text -> IO T.Text
+       PS.Connection
+    -> L.LoggerHandler IO
+    -> Y.UserId
+    -> T.Text
+    -> IO T.Text
 addToken con logger uid token = do
     let str =
             "INSERT INTO news.token (user_id, token) VALUES (?, ?) ON CONFLICT (user_id) DO UPDATE SET token = ?"
@@ -87,7 +100,11 @@ getThisPaginated con logger (Y.Paginated page size g) = do
         (PS.query con qu' totalPars)
 
 getThis ::
-       (Read a) => PS.Connection -> L.LoggerHandler IO -> a -> IO [MType a]
+       (Read a)
+    => PS.Connection
+    -> L.LoggerHandler IO
+    -> a
+    -> IO [MType a]
 getThis con logger g = do
     let (qu, pars) = selectQuery g
     Ex.withExceptionHandlers

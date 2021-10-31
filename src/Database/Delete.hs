@@ -1,9 +1,9 @@
 {-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE FlexibleInstances #-}
 
-module Database.Delete (
-DeleteSQL(..)
-) where
+module Database.Delete
+    ( DeleteSQL(..)
+    ) where
 
 import Data.Maybe (fromMaybe)
 import qualified Database.PostgreSQL.Simple as PS

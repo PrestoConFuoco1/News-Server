@@ -1,14 +1,14 @@
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DerivingVia #-}
 
-module Types.Category (
-CategoryId,
-GetCategories(..),
-CreateCategory(..),
-EditCategory(..),
-DeleteCategory(..),
-ActionCategory
-) where
+module Types.Category
+    ( CategoryId
+    , GetCategories(..)
+    , CreateCategory(..)
+    , EditCategory(..)
+    , DeleteCategory(..)
+    , ActionCategory
+    ) where
 
 import qualified Data.Text as T
 import qualified Database.PostgreSQL.Simple as PS
@@ -24,7 +24,7 @@ type ActionCategory
 data GetCategories =
     GetCategories
   deriving (Show, Eq, Generic)
-    deriving GP.PrettyShow via GP.Showable GetCategories
+  deriving GP.PrettyShow via GP.Showable GetCategories
 
 data CreateCategory =
     CreateCategory

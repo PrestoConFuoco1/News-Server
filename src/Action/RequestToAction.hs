@@ -232,4 +232,3 @@ requestToActionComments path hash =
                 Y.Delete <$>
                 runRouter (renv False hash) deleteCommentsToAction
         _ -> Left $ ActionErrorPerms False EInvalidEndpoint
-

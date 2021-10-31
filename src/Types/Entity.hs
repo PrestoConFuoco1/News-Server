@@ -1,18 +1,20 @@
 {-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE DerivingStrategies #-}
+{-# LANGUAGE DerivingVia #-}
 
-module Types.Entity (
-Entity(..),
-Gettable(..),
-User(..),
-showEText,
-Tag(..),
-Comment(..),
-Category(..),
-Draft(..),
-DraftRaw(..),
-Author(..),
-Post(..)
-) where
+module Types.Entity
+    ( Entity(..)
+    , Gettable(..)
+    , User(..)
+    , showEText
+    , Tag(..)
+    , Comment(..)
+    , Category(..)
+    , Draft(..)
+    , DraftRaw(..)
+    , Author(..)
+    , Post(..)
+    ) where
 
 import qualified Data.Aeson as Ae
 import qualified Data.Text as T
@@ -24,10 +26,11 @@ import qualified GenericPretty as GP
 import Types.Authors (AuthorId)
 import Types.Category (CategoryId)
 import Types.Draft (DraftId)
-import Types.Posts (PostId, CommentId)
+import Types.Posts (CommentId, PostId)
 import Types.Tags (TagId)
 import Types.Users (UserId)
-import Utils
+import qualified Utils as S
+import DerivingJSON (RemovePrefix(..))
 
 data Entity
     = EUser
@@ -40,7 +43,7 @@ data Entity
   deriving (Show, Eq)
 
 showE :: Entity -> String
-showE x = unCap $ drop 1 $ show x
+showE x = S.unCap $ drop 1 $ show x
 
 showEText :: Entity -> T.Text
 showEText = T.pack . showE
@@ -49,25 +52,9 @@ class (Ae.ToJSON a, Show a, GP.PrettyShow a) =>
       Gettable a
 
 
-instance Gettable User
-
-instance Gettable Author
-
-instance Gettable Category
-
-instance Gettable Tag
-
-instance Gettable Comment
-
-instance Gettable Draft
-
-instance Gettable DraftRaw
-
-instance Gettable Post
-
 data User =
     User
-        { _u_id :: UserId
+       { _u_id :: UserId
         , _u_firstname :: T.Text
         , _u_lastname :: T.Text
         , _u_pictureUrl :: Maybe T.Text
@@ -77,12 +64,8 @@ data User =
         , _u_admin :: Maybe Bool
         }
   deriving (Show, Eq, Generic, GP.PrettyShow, PSR.FromRow)
-
-instance Ae.ToJSON User where
-    toJSON =
-        Ae.genericToJSON
-            Ae.defaultOptions
-                {Ae.fieldLabelModifier = defaultModifier}
+  deriving anyclass Gettable
+    deriving Ae.ToJSON via RemovePrefix User
 
 data Author =
     Author
@@ -91,12 +74,8 @@ data Author =
         , _a_user :: User
         }
   deriving (Show, Eq, Generic, GP.PrettyShow)
-
-instance Ae.ToJSON Author where
-    toJSON =
-        Ae.genericToJSON
-            Ae.defaultOptions
-                {Ae.fieldLabelModifier = defaultModifier}
+  deriving anyclass Gettable
+    deriving Ae.ToJSON via RemovePrefix Author
 
 instance PSR.FromRow Author where
     fromRow = Author <$> PSR.field <*> PSR.field <*> PSR.fromRow
@@ -108,12 +87,8 @@ data Category =
         , _cat_parentCategory :: Maybe Category
         }
   deriving (Show, Eq, Generic, GP.PrettyShow)
-
-instance Ae.ToJSON Category where
-    toJSON =
-        Ae.genericToJSON
-            Ae.defaultOptions
-                {Ae.fieldLabelModifier = defaultModifier}
+  deriving anyclass Gettable
+    deriving Ae.ToJSON via RemovePrefix Category
 
 instance PSR.FromRow Category where
     fromRow = fmap listToCategory $ zip <$> PSR.field <*> PSR.field
@@ -141,14 +116,8 @@ data Post =
         , _p_extraPhotos :: Maybe [T.Text]
         }
   deriving (Show, Eq, Generic)
-
-instance GP.PrettyShow Post
-
-instance Ae.ToJSON Post where
-    toJSON =
-        Ae.genericToJSON
-            Ae.defaultOptions
-                {Ae.fieldLabelModifier = defaultModifier}
+  deriving anyclass (Gettable, GP.PrettyShow)
+    deriving Ae.ToJSON via RemovePrefix Post
 
 instance PSR.FromRow Post where
     fromRow = do
@@ -183,12 +152,8 @@ data Tag =
         , _t_tagName :: T.Text
         }
   deriving (Show, Eq, Generic, GP.PrettyShow, PS.FromRow)
-
-instance Ae.ToJSON Tag where
-    toJSON =
-        Ae.genericToJSON
-            Ae.defaultOptions
-                {Ae.fieldLabelModifier = defaultModifier}
+  deriving anyclass Gettable
+    deriving Ae.ToJSON via RemovePrefix Tag
 
 data Comment =
     Comment
@@ -197,12 +162,8 @@ data Comment =
         , _com_user :: User
         }
   deriving (Show, Eq, Generic, GP.PrettyShow)
-
-instance Ae.ToJSON Comment where
-    toJSON =
-        Ae.genericToJSON
-            Ae.defaultOptions
-                {Ae.fieldLabelModifier = defaultModifier}
+  deriving anyclass Gettable
+    deriving Ae.ToJSON via RemovePrefix Comment
 
 instance PSR.FromRow Comment where
     fromRow = do
@@ -230,12 +191,8 @@ data Draft =
         , _d_postId :: Maybe PostId
         }
   deriving (Show, Eq, Generic, GP.PrettyShow)
-
-instance Ae.ToJSON Draft where
-    toJSON =
-        Ae.genericToJSON
-            Ae.defaultOptions
-                {Ae.fieldLabelModifier = defaultModifier}
+  deriving anyclass Gettable
+    deriving Ae.ToJSON via RemovePrefix Draft
 
 instance PSR.FromRow Draft where
     fromRow = do
@@ -280,12 +237,7 @@ data DraftRaw =
         , _dr_postId :: Maybe PostId
         }
   deriving (Show, Eq, Generic, GP.PrettyShow)
-
-instance Ae.ToJSON DraftRaw where
-    toJSON =
-        Ae.genericToJSON
-            Ae.defaultOptions
-                {Ae.fieldLabelModifier = defaultModifier}
+    deriving Ae.ToJSON via RemovePrefix DraftRaw
 
 instance PSR.FromRow DraftRaw where
     fromRow = do

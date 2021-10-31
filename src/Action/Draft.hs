@@ -1,9 +1,9 @@
-module Action.Draft (
-createDraftToAction,
-editDraftToAction,
-deleteDraftToAction,
-publishAction,
-) where
+module Action.Draft
+    ( createDraftToAction
+    , editDraftToAction
+    , deleteDraftToAction
+    , publishAction
+    ) where
 
 import Action.Common (Router)
 import qualified Action.Utils as AU

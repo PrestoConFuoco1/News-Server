@@ -1,10 +1,10 @@
 {-# LANGUAGE TypeFamilies, RecordWildCards #-}
 
-module Execute.Draft (
-createDraft,
-editDraft,
-publish
-) where
+module Execute.Draft
+    ( createDraft
+    , editDraft
+    , publish
+    ) where
 
 import qualified App.Database as D
 import qualified App.Logger as L
@@ -131,10 +131,11 @@ publishEdit h post draft =
         D.logInfo h $ removed "post" tsRem $ Y._dr_draftId draft
         pure $ Y.REdited Y.EPost post_
 
-throwWithFunc :: (CMC.MonadCatch m)
-   => (e -> Y.DraftModifyError)
-   -> Either e a
-   -> m a
+throwWithFunc ::
+       (CMC.MonadCatch m)
+    => (e -> Y.DraftModifyError)
+    -> Either e a
+    -> m a
 throwWithFunc f = either (CMC.throwM . f) pure
 
 draftRawToPublishEditPost :: Int -> Y.DraftRaw -> Y.PublishEditPost

@@ -17,8 +17,8 @@ module GenericPretty
 
 import Data.Aeson (encode)
 import Data.Aeson.Types (Value)
-import qualified Data.ByteString.Lazy as BSL (toStrict, ByteString)
 import qualified Data.ByteString as BS (ByteString)
+import qualified Data.ByteString.Lazy as BSL (ByteString, toStrict)
 import qualified Data.Text as T (Text, pack, unpack)
 import Data.Text.Encoding as E (decodeUtf8)
 import qualified Data.Time as Time

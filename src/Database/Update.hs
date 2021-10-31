@@ -1,12 +1,12 @@
 {-# LANGUAGE FlexibleContexts, RecordWildCards, FlexibleInstances,
   AllowAmbiguousTypes, TupleSections #-}
 
-module Database.Update (
-UpdateSQL(..),
-intercalateWith,
-intercalateQ,
-updateParams
-) where
+module Database.Update
+    ( UpdateSQL(..)
+    , intercalateWith
+    , intercalateQ
+    , updateParams
+    ) where
 
 import Data.Maybe (mapMaybe)
 import qualified Database.PostgreSQL.Simple as PS

@@ -1,6 +1,7 @@
-module Action.Users (
-createUserToAction, deleteUserToAction
-) where
+module Action.Users
+    ( createUserToAction
+    , deleteUserToAction
+    ) where
 
 import Action.Common (Router)
 import qualified Action.Utils as AU

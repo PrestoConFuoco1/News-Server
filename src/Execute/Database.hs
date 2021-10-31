@@ -1,9 +1,9 @@
-module Execute.Database (
-createThis,
-editThis,
-getThis,
-deleteThis
-) where
+module Execute.Database
+    ( createThis
+    , editThis
+    , getThis
+    , deleteThis
+    ) where
 
 import qualified Control.Monad.Catch as CMC (MonadCatch)
 import Execute.Utils (modifyErrorToApiResult)

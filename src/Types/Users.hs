@@ -1,14 +1,14 @@
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DerivingVia #-}
 
-module Types.Users (
-UserId,
-CreateUser(..),
-DeleteUser(..),
-GetProfile(..),
-Authenticate(..),
-ActionUsers
-) where
+module Types.Users
+    ( UserId
+    , CreateUser(..)
+    , DeleteUser(..)
+    , GetProfile(..)
+    , Authenticate(..)
+    , ActionUsers
+    ) where
 
 import qualified Data.Text as T
 import Data.Void
@@ -33,7 +33,7 @@ data CreateUser =
 data GetProfile =
     GetProfile
   deriving (Show, Eq, Generic, PS.ToRow)
-    deriving GP.PrettyShow via GP.Showable GetProfile
+  deriving GP.PrettyShow via GP.Showable GetProfile
 
 newtype DeleteUser =
     DeleteUser

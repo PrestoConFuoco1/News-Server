@@ -1,14 +1,14 @@
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DerivingVia #-}
 
-module Types.Tags (
-TagId,
-EditTag(..),
-GetTags(..),
-DeleteTag(..),
-CreateTag(..),
-ActionTags
-) where
+module Types.Tags
+    ( TagId
+    , EditTag(..)
+    , GetTags(..)
+    , DeleteTag(..)
+    , CreateTag(..)
+    , ActionTags
+    ) where
 
 import qualified Data.Text as T
 import qualified Database.PostgreSQL.Simple as PS
@@ -23,7 +23,7 @@ type ActionTags = CRUD CreateTag (Paginated GetTags) EditTag DeleteTag
 data GetTags =
     GetTags
   deriving (Show, Eq, Generic)
-    deriving GP.PrettyShow via GP.Showable GetTags
+  deriving GP.PrettyShow via GP.Showable GetTags
 
 newtype CreateTag =
     CreateTag

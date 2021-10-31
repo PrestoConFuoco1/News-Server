@@ -2,11 +2,11 @@
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DerivingStrategies #-}
 
-module Config (
-Config(..),
-loadConfig,
-configHandlers,
-) where
+module Config
+    ( Config(..)
+    , loadConfig
+    , configHandlers
+    ) where
 
 import qualified App.Logger as L
 import qualified Control.Exception as E (IOException, SomeException)
@@ -34,7 +34,7 @@ data Config =
         , dbPort :: Int
         }
   deriving (Show, Eq, Generic)
-    deriving anyclass GP.PrettyShow
+  deriving anyclass (GP.PrettyShow)
 
 defaultPort :: Int
 defaultPort = 5555
@@ -70,14 +70,15 @@ configHandlers h =
         , C.Handler (handleOthers h)
         ]
 
-logThenTerminate :: L.LoggerHandler IO -> C.Handler IO a -> C.Handler IO b
+logThenTerminate ::
+       L.LoggerHandler IO -> C.Handler IO a -> C.Handler IO b
 logThenTerminate logger (C.Handler g) =
-    let msg = 
-         "Failed to get required data from configuration files, terminating..."
+    let msg =
+            "Failed to get required data from configuration files, terminating..."
      in C.Handler $ \e -> do
-        _ <- g e
-        L.logFatal logger msg
-        Q.exitWith $ Q.ExitFailure 1
+            _ <- g e
+            L.logFatal logger msg
+            Q.exitWith $ Q.ExitFailure 1
 
 handleIOError :: L.LoggerHandler IO -> E.IOException -> IO ()
 handleIOError logger exc

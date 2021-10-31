@@ -1,11 +1,11 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE FlexibleContexts #-}
 
-module Database.HasTags (
-HasTags(..),
-HPost(..),
-HDraft(..)
-) where
+module Database.HasTags
+    ( HasTags(..)
+    , HPost(..)
+    , HDraft(..)
+    ) where
 
 import qualified Data.Text as T (Text)
 import qualified Database.PostgreSQL.Simple as PS

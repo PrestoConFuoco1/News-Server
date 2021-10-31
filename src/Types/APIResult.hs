@@ -1,11 +1,13 @@
 {-# LANGUAGE ExistentialQuantification #-}
 
-module Types.APIResult (
-APIResult(..), logResult, RGettable(..)
-) where
+module Types.APIResult
+    ( APIResult(..)
+    , logResult
+    , RGettable(..)
+    ) where
 
 import qualified Data.Text as T
-import Types.Entity (Entity, User, Gettable)
+import Types.Entity (Entity, Gettable, User)
 
 import GHC.Generics
 import qualified GenericPretty as GP

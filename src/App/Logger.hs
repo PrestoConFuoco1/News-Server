@@ -21,10 +21,10 @@ import qualified Data.Text as T (Text, pack)
 import qualified Data.Text.IO as T (hPutStrLn)
 import qualified GHC.IO.Handle.Lock as Lk
 import Prelude hiding (log)
-import qualified Utils as S (showText)
 import qualified System.Exit as Q (ExitCode(..), exitWith)
 import qualified System.IO as S
 import qualified System.IO.Error as IOE
+import qualified Utils as S (showText)
 
 newtype LoggerHandler m =
     LoggerHandler

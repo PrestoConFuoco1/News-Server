@@ -1,8 +1,8 @@
-module Action.Authors (
-createAuthorToAction,
-deleteAuthorToAction,
-editAuthorToAction,
-) where
+module Action.Authors
+    ( createAuthorToAction
+    , deleteAuthorToAction
+    , editAuthorToAction
+    ) where
 
 import Action.Common (Router)
 import qualified Action.Utils as AU

@@ -1,6 +1,9 @@
 {-# LANGUAGE TemplateHaskell, RecordWildCards #-}
 
-module Migrations (migrationMain, Config(..)) where
+module Migrations
+    ( migrationMain
+    , Config(..)
+    ) where
 
 import Control.Monad (forM_)
 import qualified Data.ByteString as BS

@@ -1,8 +1,8 @@
-module Action.Comments (
-getCommentsToAction,
-createCommentsToAction,
-deleteCommentsToAction
-) where
+module Action.Comments
+    ( getCommentsToAction
+    , createCommentsToAction
+    , deleteCommentsToAction
+    ) where
 
 import Action.Common (Router)
 import qualified Action.Utils as AU

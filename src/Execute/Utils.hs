@@ -1,12 +1,12 @@
-module Execute.Utils (
-modifyErrorToApiResult,
-withAuthor,
-withAuthAdmin,
-withAuth,
-maybeUserToUser,
-getUser,
-authenticate
-) where
+module Execute.Utils
+    ( modifyErrorToApiResult
+    , withAuthor
+    , withAuthAdmin
+    , withAuth
+    , maybeUserToUser
+    , getUser
+    , authenticate
+    ) where
 
 import qualified App.Database as D
 import Control.Monad (when)

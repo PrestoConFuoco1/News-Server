@@ -1,13 +1,13 @@
 {-# LANGUAGE ExistentialQuantification, RankNTypes #-}
 
-module App.Database (
-Handle(..),
-logDebug,
-logInfo,
-logWarning,
-logError,
-logFatal
-) where
+module App.Database
+    ( Handle(..)
+    , logDebug
+    , logInfo
+    , logWarning
+    , logError
+    , logFatal
+    ) where
 
 import qualified App.Logger as L
 import qualified Data.Text as T

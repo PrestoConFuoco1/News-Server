@@ -1,16 +1,16 @@
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DerivingVia #-}
 
-module Types.Draft (
-DraftId,
-EditDraft(..),
-EditDraftPublish(..),
-GetDrafts(..),
-Publish(..),
-DeleteDraft(..),
-CreateDraft(..),
-ActionDrafts
-) where
+module Types.Draft
+    ( DraftId
+    , EditDraft(..)
+    , EditDraftPublish(..)
+    , GetDrafts(..)
+    , Publish(..)
+    , DeleteDraft(..)
+    , CreateDraft(..)
+    , ActionDrafts
+    ) where
 
 import qualified Data.Text as T
 import qualified Database.PostgreSQL.Simple as PS
@@ -41,7 +41,7 @@ data CreateDraft =
 data GetDrafts =
     GetDrafts
   deriving (Show, Eq, Generic)
-    deriving GP.PrettyShow via GP.Showable GetDrafts
+  deriving GP.PrettyShow via GP.Showable GetDrafts
 
 data EditDraft =
     EditDraft

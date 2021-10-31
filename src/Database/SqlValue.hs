@@ -1,8 +1,8 @@
 {-# LANGUAGE ExistentialQuantification #-}
 
-module Database.SqlValue (
-SqlValue(..)
-) where
+module Database.SqlValue
+    ( SqlValue(..)
+    ) where
 
 import qualified Database.PostgreSQL.Simple.ToField as PSF
 import GenericPretty

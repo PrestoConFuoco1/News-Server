@@ -2,11 +2,11 @@
 {-# LANGUAGE DerivingVia #-}
 {-# LANGUAGE DeriveAnyClass #-}
 
-module RunOptions (
-RunOptions(..),
-getOptsIO,
-toLoggerFilter,
-) where
+module RunOptions
+    ( RunOptions(..)
+    , getOptsIO
+    , toLoggerFilter
+    ) where
 
 import qualified App.Logger as L
 import qualified Data.Text as T
@@ -18,7 +18,7 @@ data LoggerSettings
     = LogAll
     | LogGreaterThan L.Priority
   deriving (Show, Eq)
-    deriving GP.PrettyShow via GP.Showable LoggerSettings
+  deriving GP.PrettyShow via GP.Showable LoggerSettings
 
 toLoggerFilter :: LoggerSettings -> (L.Priority -> Bool)
 toLoggerFilter LogAll = const True
@@ -33,7 +33,7 @@ data RunOptions =
         , testConfig :: Bool
         }
   deriving (Show, Eq, Generic)
-    deriving anyclass GP.PrettyShow
+  deriving anyclass (GP.PrettyShow)
 
 --for ghci
 ghciRunOpts :: RunOptions

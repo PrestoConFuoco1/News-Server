@@ -46,6 +46,7 @@ library
       Database.Read
       Database.SqlValue
       Database.Update
+      DerivingJSON
       Exceptions
       Execute
       Execute.Database

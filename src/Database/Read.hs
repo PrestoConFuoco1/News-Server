@@ -2,9 +2,10 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 
-module Database.Read (
-Read(..), pageingClause
-) where
+module Database.Read
+    ( Read(..)
+    , pageingClause
+    ) where
 
 import qualified Data.Aeson as Ae
 import Data.Maybe (catMaybes)

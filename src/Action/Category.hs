@@ -1,8 +1,8 @@
-module Action.Category (
-createCatsToAction,
-editCatsToAction,
-deleteCatsToAction
-) where
+module Action.Category
+    ( createCatsToAction
+    , editCatsToAction
+    , deleteCatsToAction
+    ) where
 
 import Action.Common (Router)
 import qualified Action.Utils as AU

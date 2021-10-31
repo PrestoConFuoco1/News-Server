@@ -1,8 +1,8 @@
 {-# LANGUAGE DeriveAnyClass #-}
 
-module Result (
 module Result
-) where
+    ( module Result
+    ) where
 
 import qualified Data.Aeson as Ae (ToJSON(..), Value)
 import qualified Data.Text as T

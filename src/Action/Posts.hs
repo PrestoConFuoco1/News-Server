@@ -1,6 +1,7 @@
-module Action.Posts (
-getPostsAction, actionWithPost
-) where
+module Action.Posts
+    ( getPostsAction
+    , actionWithPost
+    ) where
 
 import Action.Common
 import qualified Action.Utils as AU

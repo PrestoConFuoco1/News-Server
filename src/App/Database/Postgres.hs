@@ -1,11 +1,11 @@
 {-# LANGUAGE RecordWildCards, DeriveAnyClass, TypeApplications #-}
 
-module App.Database.Postgres (
-Config(..),
-withPostgresHandle,
-Resources(..),
-resourcesToHandle
-) where
+module App.Database.Postgres
+    ( Config(..)
+    , withPostgresHandle
+    , Resources(..)
+    , resourcesToHandle
+    ) where
 
 import App.Database (Handle(..))
 import qualified App.Logger as L

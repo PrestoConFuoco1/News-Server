@@ -1,24 +1,24 @@
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DerivingVia #-}
 
-module Types.Posts (
-PostId,
-CommentId,
-PublishEditPost(..),
-GetComments(..),
-SearchOptions(..),
-TagsOptions(..),
-CreationDateOptions(..),
-SortOptions(..),
-SortOrder(..),
-SortEntity(..),
-GetPosts(..),
-DeleteComment(..),
-CreateComment(..),
-ActionPosts,
-ActionPosts1(..),
-ActionComments
-) where
+module Types.Posts
+    ( PostId
+    , CommentId
+    , PublishEditPost(..)
+    , GetComments(..)
+    , SearchOptions(..)
+    , TagsOptions(..)
+    , CreationDateOptions(..)
+    , SortOptions(..)
+    , SortOrder(..)
+    , SortEntity(..)
+    , GetPosts(..)
+    , DeleteComment(..)
+    , CreateComment(..)
+    , ActionPosts
+    , ActionPosts1(..)
+    , ActionComments
+    ) where
 
 import Prelude hiding (readList)
 import Types.Common (CRUD, Paginated)
@@ -44,7 +44,7 @@ newtype GetComments =
         { _gc_postId :: PostId
         }
   deriving (Show, Eq, Generic)
-    deriving anyclass GP.PrettyShow
+  deriving anyclass (GP.PrettyShow)
 
 data CreateComment =
     CreateComment
@@ -85,26 +85,26 @@ data GetPosts =
         , _gp_sort :: SortOptions
         }
   deriving (Show, Eq, Generic)
-    deriving anyclass GP.PrettyShow
+  deriving anyclass (GP.PrettyShow)
 
 data CreationDateOptions
     = Created Time.Day
     | CreatedEarlier Time.Day
     | CreatedLater Time.Day
   deriving (Show, Eq, Generic)
-    deriving GP.PrettyShow via GP.Showable CreationDateOptions
+  deriving GP.PrettyShow via GP.Showable CreationDateOptions
 
 data TagsOptions
     = OneTag TagId
     | TagsIn [TagId]
     | TagsAll [TagId]
   deriving (Show, Eq, Generic)
-    deriving GP.PrettyShow via GP.Showable TagsOptions
+  deriving GP.PrettyShow via GP.Showable TagsOptions
 
 newtype SearchOptions =
     SearchOptions T.Text
   deriving (Show, Eq, Generic)
-    deriving GP.PrettyShow via GP.Showable SearchOptions
+  deriving GP.PrettyShow via GP.Showable SearchOptions
 
 data SortEntity
     = SEDate
@@ -112,6 +112,7 @@ data SortEntity
     | SECategory
     | SEPhotoNumber
   deriving (Show, Eq)
+
 instance GP.PrettyShow SortEntity where
     prettyShow = GP.layoutStr . drop 2 . show
 
@@ -119,9 +120,9 @@ data SortOrder
     = SOAscending
     | SODescending
   deriving (Show, Eq)
+
 instance GP.PrettyShow SortOrder where
     prettyShow = GP.layoutStr . drop 2 . show
-
 
 data SortOptions =
     SortOptions
@@ -129,6 +130,5 @@ data SortOptions =
         , _so_order :: SortOrder
         }
   deriving (Show, Eq, Generic)
-    deriving anyclass GP.PrettyShow
-
+  deriving anyclass (GP.PrettyShow)
 

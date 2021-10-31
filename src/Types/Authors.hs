@@ -1,14 +1,14 @@
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DerivingVia #-}
 
-module Types.Authors (
-AuthorId,
-EditAuthor(..),
-GetAuthors(..),
-DeleteAuthor(..),
-CreateAuthor(..),
-ActionAuthors
-) where
+module Types.Authors
+    ( AuthorId
+    , EditAuthor(..)
+    , GetAuthors(..)
+    , DeleteAuthor(..)
+    , CreateAuthor(..)
+    , ActionAuthors
+    ) where
 
 import qualified Data.Text as T
 import GHC.Generics
@@ -26,7 +26,7 @@ newtype GetAuthors =
         { _ga_userId :: Maybe UserId
         }
   deriving (Show, Eq, Generic)
-    deriving GP.PrettyShow via GP.Showable GetAuthors
+  deriving GP.PrettyShow via GP.Showable GetAuthors
 
 data CreateAuthor =
     CreateAuthor

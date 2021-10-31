@@ -40,7 +40,7 @@ newtype Token =
         { _t_token :: T.Text
         }
   deriving (Show, Eq, PST.ToField)
-    deriving GP.PrettyShow via GP.Showable Token
+  deriving GP.PrettyShow via GP.Showable Token
 
 data WhoWhat a =
     WhoWhat
