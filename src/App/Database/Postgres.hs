@@ -16,7 +16,7 @@ import Database
 import qualified Database.PostgreSQL.Simple as PS
 import GHC.Generics
 import qualified GenericPretty as GP
-import qualified IO.Postgres as IOP
+import qualified App.Database.Postgres.Internal as IOP
 import qualified Types as Y
 
 data Config =
