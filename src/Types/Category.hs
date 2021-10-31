@@ -21,8 +21,10 @@ type CategoryId = Int
 type ActionCategory
      = CRUD CreateCategory (Paginated GetCategories) EditCategory DeleteCategory
 
-data GetCategories =
+newtype GetCategories =
     GetCategories
+        { _gc_catId :: Maybe CategoryId
+        }
   deriving (Show, Eq, Generic)
   deriving GP.PrettyShow via GP.Showable GetCategories
 

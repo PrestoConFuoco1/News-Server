@@ -18,6 +18,7 @@ import Database.SqlValue
 import qualified GenericPretty as GP (PrettyShow(..))
 import Prelude hiding (Read)
 import qualified Types as Y
+import qualified Utils as S
 
 class ( Ae.ToJSON (MType a)
       , GP.PrettyShow (MType a)
@@ -135,24 +136,27 @@ enclose p qu = p <> qu <> p
 
 instance Read Y.GetCategories where
     type MType Y.GetCategories = Y.Category
-    selectQuery Y.GetCategories =
+    selectQuery (Y.GetCategories mCatId) =
         let selectClause =
                 "SELECT catids, catnames FROM news.get_categories"
             args = []
-         in (selectClause, args)
+            whereClause = " WHERE category_id = ? "
+         in S.withMaybe mCatId (selectClause, args) $ \cid ->
+                (selectClause <> whereClause, args ++ [SqlValue cid])
 
 instance Read Y.GetAuthors where
     type MType Y.GetAuthors = Y.Author
     selectQuery (Y.GetAuthors mUser) =
         let selectClause =
                 "SELECT author_id, description, user_id, firstname, lastname, \
-                           \ image, login, pass, creation_date, NULL as is_admin FROM news.get_authors "
+                           \ image, login, pass, creation_date, NULL as is_admin \
+                           \ FROM news.get_authors "
             args = []
             whereClause = " WHERE user_id = ? "
          in case mUser of
                 Nothing -> (selectClause, args)
                 Just user ->
-                    (selectClause <> whereClause, [SqlValue user])
+                    (selectClause <> whereClause, args ++ [SqlValue user])
 
 instance Read Y.GetTags where
     type MType Y.GetTags = Y.Tag

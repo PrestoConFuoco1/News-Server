@@ -1,6 +1,7 @@
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DerivingStrategies #-}
 {-# LANGUAGE DerivingVia #-}
+{-# LANGUAGE RecordWildCards #-}
 
 module Types.Entity
     ( Entity(..)
@@ -14,6 +15,7 @@ module Types.Entity
     , DraftRaw(..)
     , Author(..)
     , Post(..)
+    , getCategoryParents
     ) where
 
 import qualified Data.Aeson as Ae
@@ -102,6 +104,10 @@ listToCategory ((catId, txt):xs) =
     Category catId txt $ foldr f Nothing xs
   where
     f (cid, t) cat = Just $ Category cid t cat
+
+getCategoryParents :: Category -> [CategoryId]
+getCategoryParents Category {..} =
+    _cat_categoryId : maybe [] getCategoryParents _cat_parentCategory
 
 data Post =
     Post

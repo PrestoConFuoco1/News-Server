@@ -150,7 +150,7 @@ requestToActionCats path hash =
             | x == "get" ->
                 fmap Y.Read $
                 runRouter (renv False hash) $
-                AU.withPagination (pure Y.GetCategories)
+                AU.withPagination (pure $ Y.GetCategories Nothing)
             | x == "create" ->
                 Y.Create <$>
                 runRouter (renv True hash) createCatsToAction

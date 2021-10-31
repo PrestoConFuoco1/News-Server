@@ -28,12 +28,8 @@ userAuthor ::
     -> Y.User
     -> IO (Maybe Y.Author)
 userAuthor con logger u = do
-    as <-
-        getThis
-            @Y.GetAuthors
-            con
-            logger
-            (Y.GetAuthors $ Just $ Y._u_id u)
+    let getauthors = (Y.GetAuthors $ Just $ Y._u_id u)
+    as <- getThis @Y.GetAuthors con logger getauthors
     case as of
         [] -> pure Nothing
         [a] -> pure $ Just a
@@ -84,6 +80,15 @@ addToken con logger uid token = do
         _ <- PS.execute con str params
         pure token'
 
+getCategoryById :: PS.Connection -> L.LoggerHandler IO -> Y.CategoryId -> IO (Maybe Y.Category)
+getCategoryById con logger cid = do
+    let getcats = Y.GetCategories { Y._gc_catId = Just cid }
+    cats <- getThis con logger getcats
+    case cats of
+        [] -> pure Nothing
+        [c] -> pure $ Just c
+        _ -> Ex.throwInvalidUnique Y.ECategory $ map Y._cat_categoryId cats
+
 getThisPaginated ::
        (Read a)
     => PS.Connection
@@ -119,7 +124,7 @@ editThis ::
     -> IO (Either Y.ModifyError Int)
 editThis con logger u =
     case updateParams u of
-        Nothing -> Ex.throwInvalidUpdate
+        Nothing -> Ex.throwInvalidUpdate "no properties to update"
         Just (q, vals) -> do
             let str = updateQuery @a q
                 params = vals ++ identifParams u

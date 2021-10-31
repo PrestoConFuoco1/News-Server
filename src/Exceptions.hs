@@ -11,7 +11,7 @@ import Control.Monad.Catch as CMC
     , catches
     , throwM
     )
-import qualified Data.Text as T (pack)
+import qualified Data.Text as T (pack, Text)
 import Database.PostgreSQL.Simple as PS
     ( FormatError
     , Query
@@ -38,7 +38,7 @@ data ServerException
     | InvalidLogin
     | InvalidPassword
     | NotAnAuthor
-    | InvalidUpdate
+    | InvalidUpdate T.Text
     | TokenShared [Int]
   deriving (Show, Eq)
 
@@ -68,8 +68,8 @@ mainErrorHandler' _ (InvalidUniqueEntities _ _) =
     pure $ U.internal U.internalErrorMsg
 mainErrorHandler' _ Forbidden = pure $ U.bad U.invalidEndpointMsg
 mainErrorHandler' _ InvalidLogin = pure $ U.bad U.invalidLoginMsg
-mainErrorHandler' _ InvalidUpdate =
-    pure $ U.bad "invalid data to update"
+mainErrorHandler' _ (InvalidUpdate details)=
+    pure $ U.bad $ "invalid data to update: " <> details
 mainErrorHandler' _ InvalidPassword =
     pure $ U.bad U.invalidPasswordMsg
 mainErrorHandler' _ NotAnAuthor = pure $ U.bad U.notAnAuthorMsg
@@ -81,8 +81,8 @@ instance CMC.Exception ServerException
 throwTokenShared :: (MonadThrow m) => [Int] -> m a
 throwTokenShared lst = CMC.throwM $ TokenShared lst
 
-throwInvalidUpdate :: (MonadThrow m) => m a
-throwInvalidUpdate = CMC.throwM InvalidUpdate
+throwInvalidUpdate :: (MonadThrow m) => T.Text -> m a
+throwInvalidUpdate = CMC.throwM . InvalidUpdate
 
 throwUnauthorized :: (MonadThrow m) => m a
 throwUnauthorized = CMC.throwM Unauthorized
