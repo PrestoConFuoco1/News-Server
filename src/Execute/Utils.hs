@@ -1,12 +1,13 @@
 module Execute.Utils
-    ( modifyErrorToApiResult
-    , withAuthor
+    --( modifyErrorToApiResult
+    ( withAuthor
     , withAuthAdmin
     , withAuth
     , maybeUserToUser
     , getUser
     , authenticate
     , checkCategoryUpdate
+    , checkCategoryCycles
     ) where
 
 import qualified App.Database as D
@@ -103,15 +104,6 @@ authenticate h auth = do
     token' <- D.addToken h (D.log h) (Y._u_id user) token
     pure $ Y.RGetToken token'
 
-modifyErrorToApiResult :: Y.Entity -> Y.ModifyError -> Y.APIResult
-modifyErrorToApiResult ent (Y.MAlreadyInUse (Y.UniqueViolation field value)) =
-    Y.RAlreadyInUse ent field value
-modifyErrorToApiResult ent (Y.MInvalidForeign (Y.ForeignViolation field value)) =
-    Y.RInvalidForeign ent field value
-modifyErrorToApiResult ent Y.MConstraintViolated {..} =
-    
-modifyErrorToApiResult ent Y.MNoAction = Y.RNotFound ent
-
 checkCategoryUpdate :: (CMC.MonadThrow m) => D.Handle m -> Y.EditCategory -> m (Maybe Y.ModifyError)
 checkCategoryUpdate h editCat = do
     let funcName = "checkCategoryUpdate: "
@@ -119,8 +111,10 @@ checkCategoryUpdate h editCat = do
     D.logDebug h $ funcName <> GP.textPretty editCat
     S.withMaybe (Y._ec_parentId editCat) (pure Nothing) $ \parentCatId -> do
         mParentCat <- D.getCategoryById h (D.log h) parentCatId
+        D.logDebug h $ funcName <> "parent cat is:"
+        D.logDebug h $ funcName <> GP.textPretty mParentCat
         S.withMaybe mParentCat
-            (pure $ Just $ Y.MInvalidForeign $ Y.ForeignViolation "check_parent_id" $ S.showText parentCatId)
+            (pure $ Just $ Y.MInvalidForeign $ Y.ForeignViolation "parent_id" $ S.showText parentCatId)
             (pure . checkCategoryCycles (Y._ec_catId editCat))
 
 checkCategoryCycles :: Y.CategoryId -> Y.Category -> Maybe Y.ModifyError
@@ -129,41 +123,6 @@ checkCategoryCycles cid newParentCat =
         then Just $ Y.MConstraintViolated $ Y.ConstraintViolation {
             Y._cv_field = "parent_id"
             , Y._cv_value = S.showText $ Y._cat_categoryId newParentCat
-            , Y._cv_description = "failed: categories form a cycle"
+            , Y._cv_description = "categories form a cycle"
             }
         else Nothing
-
-{-
-checkCategoryCycles cid newParentCat =
-    if cyclesOk newParentCat
-        then Nothing
-        else Just $ Y.MInvalidForeign $ Y.ForeignViolation "cycles_parent_id" $ S.showText $ Y._cat_categoryId newParentCat
-  where cyclesOk cat
-            | cid == Y._cat_categoryId cat = False
-            | otherwise = S.withMaybe (Y._cat_parentCategory cat) True cyclesOk
--}
-
-testCat = Y.Category {
-    Y._cat_categoryId = 3
-    , Y._cat_description = "category_level3"
-    , Y._cat_parentCategory = Just Y.Category {
-        Y._cat_categoryId = 2
-        , Y._cat_description = "category_level2"
-        , Y._cat_parentCategory = Just Y.Category {
-            Y._cat_categoryId = 1
-            , Y._cat_description = "category_level1"
-            , Y._cat_parentCategory = Nothing
-            }
-        }
-
-    }
-
-{-
-    D.logDebug h $ funcName <> "checking for the category editing correctness"
-    D.logDebug h $ funcName <> "action is:"
-    D.logDebug h $ funcName <> GP.textPretty editCat
-    --mCatToEdit <- 
-    D.logDebug h $ funcName <> "the category to be edited is"
-    D.logDebug h $ funcName <> "currently no real check is performed"
-    return ()
--}

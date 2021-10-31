@@ -109,7 +109,7 @@ testCategoriesRouting = do
     describe "categories routing" $ do
         it "correctly handles getting categories" $
             requestToAction ["categories", "get"] [] `shouldBe`
-            Right (WhoWhat Nothing $ ACategory $ Read $ Paginated defaultPage defaultSize $ GetCategories)
+            Right (WhoWhat Nothing $ ACategory $ Read $ Paginated defaultPage defaultSize $ GetCategories Nothing)
 
         it "correctly handles creating categories" $
             requestToAction ["categories", "create"] [("name", Just "catName1"), ("parent_id", Just "2")]

@@ -6,16 +6,16 @@ import Prelude hiding (log)
 import Types
 import qualified Utils as S
 
-noUserByToken :: L.Handle IO -> Token -> IO (Maybe User)
+noUserByToken :: L.LoggerHandler IO -> Token -> IO (Maybe User)
 noUserByToken _ _ = return Nothing
 
-notAdminByToken :: L.Handle IO -> Token -> IO (Maybe User)
+notAdminByToken :: L.LoggerHandler IO -> Token -> IO (Maybe User)
 notAdminByToken _ _ = return (Just $ User { _u_admin = Just False })
 
-adminByToken :: L.Handle IO -> Token -> IO (Maybe User)
+adminByToken :: L.LoggerHandler IO -> Token -> IO (Maybe User)
 adminByToken _ _ = return (Just $ User { _u_admin = Just True })
 
-userByToken :: L.Handle IO -> Token -> IO (Maybe User)
+userByToken :: L.LoggerHandler IO -> Token -> IO (Maybe User)
 userByToken _ _ = return $ Just defaultUser
 
 fromJust (Just x) = x

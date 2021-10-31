@@ -8,7 +8,7 @@ module Types.APIResult
 
 import qualified Data.Text as T
 import Types.Entity (Entity, Gettable, User)
-
+import Types.APIErrors (ModifyError)
 import GHC.Generics
 import qualified GenericPretty as GP
 import Prelude as P
@@ -21,9 +21,10 @@ data APIResult
     | RCreated Entity Int
     | REdited Entity Int
     | RDeleted Entity Int
-    | RNotFound Entity
-    | RAlreadyInUse Entity T.Text T.Text
-    | RInvalidForeign Entity T.Text T.Text
+    | RFailed Entity ModifyError
+--    | RNotFound Entity
+--    | RAlreadyInUse Entity T.Text T.Text
+--    | RInvalidForeign Entity T.Text T.Text
     | RInvalidTag T.Text
   deriving (Show, Generic)
 

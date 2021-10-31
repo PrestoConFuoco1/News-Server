@@ -109,25 +109,11 @@ executeCategory h (Y.WhoWhat token (Y.Update x)) = do
     U.withAuthAdmin h token
     mModifError <- U.checkCategoryUpdate h x
     let action = editThis Y.ECategory (D.editCategory h (D.log h)) x
-    maybe action (pure . U.modifyErrorToApiResult Y.ECategory) mModifError
+    maybe action (pure . Y.RFailed Y.ECategory) mModifError
 
 executeCategory h (Y.WhoWhat token (Y.Delete x)) =
     U.withAuthAdmin h token >>
     deleteThis Y.ECategory (D.deleteCategory h (D.log h)) x
-
-{-
-updateCategory ::
-       CMC.MonadCatch m
-    => D.Handle m
-    -> Y.EditCategory
-    -> m Y.APIResult
-updateCategory h editcat = do
-    let funcName = "updateCategory: "
-    mCatToEdit <- D.getCategoryById h (D.log h) (Y._ec_parentId editcat)
-    S.withMaybe mCatToEdit (pure $ Y.RNotFound Y.ECategory) $ \cat -> do
-        U.checkCategoryUpdate h cat editcat
-        editThis Y.ECategory (D.editCategory h (D.log h)) editcat
--}
 
 executeUsers ::
        CMC.MonadCatch m

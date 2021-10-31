@@ -11,13 +11,12 @@ import qualified App.Logger as L
 import qualified Control.Monad.Catch as CMC
 import qualified Data.Text as T (Text, pack)
 import qualified Exceptions as Ex
-import Execute.Utils (modifyErrorToApiResult)
 import qualified Types as Y
 import qualified Utils as S
 
 draftModifyErrorToApiResult :: Y.DraftModifyError -> Y.APIResult
 draftModifyErrorToApiResult (Y.DModifyError x) =
-    modifyErrorToApiResult Y.EDraft x
+    Y.RFailed Y.EDraft x
 draftModifyErrorToApiResult (Y.DTagsError (Y.TagsAttachError (Y.ForeignViolation _ value))) =
     Y.RInvalidTag value
 
@@ -84,7 +83,7 @@ publish h x@(Y.WithAuthor _ Y.Publish {}) =
     D.withTransaction h $ do
         eithDraft <- D.getDraftRaw h (D.log h) x
         case eithDraft of
-            Nothing -> pure $ Y.RNotFound Y.EDraft
+            Nothing -> pure $ Y.RFailed Y.EDraft Y.MNoAction
             Just draft ->
                 case Y._dr_postId draft of
                     Nothing -> publishCreate h draft

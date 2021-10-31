@@ -133,6 +133,7 @@ test-suite warpt3-test
   main-is: Spec.hs
   other-modules:
       AuthenticationLogic
+      CategoryEditCheck
       Handlers
       Routing
       Paths_warpt3
