@@ -18,10 +18,8 @@ import Data.Void (absurd)
 import Execute.Database (createThis, deleteThis, editThis, getThis)
 import Execute.Draft (createDraft, editDraft, publish)
 import qualified Execute.Utils as U
-import qualified GenericPretty as GP
 import qualified Result as R
 import qualified Types as T
-import qualified Utils as S
 
 executeAction ::
        CMC.MonadCatch m
@@ -60,6 +58,11 @@ executePosts _ (T.WhoWhat _ (T.AP (T.Create x))) = pure $ absurd x
 executePosts _ (T.WhoWhat _ (T.AP (T.Update x))) = pure $ absurd x
 executePosts _ (T.WhoWhat _ (T.AP (T.Delete x))) = pure $ absurd x
 
+executeAuthor ::
+       CMC.MonadCatch m
+    => D.Handle m
+    -> T.WhoWhat T.ActionAuthors
+    -> m T.APIResult
 executeAuthor h (T.WhoWhat token crud) = do
     let logger = D.log h
         authH = D.authHandler h

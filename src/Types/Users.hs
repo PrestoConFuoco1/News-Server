@@ -15,7 +15,7 @@ import Data.Void
 import qualified Database.PostgreSQL.Simple as PS
 import GHC.Generics
 import qualified GenericPretty as GP
-import Types.Common (CRUD, Paginated)
+import Types.Common (CRUD)
 
 type UserId = Int
 

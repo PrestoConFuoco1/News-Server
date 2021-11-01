@@ -4,7 +4,7 @@
 
 module Types.Entity
     ( Entity(..)
-    , Gettable(..)
+    , Gettable
     , User(..)
     , showEText
     , Tag(..)

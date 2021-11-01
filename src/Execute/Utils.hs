@@ -66,7 +66,7 @@ checkAdmin ::
     -> L.LoggerHandler m
     -> Maybe T.User
     -> m ()
-checkAdmin h logger muser = do
+checkAdmin _ logger muser = do
     let fname = "checkAdmin: "
     case muser of
         Nothing -> do
@@ -90,12 +90,12 @@ maybeUserToUser ::
     -> L.LoggerHandler m
     -> Maybe T.User
     -> m T.User
-maybeUserToUser h logger Nothing = do
+maybeUserToUser _ logger Nothing = do
     let fname = "maybeUserToUser: "
     L.logDebug logger $
         fname <> "no user found, throwing unauthorized"
     Ex.throwUnauthorized
-maybeUserToUser h logger (Just u) = do
+maybeUserToUser _ logger (Just u) = do
     let fname = "maybeUserToUser: "
     L.logDebug logger $ fname <> "found user"
     L.logDebug logger $ GP.textPretty u

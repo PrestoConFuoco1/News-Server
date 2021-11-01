@@ -6,6 +6,7 @@ module Types.Common
 
 import GHC.Generics
 import qualified GenericPretty as GP
+import Prelude hiding (Read, read)
 
 data CRUD c r u d
     = Create c
