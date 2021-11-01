@@ -1,3 +1,5 @@
+{-# LANGUAGE DeriveFunctor #-}
+
 module Types.Common
     ( CRUD(..)
     , Paginated(..)
@@ -42,6 +44,6 @@ data Paginated a =
         , _pag_size :: Int
         , _pag_data :: a
         }
-  deriving (Show, Eq, Generic)
+  deriving (Show, Eq, Generic, Functor)
 
 instance GP.PrettyShow a => GP.PrettyShow (Paginated a)

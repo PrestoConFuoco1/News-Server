@@ -10,7 +10,7 @@ import qualified Control.Monad.Catch as CMC
     ( MonadCatch
     , MonadCatch
     , SomeException
-    , catch
+    , handle
     )
 import qualified Data.ByteString as BS (ByteString)
 import qualified Data.Text.Encoding as E (decodeUtf8)
@@ -20,30 +20,25 @@ import Execute.Draft (createDraft, editDraft, publish)
 import qualified Execute.Utils as U
 import qualified Result as R
 import qualified Types as T
+import Prelude hiding (read)
 
 executeAction ::
        CMC.MonadCatch m
     => D.Handle m
     -> T.WhoWhat Action
     -> m T.APIResult
-executeAction h (T.WhoWhat token (AAuthors x)) =
-    executeAuthor h (T.WhoWhat token x)
-executeAction h (T.WhoWhat token (ACategory x)) =
-    executeCategory h (T.WhoWhat token x)
-executeAction h (T.WhoWhat token (APosts x)) =
-    executePosts h (T.WhoWhat token x)
-executeAction h (T.WhoWhat token (ATags x)) =
-    executeTags h (T.WhoWhat token x)
-executeAction h (T.WhoWhat token (AUsers x)) =
-    executeUsers h (T.WhoWhat token x)
-executeAction h (T.WhoWhat _ (AAuth x)) =
-    U.authenticate (D.authHandler h) (D.log h) x
-executeAction h (T.WhoWhat token (AComments x)) =
-    executeComments h (T.WhoWhat token x)
-executeAction h (T.WhoWhat token (ADrafts x)) =
-    executeDraft h (T.WhoWhat token x)
-executeAction h (T.WhoWhat token (APublish x)) =
-    executePublish h (T.WhoWhat token x)
+executeAction h (T.WhoWhat token action) =
+  let withToken f arg = f h (T.WhoWhat token arg)
+  in case action of
+    AAuthors x -> withToken executeAuthor x
+    ACategory x -> withToken executeCategory x
+    APosts x -> withToken executePosts x
+    ATags x -> withToken executeTags x
+    AUsers x -> withToken executeUsers x
+    AAuth x -> U.authenticate (D.authHandler h) (D.log h) x
+    AComments x -> withToken executeComments x
+    ADrafts x -> withToken executeDraft x
+    APublish x -> withToken executePublish x
 
 executePosts ::
        CMC.MonadCatch m
@@ -52,11 +47,13 @@ executePosts ::
     -> m T.APIResult
 executePosts h (T.WhoWhat _ (T.GC x)) =
     getThis (D.getComments (D.commentsHandler h) (D.log h)) x
-executePosts h (T.WhoWhat _ (T.AP (T.Read x))) = do
-    getThis (D.getPosts h (D.log h)) x
-executePosts _ (T.WhoWhat _ (T.AP (T.Create x))) = pure $ absurd x
-executePosts _ (T.WhoWhat _ (T.AP (T.Update x))) = pure $ absurd x
-executePosts _ (T.WhoWhat _ (T.AP (T.Delete x))) = pure $ absurd x
+executePosts h (T.WhoWhat _ (T.AP crud)) =
+    T.foldCRUD
+        crud
+        absurd
+        (getThis $ D.getPosts h (D.log h))
+        absurd
+        absurd
 
 executeAuthor ::
        CMC.MonadCatch m
@@ -97,27 +94,29 @@ executeCategory ::
     => D.Handle m
     -> T.WhoWhat T.ActionCategory
     -> m T.APIResult
-executeCategory h (T.WhoWhat token crud) = do
-    let logger = D.log h
-        authH = D.authHandler h
-        catsH = D.catsHandler h
-        withAdmin = (U.withAuthAdmin authH logger token >>)
+executeCategory h (T.WhoWhat token crud) =
     T.foldCRUD
         crud
         (withAdmin .
          createThis T.ECategory (D.createCategory catsH logger))
         (getThis $ D.getCategories catsH logger)
-        (\u -> do
-             U.withAuthAdmin authH logger token
-             mModifError <- U.checkCategoryUpdate catsH logger u
-             let action =
-                     editThis
-                         T.ECategory
-                         (D.editCategory catsH logger)
-                         u
-             maybe action (pure . T.RFailed T.ECategory) mModifError)
+        update
         (withAdmin .
          deleteThis T.ECategory (D.deleteCategory catsH logger))
+  where
+    logger = D.log h
+    authH = D.authHandler h
+    catsH = D.catsHandler h
+    withAdmin = (U.withAuthAdmin authH logger token >>)
+
+    update u = do
+        U.withAuthAdmin authH logger token
+        mModifError <- U.checkCategoryUpdate catsH logger u
+        let action =
+              editThis
+                T.ECategory (D.editCategory catsH logger) u
+        maybe action (pure . T.RFailed T.ECategory) mModifError
+
 
 executeUsers ::
        CMC.MonadCatch m
@@ -134,7 +133,7 @@ executeUsers h (T.WhoWhat token crud) = do
         (\_ -> do
              mUser <- U.withAuth authH logger token
              U.getUser authH logger mUser)
-        (pure . absurd)
+        absurd
         (withAdmin . deleteThis T.EUser (D.deleteUser authH logger))
 
 executeComments ::
@@ -146,44 +145,44 @@ executeComments h (T.WhoWhat token crud) = do
     let logger = D.log h
         authH = D.authHandler h
         commentsH = D.commentsHandler h
+        withUser action x = do
+            user <- U.withUser authH logger token
+            action $ T.WithUser user x
     T.foldCRUD
         crud
-        (\c -> do
-             mUser <- U.withAuth authH logger token
-             user <- U.maybeUserToUser authH logger mUser
-             createThis T.EComment (D.createComment commentsH logger) $
-                 T.WithUser user c)
+        (withUser $ createThis T.EComment (D.createComment commentsH logger))
         (getThis $ D.getComments commentsH logger)
-        (pure . absurd)
-        (\d -> do
-             mUser <- U.withAuth authH logger token
-             user <- U.maybeUserToUser authH logger mUser
-             deleteThis T.EComment (D.deleteComment commentsH logger) $
-                 T.WithUser user d)
+        absurd
+        (withUser $ deleteThis T.EComment (D.deleteComment commentsH logger))
 
 executeDraft ::
        (CMC.MonadCatch m)
     => D.Handle m
     -> T.WhoWhat T.ActionDrafts
     -> m T.APIResult
-executeDraft h (T.WhoWhat token crud) = do
-    let logger = D.log h
-        draftsH = D.draftsHandler h
-        authH = D.authHandler h
-    author <- U.withAuthor authH logger token
+executeDraft h (T.WhoWhat token crud) =
     T.foldCRUD
         crud
-        (createDraft draftsH logger .
-         T.WithAuthor (T._a_authorId author))
-        (\r ->
-             getThis (D.getDrafts draftsH logger) .
-             T.Paginated (T._pag_page r) (T._pag_size r) .
-             T.WithAuthor (T._a_authorId author) $
-             T._pag_data r)
-        (editDraft draftsH logger .
-         T.WithAuthor (T._a_authorId author))
-        (deleteThis T.EDraft (D.deleteDraft draftsH logger) .
-         T.WithAuthor (T._a_authorId author))
+        (withAuthor $ createDraft draftsH logger)
+        read
+        (withAuthor $ editDraft draftsH logger)
+        (withAuthor $ deleteThis T.EDraft (D.deleteDraft draftsH logger))
+  where
+    logger = D.log h
+    draftsH = D.draftsHandler h
+    authH = D.authHandler h
+
+    withAuthor action x = do
+        authorId <- T._a_authorId <$>
+            U.withAuthor authH logger token
+        action (T.WithAuthor authorId x)
+
+    read r = do
+        authorId <- T._a_authorId <$>
+            U.withAuthor authH logger token
+        getThis (D.getDrafts draftsH logger) $
+            fmap (T.WithAuthor authorId) r
+  
 
 executePublish ::
        (CMC.MonadCatch m)
@@ -202,17 +201,15 @@ handleError ::
     => D.Handle m
     -> T.WhoWhat ActionErrorPerms
     -> m R.Response
-handleError h (T.WhoWhat _ (ActionErrorPerms False (ERequiredFieldMissing x))) =
-    handleFieldMissing h x
-handleError h (T.WhoWhat _ (ActionErrorPerms False (EInvalidFieldValue x))) =
-    handleInvalidValue h x
-handleError h (T.WhoWhat _ (ActionErrorPerms False EInvalidEndpoint)) = do
-    D.logError h "Invalid endpoint"
-    pure $ R.notFound "Invalid endpoint"
-handleError h (T.WhoWhat token (ActionErrorPerms True x)) =
-    (U.withAuthAdmin (D.authHandler h) (D.log h) token >>
-     handleError h (T.WhoWhat token (ActionErrorPerms False x))) `CMC.catch`
-    handleForbidden h
+handleError h (T.WhoWhat _ (ActionErrorPerms False err)) =
+    case err of
+        ERequiredFieldMissing x -> handleFieldMissing h x
+        EInvalidFieldValue x    -> handleInvalidValue h x
+        EInvalidEndpoint        -> handleInvalidEndpoint h
+handleError h (T.WhoWhat token (ActionErrorPerms True err)) =
+    CMC.handle (handleForbidden h) $ do
+        U.withAuthAdmin (D.authHandler h) (D.log h) token
+        handleError h (T.WhoWhat token (ActionErrorPerms False err))
 
 handleForbidden ::
        (CMC.MonadCatch m)
@@ -222,6 +219,12 @@ handleForbidden ::
 handleForbidden h _ = do
     D.logError h R.forbidden
     pure (R.notFound "Invalid endpoint")
+
+handleInvalidEndpoint :: (Monad m) => D.Handle m -> m R.Response
+handleInvalidEndpoint h = do
+    let msg =  "Invalid endpont"
+    D.logError h msg
+    pure $ R.notFound msg
 
 handleFieldMissing ::
        (Monad m) => D.Handle m -> BS.ByteString -> m R.Response

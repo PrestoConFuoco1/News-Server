@@ -2,6 +2,7 @@ module Execute.Utils
     ( withAuthor
     , withAuthAdmin
     , withAuth
+    , withUser
     , maybeUserToUser
     , getUser
     , authenticate
@@ -40,6 +41,16 @@ withAuthor h logger y = do
     user <- maybeUserToUser h logger muser
     mauthor <- D.userAuthor h logger user
     maybe Ex.notAnAuthor pure mauthor
+
+withUser ::
+       (CMC.MonadThrow m)
+    => D.AuthHandler m
+    -> L.LoggerHandler m
+    -> Maybe T.Token
+    -> m T.User
+withUser h logger y = do
+    muser <- withAuth h logger y
+    maybeUserToUser h logger muser
 
 withAuth ::
        (Monad m)
