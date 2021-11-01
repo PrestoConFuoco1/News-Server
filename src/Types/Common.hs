@@ -1,6 +1,7 @@
 module Types.Common
     ( CRUD(..)
     , Paginated(..)
+    , foldCRUD
     ) where
 
 import GHC.Generics
@@ -12,6 +13,20 @@ data CRUD c r u d
     | Update u
     | Delete d
   deriving (Show, Eq, Generic)
+
+foldCRUD ::
+       CRUD c r u d
+    -> (c -> a)
+    -> (r -> a)
+    -> (u -> a)
+    -> (d -> a)
+    -> a
+foldCRUD x create read update delete =
+  case x of
+    Create c -> create c
+    Read r   -> read r
+    Update u -> update u
+    Delete d -> delete d
 
 instance ( GP.PrettyShow c
          , GP.PrettyShow r

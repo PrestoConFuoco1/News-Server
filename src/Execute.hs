@@ -60,169 +60,111 @@ executePosts _ (T.WhoWhat _ (T.AP (T.Create x))) = pure $ absurd x
 executePosts _ (T.WhoWhat _ (T.AP (T.Update x))) = pure $ absurd x
 executePosts _ (T.WhoWhat _ (T.AP (T.Delete x))) = pure $ absurd x
 
-executeAuthor ::
-       CMC.MonadCatch m
-    => D.Handle m
-    -> T.WhoWhat T.ActionAuthors
-    -> m T.APIResult
-executeAuthor h (T.WhoWhat token (T.Read x)) = do
+executeAuthor h (T.WhoWhat token crud) = do
     let logger = D.log h
         authH = D.authHandler h
         authorsH = D.authorsHandler h
     U.withAuthAdmin authH logger token
-    getThis (D.getAuthors authorsH logger) x
-executeAuthor h (T.WhoWhat token (T.Create x)) = do
-    let logger = D.log h
-        authH = D.authHandler h
-        authorsH = D.authorsHandler h
-    U.withAuthAdmin authH logger token
-    createThis T.EAuthor (D.createAuthor authorsH logger) x
-executeAuthor h (T.WhoWhat token (T.Update x)) = do
-    let logger = D.log h
-        authH = D.authHandler h
-        authorsH = D.authorsHandler h
-    U.withAuthAdmin authH logger token
-    editThis T.EAuthor (D.editAuthor authorsH logger) x
-executeAuthor h (T.WhoWhat token (T.Delete x)) = do
-    let logger = D.log h
-        authH = D.authHandler h
-        authorsH = D.authorsHandler h
-    U.withAuthAdmin authH logger token
-    deleteThis T.EAuthor (D.deleteAuthor authorsH logger) x
+    T.foldCRUD crud
+        (createThis T.EAuthor $ D.createAuthor authorsH logger)
+        (getThis $ D.getAuthors authorsH logger)
+        (editThis T.EAuthor $ D.editAuthor authorsH logger)
+        (deleteThis T.EAuthor $ D.deleteAuthor authorsH logger)
 
-{-
--}
 executeTags ::
        CMC.MonadCatch m
     => D.Handle m
     -> T.WhoWhat T.ActionTags
     -> m T.APIResult
-executeTags h (T.WhoWhat _ (T.Read x)) =
-    getThis (D.getTags (D.tagsHandler h) (D.log h)) x
-executeTags h (T.WhoWhat token (T.Create x)) = do
+executeTags h (T.WhoWhat token crud) = do
     let logger = D.log h
         authH = D.authHandler h
         tagsH = D.tagsHandler h
-    U.withAuthAdmin authH logger token
-    createThis T.ETag (D.createTag tagsH logger) x
-executeTags h (T.WhoWhat token (T.Update x)) = do
-    let logger = D.log h
-        authH = D.authHandler h
-        tagsH = D.tagsHandler h
-    U.withAuthAdmin authH logger token
-    editThis T.ETag (D.editTag tagsH logger) x
-executeTags h (T.WhoWhat token (T.Delete x)) = do
-    let logger = D.log h
-        authH = D.authHandler h
-        tagsH = D.tagsHandler h
-    U.withAuthAdmin authH logger token
-    deleteThis T.ETag (D.deleteTag tagsH logger) x
+        withAdmin = (U.withAuthAdmin authH logger token >>)
+    T.foldCRUD crud
+        (withAdmin . (createThis T.ETag $ D.createTag tagsH logger))
+        (getThis $ D.getTags tagsH logger)
+        (withAdmin . editThis T.ETag (D.editTag tagsH logger))
+        (withAdmin . deleteThis T.ETag (D.deleteTag tagsH logger))
 
 executeCategory ::
        CMC.MonadCatch m
     => D.Handle m
     -> T.WhoWhat T.ActionCategory
     -> m T.APIResult
-executeCategory h (T.WhoWhat _ (T.Read x)) =
-    getThis (D.getCategories (D.catsHandler h) (D.log h)) x
-executeCategory h (T.WhoWhat token (T.Create x)) = do
+executeCategory h (T.WhoWhat token crud) = do
     let logger = D.log h
         authH = D.authHandler h
         catsH = D.catsHandler h
-    U.withAuthAdmin authH logger token
-    createThis T.ECategory (D.createCategory catsH logger) x
-executeCategory h (T.WhoWhat token (T.Update x)) = do
-    let logger = D.log h
-        authH = D.authHandler h
-        catsH = D.catsHandler h
-    U.withAuthAdmin authH logger token
-    mModifError <- U.checkCategoryUpdate catsH logger x
-    let action = editThis T.ECategory (D.editCategory catsH logger) x
-    maybe action (pure . T.RFailed T.ECategory) mModifError
-executeCategory h (T.WhoWhat token (T.Delete x)) = do
-    let logger = D.log h
-        authH = D.authHandler h
-        catsH = D.catsHandler h
-    U.withAuthAdmin authH logger token
-    deleteThis T.ECategory (D.deleteCategory catsH logger) x
+        withAdmin = (U.withAuthAdmin authH logger token >>)
+    T.foldCRUD crud
+        (withAdmin . createThis T.ECategory (D.createCategory catsH logger))
+        (getThis $ D.getCategories catsH logger)
+        (\u -> do
+            U.withAuthAdmin authH logger token
+            mModifError <- U.checkCategoryUpdate catsH logger u
+            let action = editThis T.ECategory (D.editCategory catsH logger) u
+            maybe action (pure . T.RFailed T.ECategory) mModifError)
+        (withAdmin . deleteThis T.ECategory (D.deleteCategory catsH logger))
 
 executeUsers ::
        CMC.MonadCatch m
     => D.Handle m
     -> T.WhoWhat T.ActionUsers
     -> m T.APIResult
-executeUsers h (T.WhoWhat _ (T.Create x)) = do
+executeUsers h (T.WhoWhat token crud) = do
     let logger = D.log h
         authH = D.authHandler h
-    createThis T.EUser (D.createUser authH logger) x
-executeUsers h (T.WhoWhat token (T.Delete x)) = do
-    let logger = D.log h
-        authH = D.authHandler h
-    U.withAuthAdmin authH logger token
-    deleteThis T.EUser (D.deleteUser authH logger) x
-executeUsers h (T.WhoWhat token (T.Read T.GetProfile)) = do
-    let logger = D.log h
-        authH = D.authHandler h
-    mUser <- U.withAuth authH logger token
-    U.getUser authH logger mUser
-executeUsers _ (T.WhoWhat _ (T.Update x)) = pure $ absurd x
+        withAdmin = (U.withAuthAdmin authH logger token >>)
+    T.foldCRUD crud
+        (createThis T.EUser $ D.createUser authH logger)
+        (\_ -> do
+            mUser <- U.withAuth authH logger token
+            U.getUser authH logger mUser)
+        (pure . absurd)
+        (withAdmin . deleteThis T.EUser (D.deleteUser authH logger))
 
 executeComments ::
        CMC.MonadCatch m
     => D.Handle m
     -> T.WhoWhat T.ActionComments
     -> m T.APIResult
-executeComments h (T.WhoWhat _ (T.Read x)) =
-    getThis (D.getComments (D.commentsHandler h) (D.log h)) x
-executeComments h (T.WhoWhat token (T.Create x)) = do
+executeComments h (T.WhoWhat token crud) = do
     let logger = D.log h
         authH = D.authHandler h
         commentsH = D.commentsHandler h
-    mUser <- U.withAuth authH logger token
-    user <- U.maybeUserToUser authH logger mUser
-    createThis T.EComment (D.createComment commentsH logger) $
-        T.WithUser user x
-executeComments h (T.WhoWhat token (T.Delete x)) = do
-    let logger = D.log h
-        authH = D.authHandler h
-        commentsH = D.commentsHandler h
-    mUser <- U.withAuth authH logger token
-    user <- U.maybeUserToUser authH logger mUser
-    deleteThis T.EComment (D.deleteComment commentsH logger) $
-        T.WithUser user x
-executeComments _ (T.WhoWhat _ (T.Update x)) = pure $ absurd x
+    T.foldCRUD crud
+        (\c -> do
+            mUser <- U.withAuth authH logger token
+            user <- U.maybeUserToUser authH logger mUser
+            createThis T.EComment (D.createComment commentsH logger) $
+                T.WithUser user c)
+        (getThis $ D.getComments commentsH logger)
+        (pure . absurd)
+        (\d -> do
+            mUser <- U.withAuth authH logger token
+            user <- U.maybeUserToUser authH logger mUser
+            deleteThis T.EComment (D.deleteComment commentsH logger) $
+                T.WithUser user d)
 
 executeDraft ::
        (CMC.MonadCatch m)
     => D.Handle m
     -> T.WhoWhat T.ActionDrafts
     -> m T.APIResult
-executeDraft h (T.WhoWhat token (T.Create x)) = do
+executeDraft h (T.WhoWhat token crud) = do
     let logger = D.log h
         draftsH = D.draftsHandler h
         authH = D.authHandler h
     author <- U.withAuthor authH logger token
-    createDraft draftsH logger $ T.WithAuthor (T._a_authorId author) x
-executeDraft h (T.WhoWhat token (T.Read (T.Paginated p s x))) = do
-    let logger = D.log h
-        draftsH = D.draftsHandler h
-        authH = D.authHandler h
-    author <- U.withAuthor (D.authHandler h) (D.log h) token
-    getThis (D.getDrafts draftsH logger) $
-        T.Paginated p s (T.WithAuthor (T._a_authorId author) x)
-executeDraft h (T.WhoWhat token (T.Delete x)) = do
-    let logger = D.log h
-        draftsH = D.draftsHandler h
-        authH = D.authHandler h
-    author <- U.withAuthor (D.authHandler h) (D.log h) token
-    deleteThis T.EDraft (D.deleteDraft draftsH logger) $
-        T.WithAuthor (T._a_authorId author) x
-executeDraft h (T.WhoWhat token (T.Update x)) = do
-    let logger = D.log h
-        draftsH = D.draftsHandler h
-        authH = D.authHandler h
-    author <- U.withAuthor authH logger token
-    editDraft draftsH logger $ T.WithAuthor (T._a_authorId author) x
+    T.foldCRUD crud
+        (createDraft draftsH logger . T.WithAuthor (T._a_authorId author))
+        (\r -> getThis (D.getDrafts draftsH logger)
+          . T.Paginated (T._pag_page r) (T._pag_size r)
+          . T.WithAuthor (T._a_authorId author) $ T._pag_data r)
+        (editDraft draftsH logger . T.WithAuthor (T._a_authorId author))
+        (deleteThis T.EDraft (D.deleteDraft draftsH logger) .
+            T.WithAuthor (T._a_authorId author))
 
 executePublish ::
        (CMC.MonadCatch m)
@@ -250,17 +192,11 @@ handleError h (T.WhoWhat _ (ActionErrorPerms False EInvalidEndpoint)) = do
     pure $ R.notFound "Invalid endpoint"
 handleError h (T.WhoWhat token (ActionErrorPerms True x)) =
     (U.withAuthAdmin (D.authHandler h) (D.log h) token >>
-     handleError h (T.WhoWhat token (ActionErrorPerms False x))) `CMC.catch`
-    f h
-  where
-    f :: (CMC.MonadCatch m)
-      => D.Handle m
-      -> CMC.SomeException
-      -> m R.Response
-    f h' _ = handleForbidden h'
+     handleError h (T.WhoWhat token (ActionErrorPerms False x)))
+        `CMC.catch` handleForbidden h
 
-handleForbidden :: (CMC.MonadCatch m) => D.Handle m -> m R.Response
-handleForbidden h = do
+handleForbidden :: (CMC.MonadCatch m) => D.Handle m -> CMC.SomeException -> m R.Response
+handleForbidden h _ = do
     D.logError h R.forbidden
     pure (R.notFound "Invalid endpoint")
 
