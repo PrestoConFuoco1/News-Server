@@ -13,6 +13,7 @@ import qualified Data.Text as Text (Text, pack)
 import qualified Exceptions as Ex
 import qualified Types as T
 import qualified Utils as S
+import qualified App.Logger as L
 
 draftModifyErrorToApiResult :: T.DraftModifyError -> T.APIResult
 draftModifyErrorToApiResult (T.DModifyError x) = T.RFailed T.EDraft x
@@ -32,38 +33,38 @@ draftModifyHandler logger err = do
 
 createDraft ::
        (CMC.MonadCatch m)
-    => D.Handle m
+    => D.DraftsHandler m -> L.LoggerHandler m
     -> T.WithAuthor T.CreateDraft
     -> m T.APIResult
-createDraft h x@(T.WithAuthor _ T.CreateDraft {..}) =
-    Ex.withHandler (draftModifyHandler $ D.log h) $
-    D.withTransaction h $ do
-        eithDraft <- D.createDraft h (D.log h) x
+createDraft draftsH logger x@(T.WithAuthor _ T.CreateDraft {..}) =
+    Ex.withHandler (draftModifyHandler logger) $
+    D.withTransaction draftsH $ do
+        eithDraft <- D.createDraft draftsH logger x
         draft <- throwWithFuncOnError T.DModifyError eithDraft
-        D.logInfo h $
+        L.logInfo logger $
             "Created draft with id = " <> Text.pack (show draft)
-        eithTags <- D.attachTagsToDraft h (D.log h) draft _cd_tags
+        eithTags <- D.attachTagsToDraft draftsH logger draft _cd_tags
         tags <- throwWithFuncOnError T.DTagsError eithTags
-        D.logInfo h $ attached "draft" tags draft
+        L.logInfo logger $ attached "draft" tags draft
         pure $ T.RCreated T.EDraft draft
 
 editDraft ::
        (CMC.MonadCatch m)
-    => D.Handle m
+    => D.DraftsHandler m -> L.LoggerHandler m
     -> T.WithAuthor T.EditDraft
     -> m T.APIResult
-editDraft h x@(T.WithAuthor _ T.EditDraft {..}) =
-    Ex.withHandler (draftModifyHandler $ D.log h) $
-    D.withTransaction h $ do
-        eithDraft <- D.editDraft h (D.log h) x
+editDraft draftsH logger x@(T.WithAuthor _ T.EditDraft {..}) =
+    Ex.withHandler (draftModifyHandler $ logger) $
+    D.withTransaction draftsH $ do
+        eithDraft <- D.editDraft draftsH logger x
         draft <- throwWithFuncOnError T.DModifyError eithDraft
         S.withMaybe _ed_tags (pure $ T.REdited T.EDraft draft) $ \tags -> do
-            eithTs <- D.attachTagsToDraft h (D.log h) draft tags
+            eithTs <- D.attachTagsToDraft draftsH logger draft tags
             ts <- throwWithFuncOnError T.DTagsError eithTs
-            D.logInfo h $ attached "draft" ts draft
+            L.logInfo logger $ attached "draft" ts draft
             tsRem <-
-                D.removeAllButGivenTagsDraft h (D.log h) draft tags
-            D.logInfo h $ removed "draft" tsRem draft
+                D.removeAllButGivenTagsDraft draftsH logger draft tags
+            L.logInfo logger $ removed "draft" tsRem draft
             pure $ T.REdited T.EDraft draft
 
 publishHandler ::
@@ -75,59 +76,59 @@ publishHandler = draftModifyHandler
 
 publish ::
        (CMC.MonadCatch m)
-    => D.Handle m
+    => D.DraftsHandler m -> L.LoggerHandler m
     -> T.WithAuthor T.Publish
     -> m T.APIResult
-publish h x@(T.WithAuthor _ T.Publish {}) =
-    Ex.withHandler (publishHandler $ D.log h) $
-    D.withTransaction h $ do
-        eithDraft <- D.getDraftRaw h (D.log h) x
+publish draftsH logger x@(T.WithAuthor _ T.Publish {}) =
+    Ex.withHandler (publishHandler $ logger) $
+    D.withTransaction draftsH $ do
+        eithDraft <- D.getDraftRaw draftsH logger x
         case eithDraft of
             Nothing -> pure $ T.RFailed T.EDraft T.MNoAction
             Just draft ->
                 case T._dr_postId draft of
-                    Nothing -> publishCreate h draft
-                    Just post -> publishEdit h post draft
+                    Nothing -> publishCreate draftsH logger draft
+                    Just post -> publishEdit draftsH logger post draft
 
 publishCreate ::
-       (CMC.MonadCatch m) => D.Handle m -> T.DraftRaw -> m T.APIResult
-publishCreate h x = do
-    eithPost <- D.createPost h (D.log h) x
+       (CMC.MonadCatch m) => D.DraftsHandler m -> L.LoggerHandler m -> T.DraftRaw -> m T.APIResult
+publishCreate draftsH logger x = do
+    eithPost <- D.createPost draftsH logger x
     post <- throwWithFuncOnError T.DModifyError eithPost
-    D.logInfo h $ "Created post with id = " <> S.showText post
+    L.logInfo logger $ "Created post with id = " <> S.showText post
     eithDraft <-
         D.editDraftPublish
-            h
-            (D.log h)
+            draftsH
+            logger
             (T.EditDraftPublish post $ T._dr_draftId x)
     draft <- throwWithFuncOnError T.DModifyError eithDraft
-    D.logInfo h $
+    L.logInfo logger $
         "Added post_id to draft with id = " <> S.showText draft
-    eithTags_ <- D.attachTagsToPost h (D.log h) post (T._dr_tagIds x)
+    eithTags_ <- D.attachTagsToPost draftsH logger post (T._dr_tagIds x)
     tags_ <- throwWithFuncOnError T.DTagsError eithTags_
-    D.logInfo h $ attached "post" tags_ post
+    L.logInfo logger $ attached "post" tags_ post
     pure $ T.RCreated T.EPost post
 
 publishEdit ::
        (CMC.MonadCatch m)
-    => D.Handle m
+    => D.DraftsHandler m -> L.LoggerHandler m
     -> Int
     -> T.DraftRaw
     -> m T.APIResult
-publishEdit h post draft =
-    Ex.withHandler (draftModifyHandler $ D.log h) $
-    D.withTransaction h $ do
+publishEdit draftsH logger post draft =
+    Ex.withHandler (draftModifyHandler logger) $
+    D.withTransaction draftsH $ do
         let publishPost = draftRawToPublishEditPost post draft
-        eithPost_ <- D.editPostPublish h (D.log h) publishPost
+        eithPost_ <- D.editPostPublish draftsH logger publishPost
         post_ <- throwWithFuncOnError T.DModifyError eithPost_
         eithTs <-
-            D.attachTagsToPost h (D.log h) post $ T._dr_tagIds draft
+            D.attachTagsToPost draftsH logger post $ T._dr_tagIds draft
         ts <- throwWithFuncOnError T.DTagsError eithTs
-        D.logInfo h $ attached "post" ts post
+        L.logInfo logger $ attached "post" ts post
         tsRem <-
-            D.removeAllButGivenTagsPost h (D.log h) post $
+            D.removeAllButGivenTagsPost draftsH logger post $
             T._dr_tagIds draft
-        D.logInfo h $ removed "post" tsRem $ T._dr_draftId draft
+        L.logInfo logger $ removed "post" tsRem $ T._dr_draftId draft
         pure $ T.REdited T.EPost post_
 
 throwWithFuncOnError ::

@@ -17,101 +17,103 @@ import qualified Exceptions as Ex
 import qualified GenericPretty as GP
 import qualified Types as T
 import qualified Utils as S
+import qualified App.Logger as L
 
 withAuthAdmin ::
-       (CMC.MonadThrow m) => D.Handle m -> Maybe T.Token -> m ()
-withAuthAdmin h y = do
-    muser <- withAuth h y
-    checkAdmin h muser
+       (CMC.MonadThrow m) => D.AuthHandler m -> L.LoggerHandler m -> Maybe T.Token -> m ()
+withAuthAdmin h logger y = do
+    muser <- withAuth h logger y
+    checkAdmin h logger muser
 
 withAuthor ::
-       (CMC.MonadThrow m) => D.Handle m -> Maybe T.Token -> m T.Author
-withAuthor h y = do
-    muser <- withAuth h y
-    user <- maybeUserToUser h muser
-    mauthor <- D.userAuthor h (D.log h) user
+       (CMC.MonadThrow m) => D.AuthHandler m -> L.LoggerHandler m -> Maybe T.Token -> m T.Author
+withAuthor h logger y = do
+    muser <- withAuth h logger y
+    user <- maybeUserToUser h logger muser
+    mauthor <- D.userAuthor h logger user
     maybe Ex.notAnAuthor pure mauthor
 
 withAuth ::
-       (Monad m) => D.Handle m -> Maybe T.Token -> m (Maybe T.User)
-withAuth h mtoken = do
+       (Monad m) => D.AuthHandler m -> L.LoggerHandler m -> Maybe T.Token -> m (Maybe T.User)
+withAuth h logger mtoken = do
     let fname = "withAuth: "
-    D.logDebug h $ fname <> "trying to get user by token"
+    L.logDebug logger $ fname <> "trying to get user by token"
     case mtoken of
         Nothing -> do
-            D.logDebug h $ fname <> "no token supplied"
+            L.logDebug logger $ fname <> "no token supplied"
             pure Nothing
         Just token -> do
-            D.logDebug h $
+            L.logDebug logger $
                 fname <>
                 "searching for user with token = " <> T._t_token token
-            D.getUserByToken h (D.log h) token
+            D.getUserByToken h logger token
 
-checkAdmin :: (CMC.MonadThrow m) => D.Handle m -> Maybe T.User -> m ()
-checkAdmin h muser = do
+checkAdmin :: (CMC.MonadThrow m) => D.AuthHandler m -> L.LoggerHandler m -> Maybe T.User -> m ()
+checkAdmin h logger muser = do
     let fname = "checkAdmin: "
     case muser of
         Nothing -> do
-            D.logDebug h $
+            L.logDebug logger $
                 fname <> "no user found, throwing forbidden"
             Ex.throwForbidden
         Just user -> do
-            D.logDebug h $ fname <> "found user"
-            D.logDebug h $ GP.textPretty user
+            L.logDebug logger $ fname <> "found user"
+            L.logDebug logger $ GP.textPretty user
             if T._u_admin user /= Just True
                 then do
-                    D.logDebug h $
+                    L.logDebug logger $
                         fname <>
                         "user is not admin, throwing forbidden"
                     Ex.throwForbidden
-                else D.logDebug h $ fname <> "ok, user is admin"
+                else L.logDebug logger $ fname <> "ok, user is admin"
 
 maybeUserToUser ::
-       (CMC.MonadThrow m) => D.Handle m -> Maybe T.User -> m T.User
-maybeUserToUser h Nothing = do
+       (CMC.MonadThrow m) => D.AuthHandler m -> L.LoggerHandler m -> Maybe T.User -> m T.User
+maybeUserToUser h logger Nothing = do
     let fname = "maybeUserToUser: "
-    D.logDebug h $ fname <> "no user found, throwing unauthorized"
+    L.logDebug logger $ fname <> "no user found, throwing unauthorized"
     Ex.throwUnauthorized
-maybeUserToUser h (Just u) = do
+maybeUserToUser h logger (Just u) = do
     let fname = "maybeUserToUser: "
-    D.logDebug h $ fname <> "found user"
-    D.logDebug h $ GP.textPretty u
+    L.logDebug logger $ fname <> "found user"
+    L.logDebug logger $ GP.textPretty u
     pure u
 
 getUser ::
        (CMC.MonadThrow m)
-    => D.Handle m
+    => D.AuthHandler m -> L.LoggerHandler m
     -> Maybe T.User
     -> m T.APIResult
-getUser h muser = T.RGetUser <$> maybeUserToUser h muser
+getUser h logger muser = T.RGetUser <$> maybeUserToUser h logger muser
 
 authenticate ::
        (CMC.MonadThrow m)
-    => D.Handle m
+    => D.AuthHandler m -> L.LoggerHandler m
     -> T.Authenticate
     -> m T.APIResult
-authenticate h auth = do
-    muser <- D.getUserByLogin h (D.log h) $ T._au_login auth
+authenticate h logger auth = do
+    muser <- D.getUserByLogin h logger $ T._au_login auth
     user <- maybe Ex.throwInvalidLogin pure muser
     when (T._u_passHash user /= T._au_passHash auth) $
         Ex.throwInvalidPassword
     token <- Text.pack <$> D.generateToken h 10
-    token' <- D.addToken h (D.log h) (T._u_id user) token
+    token' <- D.addToken h logger (T._u_id user) token
     pure $ T.RGetToken token'
 
 checkCategoryUpdate ::
        (CMC.MonadThrow m)
-    => D.Handle m
+    => D.CatsHandler m
+    -> L.LoggerHandler m
     -> T.EditCategory
     -> m (Maybe T.ModifyError)
-checkCategoryUpdate h editCat = do
+checkCategoryUpdate catsH logger editCat = do
     let funcName = "checkCategoryUpdate: "
-    D.logDebug h $ funcName <> "action is:"
-    D.logDebug h $ funcName <> GP.textPretty editCat
+    L.logDebug logger $ funcName <> "action is:"
+    L.logDebug logger $ funcName <> GP.textPretty editCat
     S.withMaybe (T._ec_parentId editCat) (pure Nothing) $ \parentCatId -> do
-        mParentCat <- D.getCategoryById h (D.log h) parentCatId
-        D.logDebug h $ funcName <> "new parent category is:"
-        D.logDebug h $ funcName <> GP.textPretty mParentCat
+        mParentCat <- D.getCategoryById catsH logger parentCatId
+        L.logDebug logger $ funcName <> "new parent category is:"
+        L.logDebug logger $ funcName <> GP.textPretty mParentCat
         S.withMaybe
             mParentCat
             (pure $

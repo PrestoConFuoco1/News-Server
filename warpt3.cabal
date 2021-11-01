@@ -37,6 +37,7 @@ library
       Action.Utils
       App.Database
       App.Database.Postgres
+      App.Database.Postgres.Internal
       App.Logger
       Config
       Database
@@ -53,7 +54,6 @@ library
       Execute.Draft
       Execute.Utils
       GenericPretty
-      IO.Postgres
       Lib
       Migrations
       Result

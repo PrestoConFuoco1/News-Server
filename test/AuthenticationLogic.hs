@@ -19,48 +19,48 @@ emulatedLogic = describe "emulated authentication logic tests" $ do
 
 authorizedLogic :: Spec
 authorizedLogic = do
-  let def = defaultHandler
+  let def = defaultAuthHandler
       noUser = def {getUserByToken = noUserByToken }
       okUser = def {getUserByToken = userByToken }
   describe "Authorization logic" $ do
     it "throws unauthorized exception if no token supplied" $ do
-        (withAuth def Nothing >>= maybeUserToUser def)
+        (withAuth def defaultLogger Nothing >>= maybeUserToUser def defaultLogger)
             `shouldThrow` unauthorizedSelector
 --    it "throws unauthorized exception if no token supplied" $ do
 --        (withAuth nouser Nothing >>= getUser nouser)
 --            `shouldThrow` unauthorizedSelector
     it "throws unauthorized exception if no user is returned" $ do
-        (withAuth noUser (Just $ Token "asdas") >>= maybeUserToUser def)
+        (withAuth noUser defaultLogger (Just $ Token "asdas") >>= maybeUserToUser def defaultLogger)
             `shouldThrow` unauthorizedSelector
 
     it "returns a user if one with such token exists" $ do
-        (withAuth okUser (Just $ Token "token1") >>= maybeUserToUser def)
+        (withAuth okUser defaultLogger (Just $ Token "token1") >>= maybeUserToUser def defaultLogger)
             `shouldReturn` defaultUser
     it "throws undefined on undefined token" $ do
-        (withAuth def undefined >>= maybeUserToUser def)
+        (withAuth def defaultLogger undefined >>= maybeUserToUser def defaultLogger)
             `shouldThrow` anyErrorCall
 
 
 
 adminPermissionsLogic :: Spec
 adminPermissionsLogic = do
-  let def = defaultHandler
+  let def = defaultAuthHandler
   describe "Permissions logic" $ do
     it "throws forbidden exception if no token supplied" $ do
-        withAuthAdmin def Nothing
+        withAuthAdmin def defaultLogger Nothing
             `shouldThrow` forbiddenSelector
     it "throws forbidden exception if no user found with this token" $ do
-        withAuthAdmin def { getUserByToken = noUserByToken } (Just $ Token "asdasdasda")
+        withAuthAdmin def { getUserByToken = noUserByToken } defaultLogger (Just $ Token "asdasdasda")
             `shouldThrow` forbiddenSelector
     it "throws forbidden exception if user is not admin" $ do
-        withAuthAdmin def { getUserByToken = notAdminByToken } (Just $ Token "asdasdasda")
+        withAuthAdmin def { getUserByToken = notAdminByToken } defaultLogger (Just $ Token "asdasdasda")
             `shouldThrow` forbiddenSelector
     it "returns unit-type value if user is admin" $ do
-        withAuthAdmin def { getUserByToken = adminByToken } (Just $ Token "asdasdasda")
+        withAuthAdmin def { getUserByToken = adminByToken } defaultLogger (Just $ Token "asdasdasda")
             `shouldReturn` ()
 
     it "throws undefined on undefined token" $ do
-        withAuthAdmin def { getUserByToken = noUserByToken } undefined
+        withAuthAdmin def { getUserByToken = noUserByToken } defaultLogger undefined
             `shouldThrow` anyErrorCall
 
 forbiddenSelector = serverErrorSelector Ex.Forbidden

@@ -7,7 +7,13 @@ module App.Database.Postgres
     , resourcesToHandle
     ) where
 
-import App.Database (Handle(..))
+import App.Database (Handle(..),
+    AuthHandler(..),
+    AuthorsHandler(..),
+    TagsHandler(..),
+    CatsHandler(..),
+    CommentsHandler(..),
+    DraftsHandler(..))
 import qualified App.Database.Postgres.Internal as IOP
 import qualified App.Logger as L
 import Control.Monad ((>=>))
@@ -55,37 +61,47 @@ closeResources resources =
     let conn = postgresConnection resources
      in PS.close conn
 
+
+
 resourcesToHandle :: Resources -> L.LoggerHandler IO -> Handle IO
 resourcesToHandle (Resources con) logger =
-    Handle
-        { log = logger
-        , userAuthor = IOP.userAuthor con
+    let authH = AuthHandler {
+          userAuthor = IOP.userAuthor con
         , createUser = IOP.createThis @T.CreateUser con
         , deleteUser = IOP.deleteThis @T.DeleteUser con
         , getUserByToken = IOP.getUserByToken con
         , getUserByLogin = IOP.getUserByLogin con
         , addToken = IOP.addToken con
         , generateToken = IOP.generateToken
-        , getAuthors = IOP.getThisPaginated @T.GetAuthors con
+        }
+        authorsH = AuthorsHandler {
+          getAuthors = IOP.getThisPaginated @T.GetAuthors con
         , createAuthor = IOP.createThis @T.CreateAuthor con
         , editAuthor = IOP.editThis @T.EditAuthor con
         , deleteAuthor = IOP.deleteThis @T.DeleteAuthor con
-        , getTags = IOP.getThisPaginated @T.GetTags con
+        }
+        tagsH = TagsHandler {
+          getTags = IOP.getThisPaginated @T.GetTags con
         , createTag = IOP.createThis @T.CreateTag con
         , editTag = IOP.editThis @T.EditTag con
         , deleteTag = IOP.deleteThis @T.DeleteTag con
-        , getCategories = IOP.getThisPaginated @T.GetCategories con
+        }
+        catsH = CatsHandler {
+          getCategories = IOP.getThisPaginated @T.GetCategories con
         , getCategoryById = IOP.getCategoryById con
         , createCategory = IOP.createThis @T.CreateCategory con
         , editCategory = IOP.editThis @T.EditCategory con
         , deleteCategory = IOP.deleteThis @T.DeleteCategory con
-        , getPosts = IOP.getThisPaginated @T.GetPosts con
-        , getComments = IOP.getThisPaginated @T.GetComments con
+        }
+        commentsH = CommentsHandler {
+          getComments = IOP.getThisPaginated @T.GetComments con
         , createComment =
               IOP.createThis @(T.WithUser T.CreateComment) con
         , deleteComment =
               IOP.deleteThis @(T.WithUser T.DeleteComment) con
-        , withTransaction = IOP.withTransaction con
+        }
+        draftsH = DraftsHandler {
+          withTransaction = IOP.withTransaction con
         , attachTagsToDraft = IOP.attachTags con HDraft
         , attachTagsToPost = IOP.attachTags con HPost
         , editDraft = IOP.editThis @(T.WithAuthor T.EditDraft) con
@@ -106,4 +122,14 @@ resourcesToHandle (Resources con) logger =
               IOP.getThisPaginated @(T.WithAuthor T.GetDrafts) con
         , deleteDraft =
               IOP.deleteThis @(T.WithAuthor T.DeleteDraft) con
+        }
+     in Handle
+        { log = logger
+        , authHandler = authH
+        , authorsHandler = authorsH
+        , tagsHandler = tagsH
+        , catsHandler = catsH
+        , commentsHandler = commentsH
+        , getPosts = IOP.getThisPaginated @T.GetPosts con
+        , draftsHandler = draftsH
         }
