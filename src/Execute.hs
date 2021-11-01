@@ -65,7 +65,8 @@ executeAuthor h (T.WhoWhat token crud) = do
         authH = D.authHandler h
         authorsH = D.authorsHandler h
     U.withAuthAdmin authH logger token
-    T.foldCRUD crud
+    T.foldCRUD
+        crud
         (createThis T.EAuthor $ D.createAuthor authorsH logger)
         (getThis $ D.getAuthors authorsH logger)
         (editThis T.EAuthor $ D.editAuthor authorsH logger)
@@ -81,8 +82,9 @@ executeTags h (T.WhoWhat token crud) = do
         authH = D.authHandler h
         tagsH = D.tagsHandler h
         withAdmin = (U.withAuthAdmin authH logger token >>)
-    T.foldCRUD crud
-        (withAdmin . (createThis T.ETag $ D.createTag tagsH logger))
+    T.foldCRUD
+        crud
+        (withAdmin . createThis T.ETag (D.createTag tagsH logger))
         (getThis $ D.getTags tagsH logger)
         (withAdmin . editThis T.ETag (D.editTag tagsH logger))
         (withAdmin . deleteThis T.ETag (D.deleteTag tagsH logger))
@@ -97,15 +99,22 @@ executeCategory h (T.WhoWhat token crud) = do
         authH = D.authHandler h
         catsH = D.catsHandler h
         withAdmin = (U.withAuthAdmin authH logger token >>)
-    T.foldCRUD crud
-        (withAdmin . createThis T.ECategory (D.createCategory catsH logger))
+    T.foldCRUD
+        crud
+        (withAdmin .
+         createThis T.ECategory (D.createCategory catsH logger))
         (getThis $ D.getCategories catsH logger)
         (\u -> do
-            U.withAuthAdmin authH logger token
-            mModifError <- U.checkCategoryUpdate catsH logger u
-            let action = editThis T.ECategory (D.editCategory catsH logger) u
-            maybe action (pure . T.RFailed T.ECategory) mModifError)
-        (withAdmin . deleteThis T.ECategory (D.deleteCategory catsH logger))
+             U.withAuthAdmin authH logger token
+             mModifError <- U.checkCategoryUpdate catsH logger u
+             let action =
+                     editThis
+                         T.ECategory
+                         (D.editCategory catsH logger)
+                         u
+             maybe action (pure . T.RFailed T.ECategory) mModifError)
+        (withAdmin .
+         deleteThis T.ECategory (D.deleteCategory catsH logger))
 
 executeUsers ::
        CMC.MonadCatch m
@@ -116,11 +125,12 @@ executeUsers h (T.WhoWhat token crud) = do
     let logger = D.log h
         authH = D.authHandler h
         withAdmin = (U.withAuthAdmin authH logger token >>)
-    T.foldCRUD crud
+    T.foldCRUD
+        crud
         (createThis T.EUser $ D.createUser authH logger)
         (\_ -> do
-            mUser <- U.withAuth authH logger token
-            U.getUser authH logger mUser)
+             mUser <- U.withAuth authH logger token
+             U.getUser authH logger mUser)
         (pure . absurd)
         (withAdmin . deleteThis T.EUser (D.deleteUser authH logger))
 
@@ -133,19 +143,20 @@ executeComments h (T.WhoWhat token crud) = do
     let logger = D.log h
         authH = D.authHandler h
         commentsH = D.commentsHandler h
-    T.foldCRUD crud
+    T.foldCRUD
+        crud
         (\c -> do
-            mUser <- U.withAuth authH logger token
-            user <- U.maybeUserToUser authH logger mUser
-            createThis T.EComment (D.createComment commentsH logger) $
-                T.WithUser user c)
+             mUser <- U.withAuth authH logger token
+             user <- U.maybeUserToUser authH logger mUser
+             createThis T.EComment (D.createComment commentsH logger) $
+                 T.WithUser user c)
         (getThis $ D.getComments commentsH logger)
         (pure . absurd)
         (\d -> do
-            mUser <- U.withAuth authH logger token
-            user <- U.maybeUserToUser authH logger mUser
-            deleteThis T.EComment (D.deleteComment commentsH logger) $
-                T.WithUser user d)
+             mUser <- U.withAuth authH logger token
+             user <- U.maybeUserToUser authH logger mUser
+             deleteThis T.EComment (D.deleteComment commentsH logger) $
+                 T.WithUser user d)
 
 executeDraft ::
        (CMC.MonadCatch m)
@@ -157,14 +168,19 @@ executeDraft h (T.WhoWhat token crud) = do
         draftsH = D.draftsHandler h
         authH = D.authHandler h
     author <- U.withAuthor authH logger token
-    T.foldCRUD crud
-        (createDraft draftsH logger . T.WithAuthor (T._a_authorId author))
-        (\r -> getThis (D.getDrafts draftsH logger)
-          . T.Paginated (T._pag_page r) (T._pag_size r)
-          . T.WithAuthor (T._a_authorId author) $ T._pag_data r)
-        (editDraft draftsH logger . T.WithAuthor (T._a_authorId author))
+    T.foldCRUD
+        crud
+        (createDraft draftsH logger .
+         T.WithAuthor (T._a_authorId author))
+        (\r ->
+             getThis (D.getDrafts draftsH logger) .
+             T.Paginated (T._pag_page r) (T._pag_size r) .
+             T.WithAuthor (T._a_authorId author) $
+             T._pag_data r)
+        (editDraft draftsH logger .
+         T.WithAuthor (T._a_authorId author))
         (deleteThis T.EDraft (D.deleteDraft draftsH logger) .
-            T.WithAuthor (T._a_authorId author))
+         T.WithAuthor (T._a_authorId author))
 
 executePublish ::
        (CMC.MonadCatch m)
@@ -192,10 +208,14 @@ handleError h (T.WhoWhat _ (ActionErrorPerms False EInvalidEndpoint)) = do
     pure $ R.notFound "Invalid endpoint"
 handleError h (T.WhoWhat token (ActionErrorPerms True x)) =
     (U.withAuthAdmin (D.authHandler h) (D.log h) token >>
-     handleError h (T.WhoWhat token (ActionErrorPerms False x)))
-        `CMC.catch` handleForbidden h
+     handleError h (T.WhoWhat token (ActionErrorPerms False x))) `CMC.catch`
+    handleForbidden h
 
-handleForbidden :: (CMC.MonadCatch m) => D.Handle m -> CMC.SomeException -> m R.Response
+handleForbidden ::
+       (CMC.MonadCatch m)
+    => D.Handle m
+    -> CMC.SomeException
+    -> m R.Response
 handleForbidden h _ = do
     D.logError h R.forbidden
     pure (R.notFound "Invalid endpoint")

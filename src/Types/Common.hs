@@ -22,11 +22,11 @@ foldCRUD ::
     -> (d -> a)
     -> a
 foldCRUD x create read update delete =
-  case x of
-    Create c -> create c
-    Read r   -> read r
-    Update u -> update u
-    Delete d -> delete d
+    case x of
+        Create c -> create c
+        Read r -> read r
+        Update u -> update u
+        Delete d -> delete d
 
 instance ( GP.PrettyShow c
          , GP.PrettyShow r
