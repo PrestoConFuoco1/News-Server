@@ -1,4 +1,5 @@
-{-# LANGUAGE TypeFamilies, RecordWildCards #-}
+{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE RecordWildCards #-}
 
 module Execute.Draft
     ( createDraft
@@ -13,7 +14,6 @@ import qualified Data.Text as Text (Text, pack)
 import qualified Exceptions as Ex
 import qualified Types as T
 import qualified Utils as S
-import qualified App.Logger as L
 
 draftModifyErrorToApiResult :: T.DraftModifyError -> T.APIResult
 draftModifyErrorToApiResult (T.DModifyError x) = T.RFailed T.EDraft x
@@ -33,7 +33,8 @@ draftModifyHandler logger err = do
 
 createDraft ::
        (CMC.MonadCatch m)
-    => D.DraftsHandler m -> L.LoggerHandler m
+    => D.DraftsHandler m
+    -> L.LoggerHandler m
     -> T.WithAuthor T.CreateDraft
     -> m T.APIResult
 createDraft draftsH logger x@(T.WithAuthor _ T.CreateDraft {..}) =
@@ -50,11 +51,12 @@ createDraft draftsH logger x@(T.WithAuthor _ T.CreateDraft {..}) =
 
 editDraft ::
        (CMC.MonadCatch m)
-    => D.DraftsHandler m -> L.LoggerHandler m
+    => D.DraftsHandler m
+    -> L.LoggerHandler m
     -> T.WithAuthor T.EditDraft
     -> m T.APIResult
 editDraft draftsH logger x@(T.WithAuthor _ T.EditDraft {..}) =
-    Ex.withHandler (draftModifyHandler $ logger) $
+    Ex.withHandler (draftModifyHandler logger) $
     D.withTransaction draftsH $ do
         eithDraft <- D.editDraft draftsH logger x
         draft <- throwWithFuncOnError T.DModifyError eithDraft
@@ -76,11 +78,12 @@ publishHandler = draftModifyHandler
 
 publish ::
        (CMC.MonadCatch m)
-    => D.DraftsHandler m -> L.LoggerHandler m
+    => D.DraftsHandler m
+    -> L.LoggerHandler m
     -> T.WithAuthor T.Publish
     -> m T.APIResult
 publish draftsH logger x@(T.WithAuthor _ T.Publish {}) =
-    Ex.withHandler (publishHandler $ logger) $
+    Ex.withHandler (publishHandler logger) $
     D.withTransaction draftsH $ do
         eithDraft <- D.getDraftRaw draftsH logger x
         case eithDraft of
@@ -91,7 +94,11 @@ publish draftsH logger x@(T.WithAuthor _ T.Publish {}) =
                     Just post -> publishEdit draftsH logger post draft
 
 publishCreate ::
-       (CMC.MonadCatch m) => D.DraftsHandler m -> L.LoggerHandler m -> T.DraftRaw -> m T.APIResult
+       (CMC.MonadCatch m)
+    => D.DraftsHandler m
+    -> L.LoggerHandler m
+    -> T.DraftRaw
+    -> m T.APIResult
 publishCreate draftsH logger x = do
     eithPost <- D.createPost draftsH logger x
     post <- throwWithFuncOnError T.DModifyError eithPost
@@ -104,14 +111,16 @@ publishCreate draftsH logger x = do
     draft <- throwWithFuncOnError T.DModifyError eithDraft
     L.logInfo logger $
         "Added post_id to draft with id = " <> S.showText draft
-    eithTags_ <- D.attachTagsToPost draftsH logger post (T._dr_tagIds x)
+    eithTags_ <-
+        D.attachTagsToPost draftsH logger post (T._dr_tagIds x)
     tags_ <- throwWithFuncOnError T.DTagsError eithTags_
     L.logInfo logger $ attached "post" tags_ post
     pure $ T.RCreated T.EPost post
 
 publishEdit ::
        (CMC.MonadCatch m)
-    => D.DraftsHandler m -> L.LoggerHandler m
+    => D.DraftsHandler m
+    -> L.LoggerHandler m
     -> Int
     -> T.DraftRaw
     -> m T.APIResult
@@ -122,7 +131,8 @@ publishEdit draftsH logger post draft =
         eithPost_ <- D.editPostPublish draftsH logger publishPost
         post_ <- throwWithFuncOnError T.DModifyError eithPost_
         eithTs <-
-            D.attachTagsToPost draftsH logger post $ T._dr_tagIds draft
+            D.attachTagsToPost draftsH logger post $
+            T._dr_tagIds draft
         ts <- throwWithFuncOnError T.DTagsError eithTs
         L.logInfo logger $ attached "post" ts post
         tsRem <-

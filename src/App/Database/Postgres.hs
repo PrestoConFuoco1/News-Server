@@ -7,13 +7,15 @@ module App.Database.Postgres
     , resourcesToHandle
     ) where
 
-import App.Database (Handle(..),
-    AuthHandler(..),
-    AuthorsHandler(..),
-    TagsHandler(..),
-    CatsHandler(..),
-    CommentsHandler(..),
-    DraftsHandler(..))
+import App.Database
+    ( AuthHandler(..)
+    , AuthorsHandler(..)
+    , CatsHandler(..)
+    , CommentsHandler(..)
+    , DraftsHandler(..)
+    , Handle(..)
+    , TagsHandler(..)
+    )
 import qualified App.Database.Postgres.Internal as IOP
 import qualified App.Logger as L
 import Control.Monad ((>=>))
@@ -61,75 +63,92 @@ closeResources resources =
     let conn = postgresConnection resources
      in PS.close conn
 
-
-
 resourcesToHandle :: Resources -> L.LoggerHandler IO -> Handle IO
 resourcesToHandle (Resources con) logger =
-    let authH = AuthHandler {
-          userAuthor = IOP.userAuthor con
-        , createUser = IOP.createThis @T.CreateUser con
-        , deleteUser = IOP.deleteThis @T.DeleteUser con
-        , getUserByToken = IOP.getUserByToken con
-        , getUserByLogin = IOP.getUserByLogin con
-        , addToken = IOP.addToken con
-        , generateToken = IOP.generateToken
-        }
-        authorsH = AuthorsHandler {
-          getAuthors = IOP.getThisPaginated @T.GetAuthors con
-        , createAuthor = IOP.createThis @T.CreateAuthor con
-        , editAuthor = IOP.editThis @T.EditAuthor con
-        , deleteAuthor = IOP.deleteThis @T.DeleteAuthor con
-        }
-        tagsH = TagsHandler {
-          getTags = IOP.getThisPaginated @T.GetTags con
-        , createTag = IOP.createThis @T.CreateTag con
-        , editTag = IOP.editThis @T.EditTag con
-        , deleteTag = IOP.deleteThis @T.DeleteTag con
-        }
-        catsH = CatsHandler {
-          getCategories = IOP.getThisPaginated @T.GetCategories con
-        , getCategoryById = IOP.getCategoryById con
-        , createCategory = IOP.createThis @T.CreateCategory con
-        , editCategory = IOP.editThis @T.EditCategory con
-        , deleteCategory = IOP.deleteThis @T.DeleteCategory con
-        }
-        commentsH = CommentsHandler {
-          getComments = IOP.getThisPaginated @T.GetComments con
-        , createComment =
-              IOP.createThis @(T.WithUser T.CreateComment) con
-        , deleteComment =
-              IOP.deleteThis @(T.WithUser T.DeleteComment) con
-        }
-        draftsH = DraftsHandler {
-          withTransaction = IOP.withTransaction con
-        , attachTagsToDraft = IOP.attachTags con HDraft
-        , attachTagsToPost = IOP.attachTags con HPost
-        , editDraft = IOP.editThis @(T.WithAuthor T.EditDraft) con
-        , removeAllButGivenTagsDraft =
-              IOP.removeAllButGivenTags con HDraft
-        , removeAllButGivenTagsPost =
-              IOP.removeAllButGivenTags con HPost
-        , getDraftRaw =
-              \l ->
-                  IOP.getThis @(T.WithAuthor T.Publish) con l >=>
-                  IOP.checkUnique Nothing Just T.EDraft T._dr_draftId
-        , createDraft =
-              IOP.createThis @(T.WithAuthor T.CreateDraft) con
-        , editDraftPublish = IOP.editThis @T.EditDraftPublish con
-        , editPostPublish = IOP.editThis @T.PublishEditPost con
-        , createPost = IOP.createThis @T.DraftRaw con
-        , getDrafts =
-              IOP.getThisPaginated @(T.WithAuthor T.GetDrafts) con
-        , deleteDraft =
-              IOP.deleteThis @(T.WithAuthor T.DeleteDraft) con
-        }
+    let authH =
+            AuthHandler
+                { userAuthor = IOP.userAuthor con
+                , createUser = IOP.createThis @T.CreateUser con
+                , deleteUser = IOP.deleteThis @T.DeleteUser con
+                , getUserByToken = IOP.getUserByToken con
+                , getUserByLogin = IOP.getUserByLogin con
+                , addToken = IOP.addToken con
+                , generateToken = IOP.generateToken
+                }
+        authorsH =
+            AuthorsHandler
+                { getAuthors = IOP.getThisPaginated @T.GetAuthors con
+                , createAuthor = IOP.createThis @T.CreateAuthor con
+                , editAuthor = IOP.editThis @T.EditAuthor con
+                , deleteAuthor = IOP.deleteThis @T.DeleteAuthor con
+                }
+        tagsH =
+            TagsHandler
+                { getTags = IOP.getThisPaginated @T.GetTags con
+                , createTag = IOP.createThis @T.CreateTag con
+                , editTag = IOP.editThis @T.EditTag con
+                , deleteTag = IOP.deleteThis @T.DeleteTag con
+                }
+        catsH =
+            CatsHandler
+                { getCategories =
+                      IOP.getThisPaginated @T.GetCategories con
+                , getCategoryById = IOP.getCategoryById con
+                , createCategory =
+                      IOP.createThis @T.CreateCategory con
+                , editCategory = IOP.editThis @T.EditCategory con
+                , deleteCategory =
+                      IOP.deleteThis @T.DeleteCategory con
+                }
+        commentsH =
+            CommentsHandler
+                { getComments =
+                      IOP.getThisPaginated @T.GetComments con
+                , createComment =
+                      IOP.createThis @(T.WithUser T.CreateComment) con
+                , deleteComment =
+                      IOP.deleteThis @(T.WithUser T.DeleteComment) con
+                }
+        draftsH =
+            DraftsHandler
+                { withTransaction = IOP.withTransaction con
+                , attachTagsToDraft = IOP.attachTags con HDraft
+                , attachTagsToPost = IOP.attachTags con HPost
+                , editDraft =
+                      IOP.editThis @(T.WithAuthor T.EditDraft) con
+                , removeAllButGivenTagsDraft =
+                      IOP.removeAllButGivenTags con HDraft
+                , removeAllButGivenTagsPost =
+                      IOP.removeAllButGivenTags con HPost
+                , getDraftRaw =
+                      \l ->
+                          IOP.getThis @(T.WithAuthor T.Publish) con l >=>
+                          IOP.checkUnique
+                              Nothing
+                              Just
+                              T.EDraft
+                              T._dr_draftId
+                , createDraft =
+                      IOP.createThis @(T.WithAuthor T.CreateDraft) con
+                , editDraftPublish =
+                      IOP.editThis @T.EditDraftPublish con
+                , editPostPublish =
+                      IOP.editThis @T.PublishEditPost con
+                , createPost = IOP.createThis @T.DraftRaw con
+                , getDrafts =
+                      IOP.getThisPaginated
+                          @(T.WithAuthor T.GetDrafts)
+                          con
+                , deleteDraft =
+                      IOP.deleteThis @(T.WithAuthor T.DeleteDraft) con
+                }
      in Handle
-        { log = logger
-        , authHandler = authH
-        , authorsHandler = authorsH
-        , tagsHandler = tagsH
-        , catsHandler = catsH
-        , commentsHandler = commentsH
-        , getPosts = IOP.getThisPaginated @T.GetPosts con
-        , draftsHandler = draftsH
-        }
+            { log = logger
+            , authHandler = authH
+            , authorsHandler = authorsH
+            , tagsHandler = tagsH
+            , catsHandler = catsH
+            , commentsHandler = commentsH
+            , getPosts = IOP.getThisPaginated @T.GetPosts con
+            , draftsHandler = draftsH
+            }

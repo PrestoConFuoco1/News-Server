@@ -71,7 +71,8 @@ invalidForeignMsg :: Text.Text -> Text.Text -> Text.Text
 invalidForeignMsg field value =
     field <> " has an invalid value of " <> value
 
-constraintViolatedMsg :: Text.Text -> Text.Text -> Text.Text -> Text.Text
+constraintViolatedMsg ::
+       Text.Text -> Text.Text -> Text.Text -> Text.Text
 constraintViolatedMsg field value description =
     field <>
     " has an invalid value of " <>

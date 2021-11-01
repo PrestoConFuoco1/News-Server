@@ -10,6 +10,7 @@ module Execute.Utils
     ) where
 
 import qualified App.Database as D
+import qualified App.Logger as L
 import Control.Monad (when)
 import qualified Control.Monad.Catch as CMC
 import qualified Data.Text as Text
@@ -17,16 +18,23 @@ import qualified Exceptions as Ex
 import qualified GenericPretty as GP
 import qualified Types as T
 import qualified Utils as S
-import qualified App.Logger as L
 
 withAuthAdmin ::
-       (CMC.MonadThrow m) => D.AuthHandler m -> L.LoggerHandler m -> Maybe T.Token -> m ()
+       (CMC.MonadThrow m)
+    => D.AuthHandler m
+    -> L.LoggerHandler m
+    -> Maybe T.Token
+    -> m ()
 withAuthAdmin h logger y = do
     muser <- withAuth h logger y
     checkAdmin h logger muser
 
 withAuthor ::
-       (CMC.MonadThrow m) => D.AuthHandler m -> L.LoggerHandler m -> Maybe T.Token -> m T.Author
+       (CMC.MonadThrow m)
+    => D.AuthHandler m
+    -> L.LoggerHandler m
+    -> Maybe T.Token
+    -> m T.Author
 withAuthor h logger y = do
     muser <- withAuth h logger y
     user <- maybeUserToUser h logger muser
@@ -34,7 +42,11 @@ withAuthor h logger y = do
     maybe Ex.notAnAuthor pure mauthor
 
 withAuth ::
-       (Monad m) => D.AuthHandler m -> L.LoggerHandler m -> Maybe T.Token -> m (Maybe T.User)
+       (Monad m)
+    => D.AuthHandler m
+    -> L.LoggerHandler m
+    -> Maybe T.Token
+    -> m (Maybe T.User)
 withAuth h logger mtoken = do
     let fname = "withAuth: "
     L.logDebug logger $ fname <> "trying to get user by token"
@@ -48,7 +60,12 @@ withAuth h logger mtoken = do
                 "searching for user with token = " <> T._t_token token
             D.getUserByToken h logger token
 
-checkAdmin :: (CMC.MonadThrow m) => D.AuthHandler m -> L.LoggerHandler m -> Maybe T.User -> m ()
+checkAdmin ::
+       (CMC.MonadThrow m)
+    => D.AuthHandler m
+    -> L.LoggerHandler m
+    -> Maybe T.User
+    -> m ()
 checkAdmin h logger muser = do
     let fname = "checkAdmin: "
     case muser of
@@ -68,10 +85,15 @@ checkAdmin h logger muser = do
                 else L.logDebug logger $ fname <> "ok, user is admin"
 
 maybeUserToUser ::
-       (CMC.MonadThrow m) => D.AuthHandler m -> L.LoggerHandler m -> Maybe T.User -> m T.User
+       (CMC.MonadThrow m)
+    => D.AuthHandler m
+    -> L.LoggerHandler m
+    -> Maybe T.User
+    -> m T.User
 maybeUserToUser h logger Nothing = do
     let fname = "maybeUserToUser: "
-    L.logDebug logger $ fname <> "no user found, throwing unauthorized"
+    L.logDebug logger $
+        fname <> "no user found, throwing unauthorized"
     Ex.throwUnauthorized
 maybeUserToUser h logger (Just u) = do
     let fname = "maybeUserToUser: "
@@ -81,20 +103,23 @@ maybeUserToUser h logger (Just u) = do
 
 getUser ::
        (CMC.MonadThrow m)
-    => D.AuthHandler m -> L.LoggerHandler m
+    => D.AuthHandler m
+    -> L.LoggerHandler m
     -> Maybe T.User
     -> m T.APIResult
 getUser h logger muser = T.RGetUser <$> maybeUserToUser h logger muser
 
 authenticate ::
        (CMC.MonadThrow m)
-    => D.AuthHandler m -> L.LoggerHandler m
+    => D.AuthHandler m
+    -> L.LoggerHandler m
     -> T.Authenticate
     -> m T.APIResult
 authenticate h logger auth = do
     muser <- D.getUserByLogin h logger $ T._au_login auth
     user <- maybe Ex.throwInvalidLogin pure muser
-    when (T._u_passHash user /= T._au_passHash auth) $
+    when
+        (T._u_passHash user /= T._au_passHash auth)
         Ex.throwInvalidPassword
     token <- Text.pack <$> D.generateToken h 10
     token' <- D.addToken h logger (T._u_id user) token
@@ -125,7 +150,7 @@ checkCategoryUpdate catsH logger editCat = do
 checkCategoryCycles ::
        T.CategoryId -> T.Category -> Maybe T.ModifyError
 checkCategoryCycles cid newParentCat =
-    if not $ cid `elem` T.getCategoryParents newParentCat
+    if cid `notElem` T.getCategoryParents newParentCat
         then Nothing
         else Just $
              T.MConstraintViolated $

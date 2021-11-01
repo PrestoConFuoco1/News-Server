@@ -1,4 +1,5 @@
-{-# LANGUAGE TypeApplications, ScopedTypeVariables #-}
+{-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module App.Database.Postgres.Internal
     ( module App.Database.Postgres.Internal
@@ -27,7 +28,7 @@ userAuthor ::
     -> T.User
     -> IO (Maybe T.Author)
 userAuthor con logger u = do
-    let getauthors = (T.GetAuthors $ Just $ T._u_id u)
+    let getauthors = T.GetAuthors $ Just $ T._u_id u
     as <- getThis @T.GetAuthors con logger getauthors
     case as of
         [] -> pure Nothing

@@ -140,7 +140,9 @@ requestToActionDrafts path hash =
         _ -> Left pathNotFound
 
 requestToActionCats ::
-       [Text.Text] -> Query -> Either ActionErrorPerms T.ActionCategory
+       [Text.Text]
+    -> Query
+    -> Either ActionErrorPerms T.ActionCategory
 requestToActionCats path hash =
     case path of
         [x]
@@ -214,7 +216,9 @@ requestToActionAuthors path hash =
         _ -> Left pathNotFound
 
 requestToActionComments ::
-       [Text.Text] -> Query -> Either ActionErrorPerms T.ActionComments
+       [Text.Text]
+    -> Query
+    -> Either ActionErrorPerms T.ActionComments
 requestToActionComments path hash =
     case path of
         [x]
