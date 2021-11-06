@@ -61,12 +61,12 @@ instance CreateSQL T.DraftRaw where
                                  \ photo,\
                                  \ extra_photos\
                            \ ) values (?, ?, ?, ?, ?, ?) RETURNING post_id"
-        , [ SqlValue _dr_title
-          , SqlValue _dr_authorId
-          , SqlValue _dr_categoryId
-          , SqlValue _dr_content
-          , SqlValue _dr_mainPhoto
-          , SqlValue $ fmap PSTy.PGArray _dr_extraPhotos
+        , [ SqlValue drTitle
+          , SqlValue drAuthorId
+          , SqlValue drCategoryId
+          , SqlValue drContent
+          , SqlValue drMainPhoto
+          , SqlValue $ fmap PSTy.PGArray drExtraPhotos
           ])
     cName = T.EPost
 

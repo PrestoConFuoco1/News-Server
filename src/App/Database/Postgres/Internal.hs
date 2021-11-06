@@ -33,7 +33,7 @@ userAuthor con logger u = do
     case as of
         [] -> pure Nothing
         [a] -> pure $ Just a
-        _ -> Ex.throwInvalidUnique T.EAuthor (map T._a_authorId as)
+        _ -> Ex.throwInvalidUnique T.EAuthor (map T.aAuthorId as)
 
 getUserByToken ::
        PS.Connection
@@ -93,7 +93,7 @@ getCategoryById con logger cid = do
         [c] -> pure $ Just c
         _ ->
             Ex.throwInvalidUnique T.ECategory $
-            map T._cat_categoryId cats
+            map T.cCategoryId cats
 
 getThisPaginated ::
        (ReadSQL a)

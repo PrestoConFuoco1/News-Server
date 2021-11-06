@@ -127,7 +127,7 @@ resourcesToHandle (Resources con) logger =
                               Nothing
                               Just
                               T.EDraft
-                              T._dr_draftId
+                              T.drDraftId
                 , createDraft =
                       IOP.createThis @(T.WithAuthor T.CreateDraft) con
                 , editDraftPublish =

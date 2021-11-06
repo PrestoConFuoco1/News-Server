@@ -89,7 +89,7 @@ publish draftsH logger x@(T.WithAuthor _ T.Publish {}) =
         case eithDraft of
             Nothing -> pure $ T.RFailed T.EDraft T.MNoAction
             Just draft ->
-                case T._dr_postId draft of
+                case T.drPostId draft of
                     Nothing -> publishCreate draftsH logger draft
                     Just post -> publishEdit draftsH logger post draft
 
@@ -107,12 +107,12 @@ publishCreate draftsH logger x = do
         D.editDraftPublish
             draftsH
             logger
-            (T.EditDraftPublish post $ T._dr_draftId x)
+            (T.EditDraftPublish post $ T.drDraftId x)
     draft <- throwWithFuncOnError T.DModifyError eithDraft
     L.logInfo logger $
         "Added post_id to draft with id = " <> S.showText draft
     eithTags_ <-
-        D.attachTagsToPost draftsH logger post (T._dr_tagIds x)
+        D.attachTagsToPost draftsH logger post (T.drTagIds x)
     tags_ <- throwWithFuncOnError T.DTagsError eithTags_
     L.logInfo logger $ attached "post" tags_ post
     pure $ T.RCreated T.EPost post
@@ -132,13 +132,13 @@ publishEdit draftsH logger post draft =
         post_ <- throwWithFuncOnError T.DModifyError eithPost_
         eithTs <-
             D.attachTagsToPost draftsH logger post $
-            T._dr_tagIds draft
+            T.drTagIds draft
         ts <- throwWithFuncOnError T.DTagsError eithTs
         L.logInfo logger $ attached "post" ts post
         tsRem <-
             D.removeAllButGivenTagsPost draftsH logger post $
-            T._dr_tagIds draft
-        L.logInfo logger $ removed "post" tsRem $ T._dr_draftId draft
+            T.drTagIds draft
+        L.logInfo logger $ removed "post" tsRem $ T.drDraftId draft
         pure $ T.REdited T.EPost post_
 
 throwWithFuncOnError ::
@@ -151,11 +151,11 @@ throwWithFuncOnError f = either (CMC.throwM . f) pure
 draftRawToPublishEditPost :: Int -> T.DraftRaw -> T.PublishEditPost
 draftRawToPublishEditPost post T.DraftRaw {..} =
     let pepPostId = post
-        pepTitle = _dr_title
-        pepCategoryId = _dr_categoryId
-        pepContent = _dr_content
-        pepMainPhoto = _dr_mainPhoto
-        pepExtraPhotos = _dr_extraPhotos
+        pepTitle = drTitle
+        pepCategoryId = drCategoryId
+        pepContent = drContent
+        pepMainPhoto = drMainPhoto
+        pepExtraPhotos = drExtraPhotos
      in T.PublishEditPost {..}
 
 attached, removed :: Text.Text -> [Int] -> Int -> Text.Text

@@ -173,12 +173,12 @@ executeDraft h (T.WhoWhat token crud) =
     authH = D.authHandler h
 
     withAuthor action x = do
-        authorId <- T._a_authorId <$>
+        authorId <- T.aAuthorId <$>
             U.withAuthor authH logger token
         action (T.WithAuthor authorId x)
 
     read r = do
-        authorId <- T._a_authorId <$>
+        authorId <- T.aAuthorId <$>
             U.withAuthor authH logger token
         getThis (D.getDrafts draftsH logger) $
             fmap (T.WithAuthor authorId) r
@@ -194,7 +194,7 @@ executePublish h (T.WhoWhat token x) = do
         draftsH = D.draftsHandler h
         authH = D.authHandler h
     author <- U.withAuthor authH logger token
-    publish draftsH logger $ T.WithAuthor (T._a_authorId author) x
+    publish draftsH logger $ T.WithAuthor (T.aAuthorId author) x
 
 handleError ::
        CMC.MonadCatch m

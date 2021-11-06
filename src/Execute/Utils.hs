@@ -168,6 +168,6 @@ checkCategoryCycles cid newParentCat =
              T.ConstraintViolation
                  { T.cvField = "parent_id"
                  , T.cvValue =
-                       S.showText $ T._cat_categoryId newParentCat
+                       S.showText $ T.cCategoryId newParentCat
                  , T.cvDescription = "categories form a cycle"
                  }

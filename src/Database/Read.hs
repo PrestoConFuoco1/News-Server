@@ -19,8 +19,7 @@ import qualified GenericPretty as GP (PrettyShow(..))
 import qualified Types as T
 import qualified Utils as S
 
-class ( Ae.ToJSON (MType a)
-      , GP.PrettyShow (MType a)
+class ( GP.PrettyShow (MType a)
       , PS.FromRow (MType a)
       , Show a
       , Show (MType a)
