@@ -1,6 +1,6 @@
 .stack-work/
 *~
 *.swp
-.gitignore
+#.gitignore
 .vscode/
 .history/

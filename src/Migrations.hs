@@ -1,5 +1,6 @@
 {-# LANGUAGE TemplateHaskell, RecordWildCards #-}
 
+
 module Migrations
     ( migrationMain
     , Config(..)
