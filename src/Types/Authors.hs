@@ -23,29 +23,29 @@ type ActionAuthors
 
 newtype GetAuthors =
     GetAuthors
-        { _ga_userId :: Maybe UserId
+        { gaUserId :: Maybe UserId
         }
   deriving (Show, Eq, Generic)
   deriving GP.PrettyShow via GP.Showable GetAuthors
 
 data CreateAuthor =
     CreateAuthor
-        { _ca_userId :: UserId
-        , _ca_description :: Text.Text
+        { caUserId :: UserId
+        , caDescription :: Text.Text
         }
   deriving (Show, Eq, Generic, GP.PrettyShow)
 
 newtype DeleteAuthor =
     DeleteAuthor
-        { _da_authorId :: AuthorId
+        { daAuthorId :: AuthorId
         }
   deriving (Show, Eq, Generic, GP.PrettyShow)
 
 data EditAuthor =
     EditAuthor
-        { _ea_authorId :: AuthorId
-        , _ea_description :: Maybe Text.Text
-        , _ea_userId :: Maybe UserId
+        { eaAuthorId :: AuthorId
+        , eaDescription :: Maybe Text.Text
+        , eaUserId :: Maybe UserId
         }
   deriving (Show, Eq, Generic, GP.PrettyShow)
 

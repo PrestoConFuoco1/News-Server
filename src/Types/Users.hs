@@ -23,10 +23,10 @@ type ActionUsers = CRUD CreateUser GetProfile Void DeleteUser
 
 data CreateUser =
     CreateUser
-        { _cu_login :: Text.Text
-        , _cu_passHash :: Text.Text
-        , _cu_firstName :: Text.Text
-        , _cu_lastName :: Text.Text
+        { cuLogin :: Text.Text
+        , cuPassHash :: Text.Text
+        , cuFirstName :: Text.Text
+        , cuLastName :: Text.Text
         }
   deriving (Show, Eq, Generic, GP.PrettyShow, PS.ToRow)
 
@@ -37,14 +37,14 @@ data GetProfile =
 
 newtype DeleteUser =
     DeleteUser
-        { _du_userId :: UserId
+        { duUserId :: UserId
         }
   deriving (Show, Eq, Generic, GP.PrettyShow, PS.ToRow)
 
 data Authenticate =
     Authenticate
-        { _au_login :: Text.Text
-        , _au_passHash :: Text.Text
+        { auLogin :: Text.Text
+        , auPassHash :: Text.Text
         }
   deriving (Show, Eq, Generic, GP.PrettyShow)
 

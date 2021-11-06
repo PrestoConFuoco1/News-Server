@@ -58,8 +58,8 @@ instance UpdateSQL T.EditTag where
         p <> " WHERE tag_id = ? RETURNING tag_id"
     uName = T.ETag
     optionalsMaybe T.EditTag {..} =
-        [("name", Just $ SqlValue _et_tagName)]
-    identifParams et = [SqlValue $ T._et_tagId et]
+        [("name", Just $ SqlValue etTagName)]
+    identifParams et = [SqlValue $ T.etTagId et]
 
 instance UpdateSQL T.EditCategory where
     updateQuery p =
@@ -67,10 +67,10 @@ instance UpdateSQL T.EditCategory where
         p <> " WHERE category_id = ? RETURNING category_id"
     uName = T.ECategory
     optionalsMaybe T.EditCategory {..} =
-        [ ("name", fmap SqlValue _ec_catName)
-        , ("parent_category_id", fmap SqlValue _ec_parentId)
+        [ ("name", fmap SqlValue ecCategoryName)
+        , ("parent_category_id", fmap SqlValue ecParentId)
         ]
-    identifParams ec = [SqlValue $ T._ec_catId ec]
+    identifParams ec = [SqlValue $ T.ecCategoryId ec]
 
 instance UpdateSQL T.EditAuthor where
     updateQuery p =
@@ -78,10 +78,10 @@ instance UpdateSQL T.EditAuthor where
         p <> " WHERE author_id = ? RETURNING author_id"
     uName = T.EAuthor
     optionalsMaybe T.EditAuthor {..} =
-        [ ("description", fmap SqlValue _ea_description)
-        , ("user_id", fmap SqlValue _ea_userId)
+        [ ("description", fmap SqlValue eaDescription)
+        , ("user_id", fmap SqlValue eaUserId)
         ]
-    identifParams ea = [SqlValue $ T._ea_authorId ea]
+    identifParams ea = [SqlValue $ T.eaAuthorId ea]
 
 instance UpdateSQL T.PublishEditPost where
     updateQuery p =
@@ -89,14 +89,14 @@ instance UpdateSQL T.PublishEditPost where
         p <> " WHERE post_id = ? RETURNING post_id"
     uName = T.EPost
     optionalsMaybe T.PublishEditPost {..} =
-        [ ("title", Just $ SqlValue _pep_title)
-        , ("category_id", Just $ SqlValue _pep_categoryId)
-        , ("content", Just $ SqlValue _pep_content)
-        , ("photo", fmap SqlValue _pep_mainPhoto)
+        [ ("title", Just $ SqlValue pepTitle)
+        , ("category_id", Just $ SqlValue pepCategoryId)
+        , ("content", Just $ SqlValue pepContent)
+        , ("photo", fmap SqlValue pepMainPhoto)
         , ( "extra_photos"
-          , fmap (SqlValue . PSTy.PGArray) _pep_extraPhotos)
+          , fmap (SqlValue . PSTy.PGArray) pepExtraPhotos)
         ]
-    identifParams pep = [SqlValue $ T._pep_postId pep]
+    identifParams pep = [SqlValue $ T.pepPostId pep]
 
 instance UpdateSQL (T.WithAuthor T.EditDraft) where
     updateQuery p =
@@ -105,15 +105,15 @@ instance UpdateSQL (T.WithAuthor T.EditDraft) where
         " WHERE draft_id = ? AND author_id = ? RETURNING draft_id"
     uName = T.EDraft
     optionalsMaybe (T.WithAuthor _ T.EditDraft {..}) =
-        [ ("title", fmap SqlValue _ed_title)
-        , ("category_id", fmap SqlValue _ed_categoryId)
-        , ("content", fmap SqlValue _ed_content)
-        , ("photo", fmap SqlValue _ed_mainPhoto)
+        [ ("title", fmap SqlValue edTitle)
+        , ("category_id", fmap SqlValue edCategoryId)
+        , ("content", fmap SqlValue edContent)
+        , ("photo", fmap SqlValue edMainPhoto)
         , ( "extra_photos"
-          , fmap (SqlValue . PSTy.PGArray) _ed_extraPhotos)
+          , fmap (SqlValue . PSTy.PGArray) edExtraPhotos)
         ]
     identifParams (T.WithAuthor a T.EditDraft {..}) =
-        [SqlValue _ed_draftId, SqlValue a]
+        [SqlValue edDraftId, SqlValue a]
 
 instance UpdateSQL T.EditDraftPublish where
     updateQuery p =
@@ -121,5 +121,5 @@ instance UpdateSQL T.EditDraftPublish where
         p <> " WHERE draft_id = ? RETURNING draft_id"
     uName = T.EDraft
     optionalsMaybe T.EditDraftPublish {..} =
-        [("post_id", Just $ SqlValue _edp_postId)]
-    identifParams T.EditDraftPublish {..} = [SqlValue _edp_draftId]
+        [("post_id", Just $ SqlValue edpPostId)]
+    identifParams T.EditDraftPublish {..} = [SqlValue edpDraftId]

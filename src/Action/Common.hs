@@ -31,20 +31,20 @@ data ActionError
 
 pathNotFound :: ActionErrorPerms
 pathNotFound =
-    ActionErrorPerms {_ae_admin = False, _ae_error = EInvalidEndpoint}
+    ActionErrorPerms {aeAdmin = False, aeError = EInvalidEndpoint}
 
 data ActionErrorPerms =
     ActionErrorPerms
-        { _ae_admin :: Bool
-        , _ae_error :: ActionError
+        { aeAdmin :: Bool
+        , aeError :: ActionError
         }
   deriving (Show, Generic, Eq)
   deriving GP.PrettyShow via GP.Showable ActionErrorPerms
 
 data RoutingEnv =
     RoutingEnv
-        { _re_admin :: Bool
-        , _re_hash :: Query
+        { reAdmin :: Bool
+        , reHash :: Query
         }
   deriving (Show, Generic)
 
@@ -55,10 +55,10 @@ newtype Router a =
   deriving (Functor, Applicative, Monad, MonadReader RoutingEnv)
 
 askAdmin :: Router Bool
-askAdmin = asks _re_admin
+askAdmin = asks reAdmin
 
 askHash :: Router Query
-askHash = asks _re_hash
+askHash = asks reHash
 
 routerError :: ActionError -> Router a
 routerError err =

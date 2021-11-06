@@ -41,32 +41,32 @@ type ActionComments
 
 newtype GetComments =
     GetComments
-        { _gc_postId :: PostId
+        { gcPostId :: PostId
         }
   deriving (Show, Eq, Generic)
   deriving anyclass (GP.PrettyShow)
 
 data CreateComment =
     CreateComment
-        { _ccom_postId :: PostId
-        , _ccom_content :: Text.Text
+        { ccomPostId :: PostId
+        , ccomContent :: Text.Text
         }
   deriving (Show, Eq, Generic, GP.PrettyShow, PS.ToRow)
 
 newtype DeleteComment =
     DeleteComment
-        { _dc_commentId :: CommentId
+        { dcCommentId :: CommentId
         }
   deriving (Show, Eq, Generic, GP.PrettyShow, PS.ToRow)
 
 data PublishEditPost =
     PublishEditPost
-        { _pep_postId :: PostId
-        , _pep_title :: Text.Text
-        , _pep_categoryId :: CategoryId
-        , _pep_content :: Text.Text
-        , _pep_mainPhoto :: Maybe Text.Text
-        , _pep_extraPhotos :: Maybe [Text.Text]
+        { pepPostId :: PostId
+        , pepTitle :: Text.Text
+        , pepCategoryId :: CategoryId
+        , pepContent :: Text.Text
+        , pepMainPhoto :: Maybe Text.Text
+        , pepExtraPhotos :: Maybe [Text.Text]
         }
   deriving (Show, Eq)
 
@@ -79,10 +79,10 @@ type ActionPosts = CRUD Void (Paginated GetPosts) Void Void
 
 data GetPosts =
     GetPosts
-        { _gp_creationDate :: Maybe CreationDateOptions
-        , _gp_tags :: Maybe TagsOptions
-        , _gp_search :: Maybe SearchOptions
-        , _gp_sort :: SortOptions
+        { gpCreationDate :: Maybe CreationDateOptions
+        , gpTags :: Maybe TagsOptions
+        , gpSearch :: Maybe SearchOptions
+        , gpSort :: SortOptions
         }
   deriving (Show, Eq, Generic)
   deriving anyclass (GP.PrettyShow)
@@ -126,8 +126,8 @@ instance GP.PrettyShow SortOrder where
 
 data SortOptions =
     SortOptions
-        { _so_sortBy :: SortEntity
-        , _so_order :: SortOrder
+        { soSortBy :: SortEntity
+        , soOrder :: SortOrder
         }
   deriving (Show, Eq, Generic)
   deriving anyclass (GP.PrettyShow)

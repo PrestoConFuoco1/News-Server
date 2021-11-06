@@ -18,7 +18,7 @@ import qualified Utils as S
 draftModifyErrorToApiResult :: T.DraftModifyError -> T.APIResult
 draftModifyErrorToApiResult (T.DModifyError x) = T.RFailed T.EDraft x
 draftModifyErrorToApiResult (T.DTagsError (T.TagsAttachError T.ForeignViolation {..})) =
-    T.RInvalidTag _fv_value
+    T.RInvalidTag fvValue
 
 --    T.RFailed T.EDraft ?
 draftModifyHandler ::
@@ -44,7 +44,7 @@ createDraft draftsH logger x@(T.WithAuthor _ T.CreateDraft {..}) =
         draft <- throwWithFuncOnError T.DModifyError eithDraft
         L.logInfo logger $
             "Created draft with id = " <> Text.pack (show draft)
-        eithTags <- D.attachTagsToDraft draftsH logger draft _cd_tags
+        eithTags <- D.attachTagsToDraft draftsH logger draft cdTags
         tags <- throwWithFuncOnError T.DTagsError eithTags
         L.logInfo logger $ attached "draft" tags draft
         pure $ T.RCreated T.EDraft draft
@@ -60,7 +60,7 @@ editDraft draftsH logger x@(T.WithAuthor _ T.EditDraft {..}) =
     D.withTransaction draftsH $ do
         eithDraft <- D.editDraft draftsH logger x
         draft <- throwWithFuncOnError T.DModifyError eithDraft
-        S.withMaybe _ed_tags (pure $ T.REdited T.EDraft draft) $ \tags -> do
+        S.withMaybe edTags (pure $ T.REdited T.EDraft draft) $ \tags -> do
             eithTs <- D.attachTagsToDraft draftsH logger draft tags
             ts <- throwWithFuncOnError T.DTagsError eithTs
             L.logInfo logger $ attached "draft" ts draft
@@ -150,12 +150,12 @@ throwWithFuncOnError f = either (CMC.throwM . f) pure
 
 draftRawToPublishEditPost :: Int -> T.DraftRaw -> T.PublishEditPost
 draftRawToPublishEditPost post T.DraftRaw {..} =
-    let _pep_postId = post
-        _pep_title = _dr_title
-        _pep_categoryId = _dr_categoryId
-        _pep_content = _dr_content
-        _pep_mainPhoto = _dr_mainPhoto
-        _pep_extraPhotos = _dr_extraPhotos
+    let pepPostId = post
+        pepTitle = _dr_title
+        pepCategoryId = _dr_categoryId
+        pepContent = _dr_content
+        pepMainPhoto = _dr_mainPhoto
+        pepExtraPhotos = _dr_extraPhotos
      in T.PublishEditPost {..}
 
 attached, removed :: Text.Text -> [Int] -> Int -> Text.Text

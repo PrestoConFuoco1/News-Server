@@ -28,7 +28,7 @@ userAuthor ::
     -> T.User
     -> IO (Maybe T.Author)
 userAuthor con logger u = do
-    let getauthors = T.GetAuthors $ Just $ T._u_id u
+    let getauthors = T.GetAuthors $ Just $ T.userId u
     as <- getThis @T.GetAuthors con logger getauthors
     case as of
         [] -> pure Nothing
@@ -45,7 +45,7 @@ getUserByToken con logger token = do
     case users of
         [] -> pure Nothing
         [u] -> pure $ Just u
-        _ -> Ex.throwTokenShared $ map T._u_id users
+        _ -> Ex.throwTokenShared $ map T.userId users
 
 getUserByLogin ::
        PS.Connection
@@ -63,7 +63,7 @@ getUserByLogin con logger login = do
         case users of
             [] -> pure Nothing
             [x] -> pure $ Just x
-            _ -> Ex.throwInvalidUnique T.EUser $ map T._u_id users
+            _ -> Ex.throwInvalidUnique T.EUser $ map T.userId users
 
 addToken ::
        PS.Connection
@@ -86,7 +86,7 @@ getCategoryById ::
     -> T.CategoryId
     -> IO (Maybe T.Category)
 getCategoryById con logger cid = do
-    let getcats = T.GetCategories {T._gc_catId = Just cid}
+    let getcats = T.GetCategories {T.gcCategoryId = Just cid}
     cats <- getThis con logger getcats
     case cats of
         [] -> pure Nothing

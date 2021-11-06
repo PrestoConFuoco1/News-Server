@@ -40,9 +40,9 @@ instance ( GP.PrettyShow c
 
 data Paginated a =
     Paginated
-        { _pag_page :: Int
-        , _pag_size :: Int
-        , _pag_data :: a
+        { pagPage :: Int
+        , pagSize :: Int
+        , pagData :: a
         }
   deriving (Show, Eq, Generic, Functor)
 

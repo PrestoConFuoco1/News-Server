@@ -22,7 +22,7 @@ import qualified Data.Text as Text
 import qualified Data.Time as Time
 import qualified Database.PostgreSQL.Simple as PS
 import qualified Database.PostgreSQL.Simple.FromRow as PSR
-import DerivingJSON (RemovePrefix(..))
+import DerivingJSON (RemovePrefix(..), DropLowerUncap(..))
 import GHC.Generics
 import qualified GenericPretty as GP
 import Types.Authors (AuthorId)
@@ -54,18 +54,19 @@ class (Ae.ToJSON a, Show a, GP.PrettyShow a) => Gettable a
 
 data User =
     User
-        { _u_id :: UserId
-        , _u_firstname :: Text.Text
-        , _u_lastname :: Text.Text
-        , _u_pictureUrl :: Maybe Text.Text
-        , _u_login :: Text.Text
-        , _u_passHash :: Text.Text
-        , _u_creationDate :: Time.Day
-        , _u_admin :: Maybe Bool
+        { userId :: UserId
+        , userFirstname :: Text.Text
+        , userLastname :: Text.Text
+        , userPictureUrl :: Maybe Text.Text
+        , userLogin :: Text.Text
+        , userPassHash :: Text.Text
+        , userCreationDate :: Time.Day
+        , userAdmin :: Maybe Bool
         }
   deriving (Show, Eq, Generic, GP.PrettyShow, PSR.FromRow)
-  deriving anyclass (Gettable)
-  deriving Ae.ToJSON via RemovePrefix User
+  deriving anyclass Gettable
+  --deriving Ae.ToJSON via RemovePrefix User
+  deriving Ae.ToJSON via DropLowerUncap User
 
 data Author =
     Author

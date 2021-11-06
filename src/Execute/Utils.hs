@@ -87,7 +87,7 @@ checkAdmin _ logger muser = do
         Just user -> do
             L.logDebug logger $ fname <> "found user"
             L.logDebug logger $ GP.textPretty user
-            if T._u_admin user /= Just True
+            if T.userAdmin user /= Just True
                 then do
                     L.logDebug logger $
                         fname <>
@@ -127,13 +127,13 @@ authenticate ::
     -> T.Authenticate
     -> m T.APIResult
 authenticate h logger auth = do
-    muser <- D.getUserByLogin h logger $ T._au_login auth
+    muser <- D.getUserByLogin h logger $ T.auLogin auth
     user <- maybe Ex.throwInvalidLogin pure muser
     when
-        (T._u_passHash user /= T._au_passHash auth)
+        (T.userPassHash user /= T.auPassHash auth)
         Ex.throwInvalidPassword
     token <- Text.pack <$> D.generateToken h 10
-    token' <- D.addToken h logger (T._u_id user) token
+    token' <- D.addToken h logger (T.userId user) token
     pure $ T.RGetToken token'
 
 checkCategoryUpdate ::
@@ -146,7 +146,7 @@ checkCategoryUpdate catsH logger editCat = do
     let funcName = "checkCategoryUpdate: "
     L.logDebug logger $ funcName <> "action is:"
     L.logDebug logger $ funcName <> GP.textPretty editCat
-    S.withMaybe (T._ec_parentId editCat) (pure Nothing) $ \parentCatId -> do
+    S.withMaybe (T.ecParentId editCat) (pure Nothing) $ \parentCatId -> do
         mParentCat <- D.getCategoryById catsH logger parentCatId
         L.logDebug logger $ funcName <> "new parent category is:"
         L.logDebug logger $ funcName <> GP.textPretty mParentCat
@@ -156,7 +156,7 @@ checkCategoryUpdate catsH logger editCat = do
              Just $
              T.MInvalidForeign $
              T.ForeignViolation "parent_id" $ S.showText parentCatId)
-            (pure . checkCategoryCycles (T._ec_catId editCat))
+            (pure . checkCategoryCycles (T.ecCategoryId editCat))
 
 checkCategoryCycles ::
        T.CategoryId -> T.Category -> Maybe T.ModifyError
@@ -166,8 +166,8 @@ checkCategoryCycles cid newParentCat =
         else Just $
              T.MConstraintViolated $
              T.ConstraintViolation
-                 { T._cv_field = "parent_id"
-                 , T._cv_value =
+                 { T.cvField = "parent_id"
+                 , T.cvValue =
                        S.showText $ T._cat_categoryId newParentCat
-                 , T._cv_description = "categories form a cycle"
+                 , T.cvDescription = "categories form a cycle"
                  }

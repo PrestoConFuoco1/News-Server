@@ -110,8 +110,8 @@ internal = Response NHT.internalServerError500 . errR
 
 data Response =
     Response
-        { _r_status :: NHT.Status
-        , _r_message :: Ae.Value
+        { rStatus :: NHT.Status
+        , rMessage :: Ae.Value
         }
   deriving (Show, Eq)
 

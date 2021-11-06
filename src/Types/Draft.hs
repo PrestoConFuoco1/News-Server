@@ -29,12 +29,12 @@ type ActionDrafts
 
 data CreateDraft =
     CreateDraft
-        { _cd_title :: Text.Text
-        , _cd_tags :: [TagId]
-        , _cd_categoryId :: CategoryId
-        , _cd_content :: Text.Text
-        , _cd_mainPhoto :: Maybe Text.Text
-        , _cd_extraPhotos :: Maybe [Text.Text]
+        { cdTitle :: Text.Text
+        , cdTags :: [TagId]
+        , cdCategoryId :: CategoryId
+        , cdContent :: Text.Text
+        , cdMainPhoto :: Maybe Text.Text
+        , cdExtraPhotos :: Maybe [Text.Text]
         }
   deriving (Show, Eq, Generic, GP.PrettyShow)
 
@@ -45,32 +45,32 @@ data GetDrafts =
 
 data EditDraft =
     EditDraft
-        { _ed_draftId :: DraftId
-        , _ed_title :: Maybe Text.Text
-        , _ed_tags :: Maybe [TagId]
-        , _ed_categoryId :: Maybe CategoryId
-        , _ed_content :: Maybe Text.Text
-        , _ed_mainPhoto :: Maybe Text.Text
-        , _ed_extraPhotos :: Maybe [Text.Text]
+        { edDraftId :: DraftId
+        , edTitle :: Maybe Text.Text
+        , edTags :: Maybe [TagId]
+        , edCategoryId :: Maybe CategoryId
+        , edContent :: Maybe Text.Text
+        , edMainPhoto :: Maybe Text.Text
+        , edExtraPhotos :: Maybe [Text.Text]
         }
   deriving (Show, Eq, Generic, GP.PrettyShow)
 
 data EditDraftPublish =
     EditDraftPublish
-        { _edp_postId :: PostId
-        , _edp_draftId :: DraftId
+        { edpPostId :: PostId
+        , edpDraftId :: DraftId
         }
   deriving (Show, Eq, Generic, GP.PrettyShow)
 
 newtype DeleteDraft =
     DeleteDraft
-        { _dd_draft_id :: DraftId
+        { ddDraftId :: DraftId
         }
   deriving (Show, Eq, Generic, GP.PrettyShow, PS.ToRow)
 
 newtype Publish =
     Publish
-        { _p_draftId :: DraftId
+        { pDraftId :: DraftId
         }
   deriving (Show, Eq, Generic, GP.PrettyShow, PS.ToRow)
 

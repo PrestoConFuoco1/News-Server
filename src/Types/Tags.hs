@@ -27,20 +27,20 @@ data GetTags =
 
 newtype CreateTag =
     CreateTag
-        { _ct_tagName :: Text.Text
+        { ctTagName :: Text.Text
         }
   deriving (Show, Eq, Generic, GP.PrettyShow, PS.ToRow)
 
 data EditTag =
     EditTag
-        { _et_tagId :: TagId
-        , _et_tagName :: Text.Text
+        { etTagId :: TagId
+        , etTagName :: Text.Text
         }
   deriving (Show, Eq, Generic, GP.PrettyShow, PS.ToRow)
 
 newtype DeleteTag =
     DeleteTag
-        { _dt_tagId :: TagId
+        { dtTagId :: TagId
         }
   deriving (Show, Eq, Generic, GP.PrettyShow, PS.ToRow)
 

@@ -7,23 +7,23 @@ import Data.Text
 
 data ForeignViolation =
     ForeignViolation
-        { _fv_field :: Text
-        , _fv_value :: Text
+        { fvField :: Text
+        , fvValue :: Text
         }
   deriving (Show)
 
 data UniqueViolation =
     UniqueViolation
-        { _uv_field :: Text
-        , _uv_value :: Text
+        { uvField :: Text
+        , uvValue :: Text
         }
   deriving (Show)
 
 data ConstraintViolation =
     ConstraintViolation
-        { _cv_field :: Text
-        , _cv_value :: Text
-        , _cv_description :: Text
+        { cvField :: Text
+        , cvValue :: Text
+        , cvDescription :: Text
         }
   deriving (Show)
 

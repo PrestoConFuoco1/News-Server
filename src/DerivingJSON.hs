@@ -7,31 +7,36 @@ module DerivingJSON where
 import qualified Data.Aeson.Types as Ae
 import Data.Char (isLower)
 import GHC.Generics
+import Utils (unCap)
 
-newtype BotSelectorModifier a =
-    BotSelectorModifier
-        { unBotSelectorModifier :: a
+newtype DropLowerUncap a =
+    DropLowerUncap
+        { unDropLowerUncap :: a
         }
 
 instance (Generic a, Ae.GFromJSON Ae.Zero (Rep a)) =>
-         Ae.FromJSON (BotSelectorModifier a) where
+         Ae.FromJSON (DropLowerUncap a) where
     parseJSON =
-        fmap BotSelectorModifier .
+        fmap DropLowerUncap .
         Ae.genericParseJSON
             (Ae.defaultOptions
                  { Ae.fieldLabelModifier =
-                       Ae.camelTo2 '_' . dropWhile isLower
+                       dropLowerUncap
                  })
 
 instance (Generic a, Ae.GToJSON' Ae.Value Ae.Zero (Rep a)) =>
-         Ae.ToJSON (BotSelectorModifier a) where
+         Ae.ToJSON (DropLowerUncap a) where
     toJSON =
         Ae.genericToJSON
             (Ae.defaultOptions
                  { Ae.fieldLabelModifier =
-                       Ae.camelTo2 '_' . dropWhile isLower
+                       --Ae.camelTo2 '_' . dropWhile isLower
+                       dropLowerUncap
                  }) .
-        unBotSelectorModifier
+        unDropLowerUncap
+
+dropLowerUncap :: String -> String
+dropLowerUncap = unCap . dropWhile isLower
 
 newtype RemovePrefix a =
     RemovePrefix
