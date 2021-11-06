@@ -20,18 +20,16 @@ instance (Generic a, Ae.GFromJSON Ae.Zero (Rep a)) =>
         fmap DropLowerUncap .
         Ae.genericParseJSON
             (Ae.defaultOptions
-                 { Ae.fieldLabelModifier =
-                       dropLowerUncap
-                 })
+                 {Ae.fieldLabelModifier = dropLowerUncap})
 
 instance (Generic a, Ae.GToJSON' Ae.Value Ae.Zero (Rep a)) =>
          Ae.ToJSON (DropLowerUncap a) where
     toJSON =
         Ae.genericToJSON
             (Ae.defaultOptions
-                 { Ae.fieldLabelModifier =
+                 { Ae.fieldLabelModifier
                        --Ae.camelTo2 '_' . dropWhile isLower
-                       dropLowerUncap
+                    = dropLowerUncap
                  }) .
         unDropLowerUncap
 

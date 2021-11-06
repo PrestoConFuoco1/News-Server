@@ -111,8 +111,7 @@ publishCreate draftsH logger x = do
     draft <- throwWithFuncOnError T.DModifyError eithDraft
     L.logInfo logger $
         "Added post_id to draft with id = " <> S.showText draft
-    eithTags_ <-
-        D.attachTagsToPost draftsH logger post (T.drTagIds x)
+    eithTags_ <- D.attachTagsToPost draftsH logger post (T.drTagIds x)
     tags_ <- throwWithFuncOnError T.DTagsError eithTags_
     L.logInfo logger $ attached "post" tags_ post
     pure $ T.RCreated T.EPost post
@@ -131,8 +130,7 @@ publishEdit draftsH logger post draft =
         eithPost_ <- D.editPostPublish draftsH logger publishPost
         post_ <- throwWithFuncOnError T.DModifyError eithPost_
         eithTs <-
-            D.attachTagsToPost draftsH logger post $
-            T.drTagIds draft
+            D.attachTagsToPost draftsH logger post $ T.drTagIds draft
         ts <- throwWithFuncOnError T.DTagsError eithTs
         L.logInfo logger $ attached "post" ts post
         tsRem <-

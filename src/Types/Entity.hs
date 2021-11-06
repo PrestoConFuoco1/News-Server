@@ -22,7 +22,7 @@ import qualified Data.Text as Text
 import qualified Data.Time as Time
 import qualified Database.PostgreSQL.Simple as PS
 import qualified Database.PostgreSQL.Simple.FromRow as PSR
-import DerivingJSON (RemovePrefix(..), DropLowerUncap(..))
+import DerivingJSON (DropLowerUncap(..), RemovePrefix(..))
 import GHC.Generics
 import qualified GenericPretty as GP
 import Types.Authors (AuthorId)
@@ -64,7 +64,7 @@ data User =
         , userAdmin :: Maybe Bool
         }
   deriving (Show, Eq, Generic, GP.PrettyShow, PSR.FromRow)
-  deriving anyclass Gettable
+  deriving anyclass (Gettable)
   deriving Ae.ToJSON via DropLowerUncap User
 
 data Author =
@@ -240,8 +240,8 @@ data DraftRaw =
         , drPostId :: Maybe PostId
         }
   deriving (Show, Eq, Generic, GP.PrettyShow)
- -- deriving Ae.ToJSON via RemovePrefix DraftRaw
 
+ -- deriving Ae.ToJSON via RemovePrefix DraftRaw
 instance PSR.FromRow DraftRaw where
     fromRow = do
         did <- PSR.field

@@ -92,8 +92,7 @@ getCategoryById con logger cid = do
         [] -> pure Nothing
         [c] -> pure $ Just c
         _ ->
-            Ex.throwInvalidUnique T.ECategory $
-            map T.cCategoryId cats
+            Ex.throwInvalidUnique T.ECategory $ map T.cCategoryId cats
 
 getThisPaginated ::
        (ReadSQL a)
