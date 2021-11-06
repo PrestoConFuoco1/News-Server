@@ -68,7 +68,7 @@ withAuth h logger mtoken = do
         Just token -> do
             L.logDebug logger $
                 fname <>
-                "searching for user with token = " <> T._t_token token
+                "searching for user with token = " <> T.tToken token
             D.getUserByToken h logger token
 
 checkAdmin ::

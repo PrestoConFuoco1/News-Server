@@ -23,29 +23,29 @@ import Types.Users as TypesInternal
 
 data WithUser a =
     WithUser
-        { _wu_userId :: User
-        , _wu_action :: a
+        { wuUserId :: User
+        , wuAction :: a
         }
   deriving (Show, Generic)
 
 data WithAuthor a =
     WithAuthor
-        { _wa_authorId :: Int
-        , _wa_action :: a
+        { waAuthorId :: Int
+        , waAction :: a
         }
   deriving (Show, Generic)
 
 newtype Token =
     Token
-        { _t_token :: Text.Text
+        { tToken :: Text.Text
         }
   deriving (Show, Eq, PST.ToField)
   deriving GP.PrettyShow via GP.Showable Token
 
 data WhoWhat a =
     WhoWhat
-        { _ww_token :: Maybe Token
-        , _ww_action :: a
+        { wwToken :: Maybe Token
+        , wwAction :: a
         }
   deriving (Show, Eq, Generic)
 

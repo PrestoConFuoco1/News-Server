@@ -109,7 +109,7 @@ mainServer req logger resources = do
             resourcesUnchanged $ coerceResponse <$> handleError h err
         Right whowhat -> do
             D.logDebug h "Action type is"
-            D.logDebug h $ GP.textPretty $ T._ww_action whowhat
+            D.logDebug h $ GP.textPretty $ T.wwAction whowhat
             let withLog res = do
                     r <- res
                     D.logDebug h "Result is"
