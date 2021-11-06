@@ -10,10 +10,10 @@ noUserByToken :: L.LoggerHandler IO -> Token -> IO (Maybe User)
 noUserByToken _ _ = return Nothing
 
 notAdminByToken :: L.LoggerHandler IO -> Token -> IO (Maybe User)
-notAdminByToken _ _ = return (Just $ User { _u_admin = Just False })
+notAdminByToken _ _ = return (Just $ User { userAdmin = Just False })
 
 adminByToken :: L.LoggerHandler IO -> Token -> IO (Maybe User)
-adminByToken _ _ = return (Just $ User { _u_admin = Just True })
+adminByToken _ _ = return (Just $ User { userAdmin = Just True })
 
 userByToken :: L.LoggerHandler IO -> Token -> IO (Maybe User)
 userByToken _ _ = return $ Just defaultUser
@@ -21,14 +21,14 @@ userByToken _ _ = return $ Just defaultUser
 fromJust (Just x) = x
 
 defaultUser = User {
-    _u_id = 1
-    , _u_firstname = "defaultFirstname"
-    , _u_lastname = "defaultLastname"
-    , _u_pictureUrl = Just "defaultPicture"
-    , _u_login = "defaultLogin"
-    , _u_passHash = "defaultPassword"
-    , _u_creationDate = fromJust $ S.readDay "2001-09-11"
-    , _u_admin = Just False
+    userId = 1
+    , userFirstname = "defaultFirstname"
+    , userLastname = "defaultLastname"
+    , userPictureUrl = Just "defaultPicture"
+    , userLogin = "defaultLogin"
+    , userPassHash = "defaultPassword"
+    , userCreationDate = fromJust $ S.readDay "2001-09-11"
+    , userAdmin = Just False
     }
 
 

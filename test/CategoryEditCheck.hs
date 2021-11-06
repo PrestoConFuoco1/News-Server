@@ -7,15 +7,15 @@ import Execute.Utils
 import Data.Maybe (isNothing)
 
 testNewParentCat = Y.Category {
-    Y._cat_categoryId = 3
-    , Y._cat_description = "category_level3"
-    , Y._cat_parentCategory = Just Y.Category {
-        Y._cat_categoryId = 2
-        , Y._cat_description = "category_level2"
-        , Y._cat_parentCategory = Just Y.Category {
-            Y._cat_categoryId = 1
-            , Y._cat_description = "category_level1"
-            , Y._cat_parentCategory = Nothing
+    Y.cCategoryId = 3
+    , Y.categoryDescription = "category_level3"
+    , Y.catParentCategory = Just Y.Category {
+        Y.cCategoryId = 2
+        , Y.categoryDescription = "category_level2"
+        , Y.catParentCategory = Just Y.Category {
+            Y.cCategoryId = 1
+            , Y.categoryDescription = "category_level1"
+            , Y.catParentCategory = Nothing
             }
         }
     }
