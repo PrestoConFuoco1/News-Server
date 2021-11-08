@@ -28,7 +28,7 @@ createThis name create x = do
         Left err -> pure $ T.RFailed name err
 
 deleteErrorToApiResult :: T.Entity -> T.DeleteError -> T.APIResult
-deleteErrorToApiResult ent T.DNoAction = T.RFailed ent T.MNoAction
+deleteErrorToApiResult ent T.DeleteNoAction = T.RFailed ent T.MNoAction
 
 deleteThis ::
        (CMC.MonadCatch m)

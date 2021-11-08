@@ -16,8 +16,8 @@ import qualified Types as T
 import qualified Utils as S
 
 draftModifyErrorToApiResult :: T.DraftModifyError -> T.APIResult
-draftModifyErrorToApiResult (T.DModifyError x) = T.RFailed T.EDraft x
-draftModifyErrorToApiResult (T.DTagsError (T.TagsAttachError T.ForeignViolation {..})) =
+draftModifyErrorToApiResult (T.DraftModifyError x) = T.RFailed T.EDraft x
+draftModifyErrorToApiResult (T.DraftTagsError (T.TagsAttachError T.ForeignViolation {..})) =
     T.RInvalidTag fvValue
 
 --    T.RFailed T.EDraft ?
@@ -41,11 +41,11 @@ createDraft draftsH logger x@(T.WithAuthor _ T.CreateDraft {..}) =
     Ex.withHandler (draftModifyHandler logger) $
     D.withTransaction draftsH $ do
         eithDraft <- D.createDraft draftsH logger x
-        draft <- throwWithFuncOnError T.DModifyError eithDraft
+        draft <- throwWithFuncOnError T.DraftModifyError eithDraft
         L.logInfo logger $
             "Created draft with id = " <> Text.pack (show draft)
         eithTags <- D.attachTagsToDraft draftsH logger draft cdTags
-        tags <- throwWithFuncOnError T.DTagsError eithTags
+        tags <- throwWithFuncOnError T.DraftTagsError eithTags
         L.logInfo logger $ attached "draft" tags draft
         pure $ T.RCreated T.EDraft draft
 
@@ -59,10 +59,10 @@ editDraft draftsH logger x@(T.WithAuthor _ T.EditDraft {..}) =
     Ex.withHandler (draftModifyHandler logger) $
     D.withTransaction draftsH $ do
         eithDraft <- D.editDraft draftsH logger x
-        draft <- throwWithFuncOnError T.DModifyError eithDraft
+        draft <- throwWithFuncOnError T.DraftModifyError eithDraft
         S.withMaybe edTags (pure $ T.REdited T.EDraft draft) $ \tags -> do
             eithTs <- D.attachTagsToDraft draftsH logger draft tags
-            ts <- throwWithFuncOnError T.DTagsError eithTs
+            ts <- throwWithFuncOnError T.DraftTagsError eithTs
             L.logInfo logger $ attached "draft" ts draft
             tsRem <-
                 D.removeAllButGivenTagsDraft draftsH logger draft tags
@@ -101,18 +101,18 @@ publishCreate ::
     -> m T.APIResult
 publishCreate draftsH logger x = do
     eithPost <- D.createPost draftsH logger x
-    post <- throwWithFuncOnError T.DModifyError eithPost
+    post <- throwWithFuncOnError T.DraftModifyError eithPost
     L.logInfo logger $ "Created post with id = " <> S.showText post
     eithDraft <-
         D.editDraftPublish
             draftsH
             logger
             (T.EditDraftPublish post $ T.drDraftId x)
-    draft <- throwWithFuncOnError T.DModifyError eithDraft
+    draft <- throwWithFuncOnError T.DraftModifyError eithDraft
     L.logInfo logger $
         "Added post_id to draft with id = " <> S.showText draft
     eithTags_ <- D.attachTagsToPost draftsH logger post (T.drTagIds x)
-    tags_ <- throwWithFuncOnError T.DTagsError eithTags_
+    tags_ <- throwWithFuncOnError T.DraftTagsError eithTags_
     L.logInfo logger $ attached "post" tags_ post
     pure $ T.RCreated T.EPost post
 
@@ -128,10 +128,10 @@ publishEdit draftsH logger post draft =
     D.withTransaction draftsH $ do
         let publishPost = draftRawToPublishEditPost post draft
         eithPost_ <- D.editPostPublish draftsH logger publishPost
-        post_ <- throwWithFuncOnError T.DModifyError eithPost_
+        post_ <- throwWithFuncOnError T.DraftModifyError eithPost_
         eithTs <-
             D.attachTagsToPost draftsH logger post $ T.drTagIds draft
-        ts <- throwWithFuncOnError T.DTagsError eithTs
+        ts <- throwWithFuncOnError T.DraftTagsError eithTs
         L.logInfo logger $ attached "post" ts post
         tsRem <-
             D.removeAllButGivenTagsPost draftsH logger post $

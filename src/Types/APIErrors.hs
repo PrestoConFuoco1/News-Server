@@ -35,7 +35,7 @@ data ModifyError
   deriving (Show)
 
 data DeleteError =
-    DNoAction
+    DeleteNoAction
   deriving (Show)
 
 newtype TagsError =
@@ -43,8 +43,8 @@ newtype TagsError =
   deriving (Show)
 
 data DraftModifyError
-    = DModifyError ModifyError
-    | DTagsError TagsError
+    = DraftModifyError ModifyError
+    | DraftTagsError TagsError
   deriving (Show)
 
 instance CMC.Exception DraftModifyError

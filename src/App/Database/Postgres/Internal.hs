@@ -172,7 +172,7 @@ deleteThis con logger del = do
     Ex.withExceptionHandlers (Ex.sqlHandlers logger str params) $ do
         ids <- map PSTy.fromOnly <$> PS.query con str params
         case ids of
-            [] -> pure $ Left T.DNoAction
+            [] -> pure $ Left T.DeleteNoAction
             [eid] -> pure $ Right eid
             _ -> Ex.throwInvalidUnique (dName @a) ids
 
@@ -226,16 +226,17 @@ removeAllButGivenTags ::
     -> [Int]
     -> IO [Int]
 removeAllButGivenTags con s logger hasTagsId tags = do
-    let inClause [] = ""
-        inClause _ = " AND NOT tag_id IN ? "
-        inParams [] = []
-        inParams ts = [SqlValue $ PS.In ts]
+    let
+        (inClause, inParams) = case tags of
+            [] -> ("", [])
+            ts ->  (" AND NOT tag_id IN ? ",
+                    [SqlValue $ PS.In ts])
         strChunks =
             [ "DELETE FROM news."
             , "_tag WHERE "
-            , "_id = ? " <> inClause tags <> "RETURNING tag_id"
+            , "_id = ? " <> inClause <> "RETURNING tag_id"
             ]
-        params = SqlValue (hToInt s hasTagsId) : inParams tags
+        params = SqlValue (hToInt s hasTagsId) : inParams
         str = fromMaybe "" $ intercalateWith (hName s) strChunks
     Ex.withExceptionHandlers
         (Ex.sqlHandlers logger str params)
