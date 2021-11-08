@@ -150,22 +150,21 @@ selfSufficientLogger ::
     -> Priority
     -> Text.Text
     -> IO ()
-selfSufficientLogger resourcesRef predicate pri s = do
-    resources <- readIORef resourcesRef
-    let action = do
-            let handle = flHandle resources
-            T.hPutStrLn handle (logString pri s)
-            when (handle /= S.stderr) $
-                T.hPutStrLn S.stderr (logString pri s)
-        errHandler e = do
-            resources' <- loggerHandler resources e
-            writeIORef resourcesRef resources'
-    when (predicate pri) action `C.catch` errHandler
+selfSufficientLogger resourcesRef predicate pri s =
+    when (predicate pri) $ do
+    C.handle (loggerHandler resourcesRef) $ do
+        let logStr = logString pri s
+        handle <- flHandle <$> readIORef resourcesRef
+        T.hPutStrLn handle logStr
+        when (handle /= S.stderr) $
+            T.hPutStrLn S.stderr logStr
+
 
 loggerHandler ::
-       LoggerResources -> C.SomeException -> IO LoggerResources
-loggerHandler resources e = do
+       IORef LoggerResources -> C.SomeException -> IO ()
+loggerHandler resourcesRef e = do
     logError stdHandler "failed to use log file, error is:"
     logError stdHandler $ Text.pack $ C.displayException e
     logError stdHandler "using standard error handle"
-    pure $ resources {flHandle = S.stderr}
+    resources <- readIORef resourcesRef
+    writeIORef resourcesRef $ resources {flHandle = S.stderr}
