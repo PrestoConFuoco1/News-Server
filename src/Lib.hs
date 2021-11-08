@@ -16,6 +16,7 @@ import Data.IORef (IORef, newIORef, readIORef, writeIORef)
 import qualified Data.Text as Text (unpack)
 import qualified Exceptions as Ex
     ( defaultMainHandler
+    , withExceptionHandlers
     , mainErrorHandler
     )
 import Execute (executeAction, handleError)
@@ -110,19 +111,22 @@ mainServer req logger resources = do
         Right whowhat -> do
             D.logDebug h "Action type is"
             D.logDebug h $ GP.textPretty $ T.wwAction whowhat
-            let withLog res = do
-                    r <- res
-                    D.logDebug h "Result is"
-                    D.logDebug h $ T.logResult r
-                    pure $ toResponse r
-                action =
-                    fmap
-                        coerceResponse
-                        (withLog (executeAction h whowhat) `CMC.catches`
-                         [ CMC.Handler $ Ex.mainErrorHandler logger
-                         , CMC.Handler $ Ex.defaultMainHandler logger
-                         ])
-            resourcesUnchanged action
+            resourcesUnchanged $ fmap coerceResponse $
+                Ex.withExceptionHandlers (mainErrorHandlers logger) $
+                    withLogResult logger $ executeAction h whowhat
+
+withLogResult :: L.LoggerHandler IO -> IO T.APIResult -> IO R.Response
+withLogResult logger resAction = do
+    res <- resAction
+    L.logDebug logger "Result is"
+    L.logDebug logger $ T.logResult res
+    pure $ toResponse res
+
+mainErrorHandlers :: L.LoggerHandler IO -> [CMC.Handler IO R.Response]
+mainErrorHandlers logger =
+    [ CMC.Handler $ Ex.mainErrorHandler logger
+    , CMC.Handler $ Ex.defaultMainHandler logger
+    ]
 
 coerceResponse :: R.Response -> W.Response
 coerceResponse (R.Response status msg) =

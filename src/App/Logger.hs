@@ -159,7 +159,6 @@ selfSufficientLogger resourcesRef predicate pri s =
         when (handle /= S.stderr) $
             T.hPutStrLn S.stderr logStr
 
-
 loggerHandler ::
        IORef LoggerResources -> C.SomeException -> IO ()
 loggerHandler resourcesRef e = do
