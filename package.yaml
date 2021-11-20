@@ -42,6 +42,8 @@ dependencies:
 - regex-pcre
 - configurator
 - optparse-applicative
+- cryptonite
+- memory
 
 
 library:

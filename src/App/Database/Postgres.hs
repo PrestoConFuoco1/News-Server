@@ -26,6 +26,7 @@ import qualified Database.PostgreSQL.Simple as PS
 import GHC.Generics
 import qualified GenericPretty as GP
 import qualified Types as T
+import qualified Crypto as Crypto
 
 data Config =
     Config
@@ -68,7 +69,10 @@ resourcesToHandle (Resources con) logger =
     let authH =
             AuthHandler
                 { userAuthor = IOP.userAuthor con
-                , createUser = IOP.createThis @T.CreateUser con
+                , createUser = \logger cre -> do
+                    passHash <- Crypto.generatePasswordHashWithSalt $ T.cuPassHash cre
+                    IOP.createThis @T.CreateUser con logger $
+                        cre { T.cuPassHash = passHash }
                 , deleteUser = IOP.deleteThis @T.DeleteUser con
                 , getUserByToken = IOP.getUserByToken con
                 , getUserByLogin = IOP.getUserByLogin con

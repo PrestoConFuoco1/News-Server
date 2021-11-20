@@ -12,9 +12,13 @@ import GHC.Arr
 import System.Random (randomRIO)
 import Text.Regex.PCRE ((=~))
 import Type.Reflection (Typeable)
+import Debug.Trace
 
 instance (Typeable a, PSF.FromField a) => PSF.FromField [a] where
     fromField f b = PST.fromPGArray <$> PSF.fromField f b
+
+echo :: Show a => a -> a
+echo x = show x `trace` x
 
 defaultModifier :: String -> String
 defaultModifier ('_':xs) =

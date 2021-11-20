@@ -40,6 +40,7 @@ library
       App.Database.Postgres.Internal
       App.Logger
       Config
+      Crypto
       Database
       Database.Create
       Database.Delete
@@ -56,6 +57,7 @@ library
       GenericPretty
       Lib
       Migrations
+      RenewPasswords
       Result
       RunOptions
       Types
@@ -81,9 +83,11 @@ library
     , base >=4.7 && <5
     , bytestring
     , configurator
+    , cryptonite
     , exceptions
     , file-embed
     , http-types
+    , memory
     , mtl
     , optparse-applicative
     , postgresql-simple
@@ -111,9 +115,11 @@ executable warpt3
     , base >=4.7 && <5
     , bytestring
     , configurator
+    , cryptonite
     , exceptions
     , file-embed
     , http-types
+    , memory
     , mtl
     , optparse-applicative
     , postgresql-simple
@@ -147,10 +153,12 @@ test-suite warpt3-test
     , base >=4.7 && <5
     , bytestring
     , configurator
+    , cryptonite
     , exceptions
     , file-embed
     , hspec
     , http-types
+    , memory
     , mtl
     , optparse-applicative
     , postgresql-simple
