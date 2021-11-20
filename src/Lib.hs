@@ -16,8 +16,8 @@ import Data.IORef (IORef, newIORef, readIORef, writeIORef)
 import qualified Data.Text as Text (unpack)
 import qualified Exceptions as Ex
     ( defaultMainHandler
-    , withExceptionHandlers
     , mainErrorHandler
+    , withExceptionHandlers
     )
 import Execute (executeAction, handleError)
 import qualified GenericPretty as GP (textPretty)
@@ -111,9 +111,10 @@ mainServer req logger resources = do
         Right whowhat -> do
             D.logDebug h "Action type is"
             D.logDebug h $ GP.textPretty $ T.wwAction whowhat
-            resourcesUnchanged $ fmap coerceResponse $
+            resourcesUnchanged $
+                fmap coerceResponse $
                 Ex.withExceptionHandlers (mainErrorHandlers logger) $
-                    withLogResult logger $ executeAction h whowhat
+                withLogResult logger $ executeAction h whowhat
 
 withLogResult :: L.LoggerHandler IO -> IO T.APIResult -> IO R.Response
 withLogResult logger resAction = do

@@ -8,11 +8,11 @@ import qualified Data.Text.Encoding as E
 import qualified Data.Time as Time
 import qualified Database.PostgreSQL.Simple.FromField as PSF
 import qualified Database.PostgreSQL.Simple.Types as PST
+import Debug.Trace
 import GHC.Arr
 import System.Random (randomRIO)
 import Text.Regex.PCRE ((=~))
 import Type.Reflection (Typeable)
-import Debug.Trace
 
 instance (Typeable a, PSF.FromField a) => PSF.FromField [a] where
     fromField f b = PST.fromPGArray <$> PSF.fromField f b

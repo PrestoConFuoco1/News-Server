@@ -226,11 +226,10 @@ removeAllButGivenTags ::
     -> [Int]
     -> IO [Int]
 removeAllButGivenTags con s logger hasTagsId tags = do
-    let
-        (inClause, inParams) = case tags of
-            [] -> ("", [])
-            ts ->  (" AND NOT tag_id IN ? ",
-                    [SqlValue $ PS.In ts])
+    let (inClause, inParams) =
+            case tags of
+                [] -> ("", [])
+                ts -> (" AND NOT tag_id IN ? ", [SqlValue $ PS.In ts])
         strChunks =
             [ "DELETE FROM news."
             , "_tag WHERE "

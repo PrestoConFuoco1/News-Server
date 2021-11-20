@@ -20,13 +20,13 @@ import qualified App.Database.Postgres.Internal as IOP
 import qualified App.Logger as L
 import Control.Monad ((>=>))
 import qualified Control.Monad.Catch as C (bracket)
+import qualified Crypto
 import qualified Data.ByteString as B
 import Database
 import qualified Database.PostgreSQL.Simple as PS
 import GHC.Generics
 import qualified GenericPretty as GP
 import qualified Types as T
-import qualified Crypto as Crypto
 
 data Config =
     Config
@@ -69,10 +69,13 @@ resourcesToHandle (Resources con) logger =
     let authH =
             AuthHandler
                 { userAuthor = IOP.userAuthor con
-                , createUser = \logger cre -> do
-                    passHash <- Crypto.generatePasswordHashWithSalt $ T.cuPassHash cre
-                    IOP.createThis @T.CreateUser con logger $
-                        cre { T.cuPassHash = passHash }
+                , createUser =
+                      \logger cre -> do
+                          passHash <-
+                              Crypto.generatePasswordHashWithSalt $
+                              T.cuPassHash cre
+                          IOP.createThis @T.CreateUser con logger $
+                              cre {T.cuPassHash = passHash}
                 , deleteUser = IOP.deleteThis @T.DeleteUser con
                 , getUserByToken = IOP.getUserByToken con
                 , getUserByLogin = IOP.getUserByLogin con

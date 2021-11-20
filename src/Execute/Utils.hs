@@ -10,11 +10,11 @@ module Execute.Utils
     , checkCategoryCycles
     ) where
 
-import qualified Crypto as Crypto
 import qualified App.Database as D
 import qualified App.Logger as L
 import Control.Monad (unless)
 import qualified Control.Monad.Catch as CMC
+import qualified Crypto
 import qualified Data.Text as Text
 import qualified Exceptions as Ex
 import qualified GenericPretty as GP
@@ -131,13 +131,13 @@ authenticate h logger auth = do
     muser <- D.getUserByLogin h logger $ T.auLogin auth
     user <- maybe Ex.throwInvalidLogin pure muser
     unless
-        (Crypto.validatePassword (T.auPassHash auth) (T.userPassHash user))
+        (Crypto.validatePassword
+             (T.auPassHash auth)
+             (T.userPassHash user))
         Ex.throwInvalidPassword
     token <- Text.pack <$> D.generateToken h 10
     token' <- D.addToken h logger (T.userId user) token
     pure $ T.RGetToken token'
-
-
 
 checkCategoryUpdate ::
        (CMC.MonadThrow m)

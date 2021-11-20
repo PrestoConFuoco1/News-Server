@@ -16,7 +16,8 @@ import qualified Types as T
 import qualified Utils as S
 
 draftModifyErrorToApiResult :: T.DraftModifyError -> T.APIResult
-draftModifyErrorToApiResult (T.DraftModifyError x) = T.RFailed T.EDraft x
+draftModifyErrorToApiResult (T.DraftModifyError x) =
+    T.RFailed T.EDraft x
 draftModifyErrorToApiResult (T.DraftTagsError (T.TagsAttachError T.ForeignViolation {..})) =
     T.RInvalidTag fvValue
 
