@@ -13,6 +13,7 @@ import GHC.Arr
 import System.Random (randomRIO)
 import Text.Regex.PCRE ((=~))
 import Type.Reflection (Typeable)
+import qualified Data.Time.Clock.System as Sys
 
 instance (Typeable a, PSF.FromField a) => PSF.FromField [a] where
     fromField f b = PST.fromPGArray <$> PSF.fromField f b
@@ -62,3 +63,16 @@ showDay = Time.formatTime Time.defaultTimeLocale "%F"
 
 readDay :: String -> Maybe Time.Day
 readDay = Time.parseTimeM True Time.defaultTimeLocale "%Y-%-m-%-d"
+
+secondsSinceEpoch :: IO Int
+secondsSinceEpoch = fromIntegral . Sys.systemSeconds <$> Sys.getSystemTime
+
+utcTime :: IO Time.UTCTime
+utcTime = Sys.systemToUTCTime <$> Sys.getSystemTime
+
+showUTCTime :: Time.UTCTime -> String
+showUTCTime = Time.formatTime Time.defaultTimeLocale "%F %T.%4q UTC"
+
+showUTCTimeText = Text.pack . showUTCTime
+
+
