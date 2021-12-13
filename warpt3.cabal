@@ -57,7 +57,6 @@ library
       GenericPretty
       Lib
       Migrations
-      RenewPasswords
       Result
       RunOptions
       Types
